@@ -1,0 +1,348 @@
+\section{Preliminaries} \label{sec:base}
+%From here on we will study the problem of mutual termination of
+%functions. Programs can be seen as a special case, namely the 'main' function.
+Our goal is to prove mutual termination of pairs of functions in programs that are assumed to be deterministic (i.e.,
+single threaded and no internal nondeterminism). Formally:
+
+\begin{definition}[Mutual termination of functions]
+\label{def:mt_prog} Two functions $f$ and $f'$  are \emph{mutually
+terminating} if and only if they terminate upon exactly the same inputs.
+\end{definition}
+By \emph{input} we mean both the function parameters and the
+global data it accesses, including the heap. 
+%
+Denote by $\mt(f,f')$ the fact that $f$ and $f'$ mutually terminate.
+%
+\subsubsection{Preprocessing and mapping}
+As a preprocessing step, all loops are extracted to external recursive
+functions, as shown in~\cite{G08}. After this step nontermination can only
+arise from recursion. In addition, all global variables that are read by a
+function are added to the end of its formal parameter list, and the
+calling sites are changed accordingly. This is not essential for the
+proof, but simplifies the presentation. It should be noted that this step in
+itself is impossible in general programs that access the heap, because it is
+undecidable whether there exists an input to a function that causes the
+function to read a particular variable. Our only way out of this problem is to
+point out that it is easy to overapproximate this information (in the worst
+case just take the whole list of global variables) and to state that, based on
+our experience with a multitude of real programs, it is rather easy to compute
+this information precisely or slightly overapproximate it with static analysis
+techniques such as alias analysis. Indeed, the same exact problem exists in
+\tool{rvt} and \tool{SymDiff} for the case of partial equivalence, and there,
+as in our case, overapproximation can only hinder completeness, not soundness.
+In general we will not elaborate on issues arising from aliasing because these
+are not unique to mutual termination, and are dealt with in~\cite{GS09,KLR10}.
+
+As a second step, a map $\mapf$ between the functions of $P$ and $P'$ is
+derived. For functions $f \in P$ and $f' \in P'$ it is possible that
+$\pair{f,f'} \in \mapf$ only if $f$ and $f'$ have the same prototype, i.e., the
+same list of formal input parameter types. We emphasize that the output of the two
+functions need not be compatible (e.g., $f$ can update more global variables
+than $f'$).
+
+\subsubsection{Definitions and notations}
+
+\begin{itemize}
+\item \emph{Function isolation}. With each function $g$, we associate an
+    uninterpreted function $\uf{g}$ such that $g$ and $\uf{g}$ have the
+    same prototype and return type\footnote{This definition generalized naturally to cases in which $g$ has multiple outputs owing to global data and arguments passed by reference.}. The following definition will be used for specifying which functions are associated with the \emph{same} uninterpreted function:    
+    
+\begin{definition}[Partial equivalence of functions]
+\label{def:pe_prog} Two functions $f$ and $f'$  are \emph{partially
+equivalent} if any two terminating executions of $f$ and $f'$ starting from the
+same inputs, return the same value.
+\end{definition}
+Denote by $\pe(f,f')$ the fact that $f$ and $f'$ are partially equivalent. We enforce that
+\begin{equation}\label{eq:enforcement}
+\uf{g} = \uf{g'} \Rightarrow \left(\pair{g, g'} \in\mapf \wedge \pe(g, g')\right)  \mbox{(enforce)}
+\end{equation}
+i.e., we associate $g$ and $g'$ with the same
+uninterpreted function only if $\pair{g,g'} \in \mapf$, and $g,g'$ were proven to be partially equivalent. The list of pairs of functions that are proven to be partially equivalent is assumed to be an input to the mutual termination algorithm.
+%
+We now define:
+\begin{equation}\label{eq:isolation}
+\mtbody{f} \doteq f[g(expr_{in}) \leftarrow \uf{g}(expr_{in}) \mid g \mbox{ is called in $f$}]\;,
+\end{equation}
+%
+where $expr_{in}$ is the expression(s) denoting actual parameter(s) with which $g$ is called.
+$ \mtbody{f}$ is called the \emph{isolated} version of $f$. By construction
+it has no loops or function calls, except for calls to uninterpreted functions.
+
+The definition of $\mtbody{f}$ requires all function calls to be replaced
+with uninterpreted functions. A useful relaxation of this requirement,
+which we will later use, is that it can inline non-recursive functions.
+Clearly the result is still nonrecursive. Therefore, we still refer to this
+as an isolated version of $f$.
+
+
+\item \emph{Call equivalence}.
+%
+%The following definition is necessary for the proof rule:
+%
+%
+%\begin{definition}[Call-containment]
+%\label{def:rimplic_func} The calls of a function $f$ are said to
+%\emph{contain} those of $f'$ if the existence of a call to $g'(\vec{in})$
+%in $f'$ implies that there is a call to $g(\vec{in})$ in every possible
+%computation of $f$, given that \pairtag{g} $\in\mapf$, and that $f,f'$ were
+%called with equal inputs.
+%\end{definition}
+%
+
+%*** new
+
+Let $calls(f(\vec{in}))$, where $\vec{in}$ is a vector of actual values, denote the set of function call instructions (i.e., a function name and the actual parameter values) invoked in the body of $f()$ during the execution of $f(\vec{in})$. Note that $calls(f(\vec{in}))$ does not include calls from descendant functions and hence also not from recursive calls.
+
+We can now define:
+\begin{definition}[Call-equivalence of functions]\label{def:re_func}
+$f$ and $f'$ are \emph{call-equivalent} if and only if
+\[ \forall \text{\pairtag{g}} \in \mapf, in_f, in_g.\ g'(in_g) \in calls(f'(in_f))
+\Leftrightarrow g(in_g) \in calls (f(in_f))\;. \]
+\end{definition}
+%
+%Denote by $\callc(f,f')$ that the calls of $f$ contain those of $f'$.
+%
+%\begin{definition}[Call-equivalence of functions]
+%\label{def:re_func} Two functions \comandtag{f} are said to be
+%\emph{call-equivalent} if $\callc(f,f') \land \callc(f',f)$.
+%%, when called with the same input arguments, for every call that $f$ makes
+%%to a function $g$, there is a call by $f'$ to $g'$ (and vice-versa) for
+%%every possible computation such that \pairtag{g} $\in\mapf$, and \comtag{g}
+%%are called with the same arguments.
+%\end{definition}
+Denote by $\requiv(f,f')$ the fact that $f$ and $f'$ are call-equivalent.
+%
+Note that it is decidable whether $f^{UF}$ and $f'^{UF}$ are call-equivalent, because
+these are functions without loops and function calls, as explained above.
+
+\end{itemize}
+
+\section{A proof rule}
+\label{sec:rule}
+Given a call graph of a general program, a corresponding DAG may be built by collapsing each maximal strongly connected
+component (MSCC) into a single node. Nodes that are not part of any cycle in
+the call graph (corresponding to non-recursive functions) are called
+\emph{trivial} MSCCs in the DAG. Other MSCCs correspond to either simple or
+mutually recursive function(s).
+
+Consider, then, two nontrivial MSCCs \comtag{m} in $P$ and $P'$, respectively,
+that are \emph{leaves} in the MSCC DAGs.
+%(the rule in~\cite{GS08} only refers to this case). !!! add note to related work
+Also  assume, for now, that $\mapf$ provides a bijective mapping between the functions in \comandtag{m}. Denote by
+\[ \mapf(m) = \{\pair{f,f'}  \mid \pair{f,f'} \in \mapf, f \in m\}\;.\]
+%
+Our goal is to prove mutual termination of each of the pairs in $\mapf(m)$. The
+following proof rule gives us a way to do it by proving
+call-equivalence of each of these pairs:
+\begin{center}
+\fbox{
+\begin{minipage}{\linewidth}
+\begin{equation} \label{eq:new}
+\frac
+{\forall \pair{f, f'} \in\mapf(m).\ \requiv(\upbody{f},\upbody{f'})}
+{\forall \pair{f, f'} \in\mapf(m).\ \mt(f, f')}
+\mbox{\quad \mtermd}
+\end{equation}
+\end{minipage}
+}
+\end{center}
+%
+Later on in this section we generalize this rule so it also applies to non-leaf MSCCs,
+and outline the soundness proof.
+
+%
+Readers familiar with~\cite{GS08} may wonder about the relation of this rule to the one suggested there. The answer is that (\ref{eq:new}) is stronger (i.e., it has a weaker premise) because it does not require the functions to be partially equivalent.
+
+Note that the abstraction of calls with uninterpreted functions is the source of incompleteness. $\requiv(\upbody{f}, \upbody{f'})$ may fail, but the counterexample may rely on values returned by an uninterpreted function that are different than what the corresponding concrete function would have returned if called with the same parameters. Furthermore, it is possible that the concrete function and its counterpart on the other side do not terminate, but their abstractions terminate and are followed by different function calls on the two sides, which leads to call equivalence not being true.
+
+
+
+\subsubsection{Checking the premise}
+We check the premise of~(\ref{eq:new}) by building a loop- and recursion-free program for each pair of functions that we want to prove call equivalent. Here we describe the construction informally, and only for the case of simple recursion at the leaf functions. We will consider the general case in a more formal way in Sec.~\ref{sec:decomposition}.
+
+Let $f,f'$ be simple recursive functions that only call themselves. We associate a set of call instructions with each called function (this set represents $calls(f(\vec{in}))$. For example, in $f$ only $f$ itself is called, and hence we maintain a set of call instructions to $f$. We then build a program with the following structure: {\tt main} assigns equal nondeterministic values to the inputs of $f$ and $f'$. It then calls an implementation of $\mtbody{f}$ and $\mtbody{f'}$, and finally asserts that the sets of call instructions are equal. The example below (hopefully) clarifies this construction.
+% The %implementation of $\mtbody(f)$ is simply $f$ itself where the recursive call is replaced with a call to a new function that a) models an uninterpreted function and b) collect call
+
+
+
+
+
+
+
+
+\begin{figure}[h!]
+\begin{tabular}{p{6 cm}p{6 cm}} \hline
+\begin{algorithmic}
+\Function {$f$}{{\bf int} $a$}
+\State {\bf int} $even := 0, ret := 0$;
+\If {$a > 1$}
+\If {$\lnot(a\ \%\ 2)$} \Comment{even}
+    \State $a := a/2$;
+    \State $even = 1$;
+    \Else \ $a := 3a + 1$;
+\EndIf
+\State $ret := even + f(a)$;
+\EndIf
+\Return $ret$;
+\EndFunction
+\end{algorithmic}
+&
+\begin{algorithmic}
+\Function{$f'$}{{\bf int} a'}
+\State {\bf int} $t', odd' := 0, ret' := 0$;
+\If {$a' \leq 1$} \Return $ret'$; \EndIf
+\State 	$t' := a' / 2$;
+\If {$a' \% 2$}   \Comment{odd}
+\State		$a' := 6 t' + 4$;
+\State		$odd' := 1$;
+\Else \ $a' := t'$;	
+\EndIf
+\State $ret' := odd' + f'(a')$;
+\State \Return $ret'$;
+\EndFunction
+\end{algorithmic} \\[-6pt] \hline
+\end{tabular}
+\caption{Two variations on the Collatz (``$3x + 1$") function that are mutually terminating. $f$ ($f'$) returns the total number of times the function was called with an even (odd) number. Note than when $a'$ is odd, $a' / 2 = (a'-1)/2$, and hence $6(a'/2) + 4 = 3a' + 1$.}\label{fig:collatz}
+\end{figure}
+
+
+
+\begin{example} \label{ex:collatz} Consider the two variants of the Collatz (``$3x + 1$") program~\cite{G81} in Fig.~\ref{fig:collatz}\footnote{In the pseudocode we use the convention by which $\%$ is the modulo operator. \Long{, `:=' is an assignment and `=' is equality.}}, which return different values (see explanation in the caption of the figure).
+%\footnote{the code uses C-like notation. Hence `$>>$' is `shift-right' and `$\&$' is `bit-wise and'},
+The Collatz program is a famous open problem in termination: no one knows whether
+it terminates for all (unbounded) integers. On
+the other hand proving mutual termination of the two variants given here is
+easy. The comparison is not fair, however, because our decision procedure assumes finite types: we target C programs.
+But as we show in \notfull{the full version of this article~\cite{EKS12}}\full{Appendix~\ref{sec:infinite}}, it is solvable even when the input parameter is an unbounded integer, using a decision procedure for linear arithmetic.
+
+
+\begin{figure}[h!]
+\begin{tabular}{p{6 cm}p{6 cm}} \hline
+\begin{algorithmic}
+\Function {$f^{UF}$}{{\bf int} $a$}
+\State {\bf int} $even := 0, ret := 0$;
+\If {$a > 1$}
+\If {$\lnot(a\ \%\ 2)$} \Comment{even}
+    \State $a := a/2$;
+    \State $even = 1$;
+    \Else \ $a := 3a + 1$;
+\EndIf
+\State $ret := even$ + \alg{UF}($f,a$);
+\EndIf
+\Return $ret$;
+\EndFunction
+\end{algorithmic}
+&
+\begin{algorithmic}
+\Function {$f'^{UF}$}{{\bf int} $a'$}
+\State {\bf int} $t', odd' := 0, ret' := 0$;
+\If {$a' \leq 1$} \Return $ret'$; \EndIf
+\State 	$t' := a' / 2$;
+\If {$a' \% 2$}   \Comment{odd}
+\State		$a' := 6 t' + 4$;
+\State		$odd' := 1$;
+\Else \ $a' := t'$;	
+\EndIf
+\State $ret' := odd'$ + \alg{UF}($f',a'$);
+\State \Return $ret'$;
+\EndFunction
+\end{algorithmic}
+\\
+%
+\multicolumn{2}{c}{\hspace{0.3 cm}
+\begin{minipage}{11.6 cm}
+\begin{algorithmic}  % implementation of UFf and UFf'
+\Function{uf}{function index $g$, input parameters $\vec{in}$}
+  \If {$\vec{in} \in params[g]$} \Return the output of the earlier call \pneuf{$g$};
+  \EndIf
+  \State $params[g] := params[g]\; \bigcup\; \vec{in}$;
+  \State \Return a nondeterministic value; % nondet();
+  \EndFunction\newline
+\end{algorithmic}
+\end{minipage}
+} \\
+\multicolumn{2}{c}{\hspace{0.3 cm}
+\begin{minipage}{11.6 cm}
+\begin{algorithmic}
+\Function{main}{}
+\State $\vec{in} = nondet()$; $f^{UF}(\vec{in})$; $f'^{UF}(\vec{in})$;
+\State assert($params[f] = params[f']$); \Comment{checks call equivalence}
+\EndFunction
+\end{algorithmic}
+\end{minipage}
+}
+\\ \mbox{} \\ \hline
+\end{tabular}
+%
+\caption{The flat program that we generate and then verify its assertion, given the two functions of Fig.~\ref{fig:collatz} .} \label{fig:collatz-flat}
+\end{figure}
+
+
+
+% Note than when $a'$ is odd, $a' >> 1 = (a'-1)/2$, and hence $6 \cdot (a'>>1) + 4 = 3a' + 1$.
+%Note that we made the two functions return \emph{different} values, just in order to emphasize that mutual termination can be proved for functions that are not partially equivalent.
+The definitions of $f^{UF}$, $f'^{UF}$ appear at the top part of Fig.~\ref{fig:collatz-flat}. The middle part of the same figure shows an implementation {\tt UF} of the uninterpreted functions. It receives a function index (abusing notation for simplicity, we assume here that a function name represents also a unique index) and the actual parameters. Note that it records the set of call instructions in the array {\tt params}.
+
+
+
+
+
+
+Note that in this case $f,f'$ are not partially equivalent, and therefore according to $(\ref{eq:enforcement})$ we replace the recursive calls with different uninterpreted functions. Indeed, we call \alg{uf} above with two different function indices ($f$ and $f'$), which means that on equal inputs they do not necessarily return the same nondeterministic value.
+We defer the presentation of the case in which the functions are known to be partially equivalent to Sec.~\ref{sec:decomposition}.
+%
+\qed
+\end{example}
+
+What if the mapping is not bijective, or if some of the pairs cannot be proven to be mutually terminating? It is not hard to see that it is sufficient to prove mutual termination of pairs of functions that together intersect all cycles in \comtag{m}, whereas the other functions are inlined. The same observation was made with regard to proving partial equivalence in~\cite{GS11}.
+This observation can be used to improve completeness: even when there is no bijective mapping or when it is impossible to prove mutual termination for all pairs in \comtag{m}, it is still sometimes possible to prove it for some of the pairs. The algorithm that we describe in Sec.~\ref{sec:decomposition} uses this observation.
+
+\comment{Moreover, \mtermd only refers to leaf MSCCs. The algorithm by which whole programs are checked for mutual termination has never been given explicitly in previous publications nor was it implemented. Questions like how to deal with non-leaf MSCCs and how to progress
+once the descendants are not equivalent were left open, and are newly treated here (in Sec.~\ref{sec:decomposition} we will give an
+explicit decomposition algorithm, which also uses the observation above).
+}
+
+\Long{We continue in the next section by generalizing \mtermd to the case in which functions are called outside the MSCCs.}
+
+\subsubsection{Generalization} We now generalize \mtermd to the case that \comtag{m} are not leaf MSCCs. This means that there is a set of functions $C(m)$ outside of $m$ that are called by functions in $m$. $C(m')$ is defined similarly with respect to $m'$. The
+premise now requires that these functions are mutually-terminating:
+
+\begin{center}
+\fbox{
+\begin{minipage}{\linewidth}
+\begin{equation} \label{eq:new1}
+\frac
+{\begin{array}{l}
+(\forall \pair{g, g'} \in \mapf.\ (g \in C(m) \land g' \in C(m')) \rightarrow \mt(g,g')) \land \\
+(\forall \pair{f, f'} \in\mapf(m).\ \requiv(\upbody{f},\upbody{f'}))
+\end{array}
+}
+{\forall \pair{f, f'} \in\mapf(m).\ \mt(f, f')}
+\mbox{\ \mtermdp} \;.
+\end{equation}
+\end{minipage}
+}
+\end{center}
+%
+Recall that (\ref{eq:isolation}) prescribes that calls to functions in $C(m)$ and $C(m')$ are replaced with uninterpreted functions in $\upbody{f}$, $\upbody{f'}$.
+
+A full soundness proof of the generalized rule appears in Appendix~\ref{sec:proof1}, whereas
+here we only sketch its steps. The proof begins by showing that the premise implies $\forall \pair{f, f'} \in\mapf(m).\ \requiv(f,f')$.
+%the validity of:
+%
+%$ \big(\forall \pair{f, f'} \in\mapf(m).\ \requiv(\upbody{f},\upbody{f'})\big)
+%\rightarrow \forall \pair{f, f'} \in\mapf(m).\ \requiv(f,f') \;. $
+\Long{
+\[ \begin{array}{l} \big(\forall \pair{f, f'} \in\mapf(m).\ \requiv(\upbody{f},\upbody{f'})\big)
+\rightarrow \\
+\forall \pair{f, f'} \in\mapf(m).\ \requiv(f,f')\;. \end{array} \]}
+%
+Now, falsely assume that there is a pair \pairtag{f}$\in \mapf(m)$ that is not mutually
+terminating whereas the premise holds.
+For some value $in$, suppose that it is $f(in)$ that terminates, while $f'(in)$
+does not. The infinite call stack of $f'(in)$ must contain a call, say from
+$h'(in_1)$ to $g'(in_2)$, whereas $h(in_1)$ does not call $g(in_2)$ in the call
+stack of $f(in)$ (assuming $\{$\pairtag{g}, \pairtag{h}$\} \subseteq \mapf$).
+This contradicts our premise that \pairtag{h} are call-equivalent. The argument
+is a little more involved when there are multiple calls to the same function, and when there are calls to functions in $C(m), C(m')$,
+but we leave such subtleties to Appendix~\ref{sec:proof1}.

@@ -1,0 +1,66 @@
+\documentclass{llncs}
+\usepackage{xspace}
+\usepackage{epsfig}
+\usepackage{amsmath, amssymb}
+\usepackage{algorithmicx,algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage{pifont}
+\newcommand\comment[1]{}
+\usepackage{listings}
+\usepackage{tkz-graph}
+\usepackage{graphics}
+%\usepackage[small,it]{caption}
+\usetikzlibrary{arrows,shapes}
+\lstset{language=C}
+
+\input{macros.tex}
+\newcommand\full[1]{#1}
+\newcommand\notfull[1]{}
+\newcommand\cg{\sc{cg}}
+\newcommand\student{ }
+\addtolength{\intextsep}{-0.5 cm}
+\addtolength{\abovecaptionskip}{-0.3 cm}
+\begin{document}
+\title{Proving Mutual Termination of Programs \full{(full version)}}
+
+
+\author{
+Dima Elenbogen$^1$ \quad
+Shmuel Katz$^1$\quad
+Ofer Strichman$^2$
+}
+\institute{
+$^1$ CS, Technion, Haifa, Israel. \email{\{katz,edima\}@cs.technion.ac.il}  \\
+$^2$ Information Systems Engineering, IE, Technion, Haifa, Israel\ \email{ofers@ie.technion.ac.il}\\
+}
+
+\newcommand\bpar[1]{{\bf #1} }
+
+\maketitle
+
+\begin{abstract}
+Two programs are said to be \emph{mutually terminating} if they terminate on
+exactly the same inputs. We suggest a proof rule that uses a mapping between the functions of the two programs for proving mutual
+termination of functions \comtag{f}. The rule's premise requires proving that given the same
+arbitrary input $\vec{in}$, $f(\vec{in})$ and $f'(\vec{in})$ call mapped functions with the same
+arguments. A variant of this rule with a weaker premise allows to prove
+termination of one of the programs if the other is known to terminate for all
+inputs. We present an algorithm for decomposing the verification problem of
+whole programs to that of proving mutual termination of individual functions,
+based on our suggested rules.
+\end{abstract}
+
+\input{intro}
+\input{rule}
+\input{decompose}
+%\input{c:/temp/decompose}
+\input{termination}
+
+\bibliographystyle{abbrv}
+\bibliography{biblio}
+\appendix
+\input{appendix}
+%%%%%%%%%%%%%%%%%%%%%%%% A decomposition algorithm %%%%%%%%%%%%%%%%%%%%%%
+
+
+\end{document}

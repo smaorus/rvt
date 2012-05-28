@@ -1,0 +1,508 @@
+\newpage
+\section{Soundness proof for \mtermdp}
+\label{sec:proof1}
+
+For simplicity, assume that $\mapf$ provides a bijective mapping between the
+functions in \comtag{m} (otherwise we can possibly satisfy this assumption via
+inlining).
+%
+In the following by \emph{context} of a function call $f(\vec{in})$ we mean the execution from the time $f(\vec{in})$ entered the stack until it left it. We begin with two simple observations:
+\begin{itemize}
+\item[O1.] If there is a call $f(\vec{in})$ in the context of
+    $f(\vec{in})$, then $f(\vec{in})$ does not terminate.
+
+\item[O2.] If $f(\vec{in})$ terminates, then there can only be a
+    finite number of parameter vectors in the context of $f(\vec{in})$ with which $f$ is called.
+\end{itemize}
+%
+Denote by $\ufpdef{g}$ the {\emph set} (not a multiset) of parameter vectors
+with which function $g$ is directly called from function $f$.
+
+\begin{lemma}\label{lem:a1l1}
+If $\requiv(\upbody{f},\upbody{f'}$), then $\requiv(f,f')$.
+\end{lemma}
+
+\begin{proof}: We prove the contrapositive of the lemma:
+\[\lnot \requiv(f,f') \rightarrow \lnot \requiv(\upbody{f},\upbody{f'})\;.\]
+
+Suppose \comandtag{f} are called with the same
+value but for some \pairtag{g}$\in\mapf$ and input $\vec{in}$, $g(\vec{in})$ is called from $f$ and $g'(\vec{in})$ is not called from $f'$. This implies $\lnot \requiv(f,f')$. %$\vec{in}\in$\ufpdef{g}. %
+In $\upbody{f}$, each call of $g$ is replaced with a call of
+$\uf{g}$ with the same parameters. If the parameters values $\vec{in}$ do not depend on the result of any of the recursive functions, then the value of the parameters passed into the corresponding call
+to $\uf{g}$ in $\upbody{f}$ will not depend on the result of any
+uninterpreted function and, therefore, will be equal to the value of $\vec{in}$.
+Otherwise, namely, $\vec{in}$ depends on the result of some (or several) recursive
+function(s), then the non-deterministic values returned by the corresponding uninterpreted
+function(s) will affect the parameter passed into the corresponding call
+to $\uf{g}$ in $\upbody{f}$. But among all the possibilities for those
+non-deterministic values, there are values that were actually returned by
+the recursive functions replaced by those uninterpreted functions. Those
+actual values caused that $\vec{in}$ was passed into the mentioned call of
+$g$. Those actual values (returned by the uninterpreted functions) cause
+$\uf{g}$ to be called with $\vec{in}$ in $\upbody{f}$. Hence,
+$\vec{in}\in\ufp{g}$.
+
+If there are no calls of $g'$ in $f'$ at all, then $\upbody{f'}$ contains
+no calls of $\uf{g'}$ either. Hence, $\ufpp{g'}=\emptyset$, i.e.,
+$\ufp{g}\neq\ufpp{g'}$. Otherwise (there is a call of $g'$ in $f'$)
+by our assumption $\vec{in} \notin \ufpdefp{g'}$. Analogously, we can show
+that in this case when all uninterpreted functions return actual values
+that their corresponding original functions would, some value different
+from $\vec{in}$ is passed into $\uf{g'}$ in $\upbody{f'}$. Hence, there
+exists a computation with a set of non-deterministic values for which
+$\vec{in}\notin\ufpp{g'}$, i.e., $\ufp{g}\neq\ufpp{g'}$.
+
+So in both cases we found a computation where $\ufp{g}\neq\ufpp{g'}$, which implies $\lnot \requiv(\upbody{f},\upbody{f'})$. \qed \end{proof}
+
+The next lemma proves the validity of the rule\mbox{\ \mtermd} for basic programs consisting of a single function. The function can be either simply recursive
+\Long{as displayed in Fig.~\ref{fig:mostBasicRecCase}, }
+or not recursive at all.
+\Long{
+\begin{figure}[here]
+\begin{center}
+\begin{minipage}{0.25\linewidth}
+\begin{tikzpicture}
+\tikzset{node distance = 1.35cm}
+\Vertex[Math=true]{f}
+\GraphLoop[dist=1.0cm,dir=NO,style={->, thick}](f)
+\end{tikzpicture}
+\end{minipage}
+\begin{minipage}{0.25\linewidth}
+\begin{tikzpicture}
+\tikzset{node distance = 1.35cm}
+\Vertex[Math=true]{f'}
+\GraphLoop[dist=1.0cm,dir=NO,style={->, thick}](f')
+\end{tikzpicture}
+\end{minipage}
+\end{center}
+\caption{The most basic case of two recursive programs.}
+\label{fig:mostBasicRecCase}
+\end{figure}
+}
+
+\begin{lemma}\label{lem:a1l2}
+If all the functions called in \pairtag{f}$\in\mapf$ are \comandtag{f} themselves, respectively, then $\requivpair{f} \rightarrow \mtpair{f}$.
+\end{lemma}
+
+\begin{proof}Consider \pairtag{f}$ \in\mapf$ called with the same parameter
+$\vec{in}$ such that each one of \comandtag{f} can call only itself. Falsely assume $\lnot\mtpair{f}$. W.l.o.g., assume $\term{f(\vec{in})}$ and  $\lnot\term{f'(\vec{in})}$, where, recall, $\term{f(\vec{in})}$ denotes that $f(\vec{in})$ terminates.
+
+Consider $\vec{in_1}$, the parameter passed into the non-returning
+recursive call to $f'$. $\requivpair{f}$ implies that $f$ is called
+with $\vec{in_1}$ too. $\vec{in_1} \neq \vec{in}$ because otherwise we would get $\lnot\term{f(\vec{in})}$ according to O1.
+
+Now consider terminating $f(\vec{in_1})$ and non-terminating $f'(\vec{in_1})$.
+The situation is quite similar to $f(\vec{in})$ and $f'(\vec{in})$. Thus we
+conclude that $f(\vec{in_2})$ must call terminating $f(\vec{in_2})$, while
+ $f(\vec{in_1})$ must call non-terminating $f'(\vec{in_2})$, such that $\vec{in_2}
+\notin \{\vec{in}, \vec{in_1}\}$. We can go on descending the call stacks
+discovering a new value $\vec{in_n} \notin \{\vec{in}, \vec{in_1}, ...,
+\vec{in_{n-1}}\}$ with which both \comandtag{f} are called. But the number of
+such unique values passed into $f$ is finite according to O2. Hence,
+we must eventually reach a situation where either:
+\begin{itemize}
+\item $f(\vec{in_n})$ calls $f$ with some $\vec{in_i}$ that is already found
+    in the call stack, which contradicts the assumption $\term{f(\vec{in})}$ (by O1);
+\item $f(\vec{in_n)}$ calls $f$ with some value $\vec{in_{extra}}$ such that
+    $f'(\vec{in_{extra}})$ is never called in $f'(\vec{in_n})$. It contradicts $\requivpair{f}$;
+\item $f(\vec{in_n})$ has no more calls to $f$. However,  $f'(\vec{in_n})$ must call $f'$ because of $\lnot\term{f'(\vec{in_n})}$.
+    Again, it contradicts $\requivpair{f}$.
+\end{itemize}
+Consequently, the assumption $\lnot\mtpair{f}$ cannot be true.
+\qed
+\end{proof}
+
+%Denote the fact that function $f$ has a call to $g$ by $\calls{f}{g}$. Similarly, $\callspair{f}{g}$ denotes that $f$ has a call to $g$ and $f'$ has a call to $g'$.
+
+The next lemma addresses mutual recursion with terminating outer calls.
+
+\begin{lemma}\label{lem:a1l3}
+The following rule is sound:
+%For each function \pairtag{f} $\in\mapf(m)$ such that \pairtag{m}$\in\mapm$ the following:
+\[
+%\requivpair{f}\mbox{ }\land\mbox{ }\forall{\pairwtag{g}}.
+%(\callspair{f}{g}) \rightarrow \left(
+%\left(g\in C(m) \land g'\in C(m')\right) \rightarrow
+%\pairwtag{g}\in\pairwtag{m} \lor
+%\left(\term{g} \land \term{g'}\right)%\right)
+\frac
+{\begin{array}{l}
+(\forall{\pairwtag{g}} \in \mapf.\ (\left(g \in C(m) \land g' \in C(m')\right) \rightarrow \left(\term{g} \land \term{g'}\right))\ \land \\
+(\forall {\pairwtag{f}} \in\mapf(m).\ \requivpair{f})
+\end{array}
+}
+{\forall {\pairwtag{f}} \in\mapf(m).\  \mtpair{f}}
+\]
+%if every function call in \pairtag{f}$\in\mapf(m)$ either terminates or calls to a function from \comtag{m},
+% respectively, then $\requivpair{f}$
+%implies $\mtpair{f}$.
+\end{lemma}
+
+\begin{proof}
+(Proof sketch) Consider \pairtag{f}$\in$ \pairtag{m} that are called with the same parameter
+$\vec{in}$. Assume by negation $\lnot\mtpair{f}$. W.l.o.g., assume $\term{f(\vec{in})}$
+ and  $\lnot\term{f'(\vec{in})}$.
+
+The premise of the lemma implies that all the outer calls (beyond \comtag{m}) terminate. Hence, only inner calls inside \comtag{m} could cause $\lnot\term{f'(\vec{in})}$.
+
+From now on, the proof is very similar to that of Lemma~\ref{lem:a1l2}. We start traversing
+the infinite call stack of $f'(\vec{in})$. The only difference is
+that instead of descending with the same function pair in every call stack level
+(i.e., \pairtag{f} in the proof of Lemma~\ref{lem:a1l2}), we now descend to some pair \pairtag{h_i} $\in$ \pairtag{m} in each level $\#i$.
+According to O2, the number of unique values for
+every function from $m$ found in the call stack of $f(\vec{in})$ is finite
+because $\term{f(\vec{in})}$ is assumed. On the other side,
+the number of functions in $m'$ is finite. Hence, the infinite call
+stack of $f'(\vec{in})$ must include calls to some function $g'$ s.t. \pairtag{g} $\in$ \pairtag{m} which repeats an
+infinite number of times. The latter will contradict either $\term{f(\vec{in})}$ or $\requivpair{g}$ (similarly to how the infinitely called $f'$ led to the final contradiction in the proof of Lemma~\ref{lem:a1l2}).
+\qed
+\end{proof}
+
+\begin{lemma}\label{lem:a1l4}
+The following rule is sound:
+%For each function \pairtag{f} $\in\mapf(m)$ such that \pairtag{m}$\in\mapm$ the following:
+\[
+\frac
+{\begin{array}{l}
+(\forall{\pairwtag{g}} \in \mapf.\ (\left(g \in C(m) \land g' \in C(m')\right) \rightarrow \mtpair{g})\ \land \\
+(\forall {\pairwtag{f}} \in\mapf(m).\ \requivpair{f})
+\end{array}
+}
+{\forall {\pairwtag{f}} \in\mapf(m).\  \mtpair{f}}
+\]
+%\[
+%\requivpair{f}\mbox{ }\land\mbox{ }\forall{\pairwtag{g}}. (\callspair{f}{g}) \rightarrow \left(\pairwtag{g}\in\pairwtag{m} \lor %\mtpair{g}\right)
+%\]
+%implies $\mtpair{f}$.
+%$\requivpair{f}$ and for each function $g$ called by $f$ there exists a function $g'$ called by $f'$ (and vice-versa) such that \pairtag{g}$\in$\pairtag{m} $\lor\xspace{~}\mtpair{g}$, then $\mtpair{f}$.
+\end{lemma}
+
+\begin{proof}Consider \pairtag{f}$ \in\mapf$ called with the same parameter
+$\vec{in}$. Assume by negation $\lnot\mtpair{f}$. W.l.o.g., assume $\term{f(\vec{in})}$
+ and  $\lnot\term{f'(\vec{in})}$.
+
+Consider any function call $g(\vec{in_1})$ in $f(\vec{in})$  s.t. $g \notin m \land \exists{g'}. $\pairtag{g}$\in\mapf$.
+$\requivpair{f}$ implies that $f'(\vec{in_1})$ also calls $g'(\vec{in_1})$.
+%$\calls{f'(\vec{in_1})}{g'(\vec{in_1})}$.
+\pairtag{g}$\notin$\pairtag{m} implies $\mtpair{g}$, which implies that $g(\vec{in_1})$ and $g'(\vec{in_1})$ mutually terminate.%, g(\vec{in_1})}$.
+%$\lnot\term{g'(\vec{in_1})} \leftrightarrow \lnot\term{g(\vec{in_1})}$.
+Hence, $g'(\vec{in_1})$ must terminate because otherwise this would contradict $\term{f(\vec{in})}$.
+
+Hence, all the outer function calls (referring beyond \comtag{m}) must terminate. Thus all the conditions satisfy the premise of Lemma~\ref{lem:a1l3}, which implies $\mtpair{f}$.
+\qed
+\end{proof}
+
+
+\begin{theorem}
+The inference rule\mbox{\ \mtermdp} is sound.
+\end{theorem}
+\begin{proof}
+According to Lemma~\ref{lem:a1l1}, $\forall {\pairwtag{f}} \in\mapf(m).\ \requiv(\upbody{f},\upbody{f'})$ implies $\forall {\pairwtag{f}} \in\mapf(m).\ \requivpair{f}$. Thus, the second line of the premise of the rule of Lemma~\ref{lem:a1l4} is satisfied. The upper line of the premise in\mbox{\ \mtermdp} matches the upper line of the premise of the rule of Lemma~\ref{lem:a1l4}. Having all its premises satisfied, Lemma~\ref{lem:a1l4} implies: \[\forall {\pairwtag{f}} \in\mapf(m).\  \mtpair{f}\;.\]
+\qed
+\end{proof}
+
+
+\comment{
+\begin{lemma}\label{lem:a1l4}
+For \pairtag{f}$\in\mapf(m)$ such that $m=\{f\}$ and $m'=\{f'\}$ the following holds: if any function called in \pairtag{f} is, respectively, either \comtag{f} itself, or some \comtag{g} such that \pairtag{g}$ \in\mapf\mbox{ } \land$ \pairtag{g}$\notin\mapf(m)$ and $\mtpair{g}$ is assumed, then $\requivpair{f}$ implies $\mtpair{f}$.
+\end{lemma}
+
+\begin{proof}Consider \pairtag{f}$ \in\mapf$ called with the same parameter
+$\vec{in}$ such that each one of \comandtag{f} can call only itself. Assume by negation $\lnot\mtpair{f}$. W.l.o.g., assume $\term{f(\vec{in})}$
+ and  $\lnot\term{f'(\vec{in})}$, where $\term{f(\vec{in})}$ denotes that $f(\vec{in})$ terminates.
+
+Consider any function $g \neq f$ called in $f(\vec{in})$ with parameter
+$\vec{X}$ such that \pairtag{g}$\in\mapf$. The call-equivalence of \pairtag{f}
+implies that $f'(\vec{in})$ also calls $g'$ with the parameter $\vec{X}$. If
+$g'(\vec{X})$ did not terminate, then $g(\vec{X})$ would not terminate either
+because \pairtag{g} is mutually-terminating. Hence, no $g \neq f$ can prevent
+the termination of $f'(\vec{in})$.
+
+Consequently, only a recursive call to $f'$ itself can cause $f'(\vec{in})$ not
+to terminate. Consider $\vec{X_1}$, the parameter passed into the non-returning
+recursive call to $f'$. Since \pairtag{f} is call-equivalent, $f$ is called
+with $\vec{X_1}$ too. $\vec{X_1} \neq \vec{in}$ because otherwise $f(\vec{in})$
+would not terminate according to Lemma 1.
+
+Now consider terminating $f(\vec{X_1})$ and non-terminating $f'(\vec{X_1})$.
+The situation is quite similar to $f(\vec{in})$ and $f'(\vec{in})$. Thus we
+conclude that there must be terminating $f(\vec{X_2})$ under $f(\vec{X_2})$ and
+non-terminating $f'(\vec{X_2})$ under $f(\vec{X_1})$ such that $\vec{X_2}
+\notin \{\vec{in}, \vec{X_1}\}$. We can go on descending the call stacks
+discovering a new value $\vec{X_n} \notin \{\vec{in}, \vec{X_1}, ...,
+\vec{X_{n-1}}\}$ with which both \comandtag{f} are called. But the number of
+such unique values passed into $f$ is finite according to the Observation 2. Hence,
+we must reach a situation where either:
+\begin{itemize}
+\item $f(\vec{X_n})$ calls $f$ with some $\vec{X_i}$ that is already found
+    in the call stack, which contradicts the assumption that $f(\vec{in})$
+    terminates (Observation 1);
+\item $f(\vec{X_n)}$ calls $f$ with some value $\vec{Y}$ such that
+    $f'(\vec{Y})$ is never called in $f'(\vec{X_n})$. It contradicts the
+    call-equivalence of \pairtag{f};
+\item $f(X_n)$ has no more calls to $f$. However, since $f'(\vec{X_n})$
+    does not terminate and, as earlier shown, only infinite recursive calls
+    to $f'$ can prevent its termination, $f'(\vec{X_n})$ must call $f'$.
+    Again, it contradicts the call-equivalence of \pairtag{f}.
+\end{itemize}
+Consequently, the assumption that $f(\vec{in})$ and $f'(\vec{in})$ are not
+mutually terminating cannot be true. \qed \end{proof}
+
+Meanwhile, we have proven the soundness of the inference rule for simple
+recursion only. The next lemma addresses mutual recursion.
+
+\begin{lemma}\label{lem:a1l3}
+For matched MSCC's \pairtag{m}, if all matched pairs of \pairtag{f} $\in$ \pairtag{m} have call-equivalent \pairbodies{f} and all the called functions which are not in \pairtag{m} belong to mutually-terminating pairs, then all the pairs of functions in \pairtag{m} are mutually-terminating.
+\end{lemma}
+\begin{proof} Proof sketch: according to Lemma~\ref{lem:a1l1}, if for all the pairs \pairtag{f} $\in$
+\pairtag{m},   \pairbodies{f} is call-equivalent, then all those pairs are
+call-equivalent by themselves.
+
+Consider \pairtag{f}$\in$ \pairtag{m} called with the same parameter
+$\vec{in}$. Similarly to the proof of Lemma~\ref{lem:a1l2}, we can show that only recursive
+calls to some functions from \pairtag{m} can cause $f$ or $f'$ not to
+terminate. Assume by negation \pairtag{f} is not mutually terminating. Without
+loss of generality, assume that $f(\vec{in})$ terminates, while $f'(\vec{in})$
+does not.
+
+The number of functions in \pairtag{m} is finite. Hence, the infinite call
+stack of $f'(\vec{in})$ must include calls to some function $g'$ that repeat an
+infinite number of times such that \pairtag{g} $\in$ \pairtag{m}.
+
+From now on, the proof is very similar to that of Lemma~\ref{lem:a1l2}. We start traversing
+the infinite call stack of $f'(\vec{in})$ and compare every call to $h'$ to the
+call of $h$ such that \pairtag{h} $\in$ \pairtag{m}. The only difference is
+that instead of descending to the same function pair in every call stack level
+(i.e., \pairtag{f} in the proof of Lemma~\ref{lem:a1l2}), we now descend to some pair among
+the pairs of \pairtag{m}. According to Observation 2, the number of unique values for
+every function from $m$ found in the call stack of $f(\vec{in})$ is finite
+because $f(\vec{in})$ is assumed to terminate. On the other side, as mentioned
+above, there exists infinitely repeating calls to $g'$ that will cause a
+contradiction to the assumption that $f(\vec{in})$ terminates, while
+$f'(\vec{in})$ does not: it can be shown that either $f(\vec{in})$ does not
+terminate or \pairtag{g} are not call-equivalent. \qed \end{proof}
+
+\begin{lemma}\label{lem:a1l4}
+A call graph of a program is a directed acyclic graph of MSCCs (if we collapse the nodes of each MSCC into a single node).
+\end{lemma}
+\begin{proof}
+Falsely assume that there is a loop between two MSCCs: $m_1$ and $m_2$. It implies existence of directed paths: $\pi_{1 \rightarrow 2}$ from $m_1$ to $m_2$ and $\pi_{2 \rightarrow 1}$ from $m_2$ to $m_1$. $\pi_{1 \rightarrow 2}$ implies that there is a call graph node $s_2$ in $m_2$ which is reachable from some node $t_1$ in $m_1$. $t_1$ is reachable from all the functions in $m_1$. $s_2$ can reach all the functions in $m_2$. Hence, every node in $m_1$ can reach each node in $m_2$. Analogously, the path $\pi_{2 \rightarrow 1}$ implies the reachability of each node in $m_1$ from every node of $m_2$. Hence, the set of the functions of $m_1 \cup m_2$ are strongly connected each to other. Since $m_1 \neq \emptyset \land m_2 \neq \emptyset \land m_1 \neq m_2$,  $m_1 \cup m_2$ is a bigger strongly connected component that includes each one of $m_1$ and $m_2$ in a contradiction to the fact that they are SCCs of maximal sizes.
+\qed
+\end{proof}
+
+\begin{theorem}
+The inference rule\mbox{\ \mtermdp} is sound.
+\end{theorem}
+\begin{proof}
+Recall the MSCC  Denote the maximal distance of an MSCC node $m$ from any leaf
+MSCC by $d(m)$ (If $m$ is a leaf MSCC node then $d(m) = 0$). The proof is by
+induction on $d(m)$.
+
+Base: Consider a pair of mapped leaf MSCC nodes: \pairtag{m} $\in \mapm$. $m$ has only calls to the functions of $m$ itself. $m'$ has only calls to the functions of $m'$ itself. By the assumption of the inference rule\mbox{\ \mtermd}, all matched pairs of \pairtag{f} $\in$ \pairtag{m} have call-equivalent \pairbodies{f}. Therefore, \pairtag{m} satisfies the premise of Lemma~\ref{lem:a1l3}. Consequently, the functions of this pair are mutually terminating.
+
+Step: Assume that using the rule each mapped pair of MSSC nodes \pairtag{t} such that $max\{d(t), d(t')\} \le i$ was established as mutually terminating. We must prove that the rule is true for any pair of mapped MSSC nodes \pairtag{m} $\in \mapm$ such that $max\{d(m), d(m')\} = i+1$.
+
+Consider a pair of mapped leaf MSCC nodes, \pairtag{m} $\in \mapm$ such that $max\{d(m), d(m')\} = i+1$.
+If $m$ had an outer function call to an MSCC node $x$ such that $d(x) \ge i+1$, it would contradict the assumption that $d(m) \le i+1$. Hence, every outer call from $m$ refers to a function from an MSCC node $t$ for which $d(t) \le i$. The assumption of the induction implies that the functions are established as mutually terminating. Analogously, all the outer calls in $m'$ refer to functions established as mutually terminating. The assumption of the inference rule\mbox{\ \mtermd} implies that all matched pairs of \pairtag{f} $\in$ \pairtag{m} have call-equivalent \pairbodies{f}. Hence, \pairtag{m} satisfies the premise of Lemma~\ref{lem:a1l3}. Consequently, the functions of this pair are mutually terminating.
+\qed
+\end{proof}
+}
+
+\full{
+\section{Sample code}
+\label{sec:sample}
+The following two code snippets from the \alg{Betik} project demonstrate changes that do not preserve mutual termination. Explanations are found in Sec.~\ref{sec:experiments}.
+
+\begin{figure}[top]
+\begin{tabular}{p{5 cm}|p{7 cm}} \hline
+\begin{algorithmic}
+%\Function{$int\_value$}{value\_t *$v$}
+\State value\_t *\alg{int\_value}(value\_t *$v$) \{
+\State \hspace{0.35cm}{\bf switch}($v$$\rightarrow$$type$) \{
+\State \hspace{0.35cm}\hspace{0.35cm}{\bf case} 0: $v = \ldots$; {\bf break};
+\State \hspace{0.35cm}\hspace{0.35cm}$\vdots$
+\State \hspace{0.35cm}\hspace{0.35cm}{\bf case} N: $v = \ldots$; {\bf break};
+\State \hspace{0.35cm}\}
+\State \hspace{0.35cm}\Return $v$;
+\State \}
+%\EndFunction
+\end{algorithmic}
+&
+\begin{algorithmic}
+%\Function{int\_value'}{value\_t *$v'$}
+\State value\_t *\alg{int\_value'}(value\_t *$v'$) \{
+\State \hspace{0.35cm}{\bf switch}($v'$$\rightarrow$$type$) \{
+\State \hspace{0.35cm}\hspace{0.35cm}{\bf case} 0: $v' = \ldots$; {\bf break};
+\State \hspace{0.35cm}\hspace{0.35cm}$\vdots$
+\State \hspace{0.35cm}\hspace{0.35cm}{\bf case} N: $v' = \ldots$; {\bf break};
+\State \hspace{0.35cm}\hspace{0.35cm}{\bf default}: $v'$ = \alg{int\_value'}($v'$$\rightarrow$$subvalue$);
+%\{val\_t *$u'=\ldots$; $int\_value'$($u'$);\}
+\State \hspace{0.35cm}\}
+\State \hspace{0.35cm}\Return$v'$;
+\State \}
+%\EndFunction
+\end{algorithmic}
+\\
+\hline
+\end{tabular}
+\caption{Two possibly non-mutually terminating versions of \alg{int\_value()}.}\label{fig:int_value}
+\end{figure}
+
+
+The code in Fig.~\ref{fig:parse_funccall} is a function called \alg{parse\_funccall} that receives a pointer to a function node and processes it according to the function name. The newer version handles an additional option for the function name and calls a new function \alg{list\_set\_item}. The latter receives a pointer to a list, traverses it from the list head, and modifies data of some of its items. The traversal ends upon reaching a `NULL' node, but may not terminate in an arbitrary context, e.g., when the list is cyclic. The new function is not mapped to any function in the old code. Indeed Alg.~\ref{alg:ProveMT} aborts at line~\ref{step:generate_map} when encountering this function.
+
+\begin{figure}
+\begin{tabular}{p{6.1 cm}|p{6.1 cm}} \hline
+\begin{algorithmic}
+\Function{parse\_funccall}{fcall\_t *$f$} \{
+%\State variable\_t *$int\_funccall$(..., funccall\_t* $f$) \{
+\State {\bf if} (!$strcmp$($f$$\rightarrow$func\_name, ``env")) \{
+\State \hspace{0.4cm}$\ldots$
+\State \} {\bf else if} (!$strcmp$($\ldots$, ``len")) \{
+\State \hspace{0.4cm}$\ldots$
+\State \}
+\EndFunction
+\State \}
+\end{algorithmic}
+&
+\begin{algorithmic}
+\Function{parse\_funccall'}{fcall\_t *$f'$} \{
+%\State variable\_t *$int\_funccall'$(..., funccall\_t* $f'$) \{
+\State {\bf if} (!$strcmp$($f'$$\rightarrow$func\_name, ``env")) \{
+\State \hspace{0.4cm}$\ldots$
+\State \} {\bf else if} (!$strcmp$($\ldots$, ``len")) \{
+\State \hspace{0.4cm}$\ldots$
+\State \} {\bf else if} (!$strcmp$($\ldots$, ``set")) \{
+\State \hspace{0.4cm}list\_t *$list' = \ldots$;
+\State \hspace{0.4cm}\alg{list\_set\_item'}($list'$, $\ldots$);
+\State \}
+\EndFunction
+\State \}
+%\comment{
+  \\
+  \Function{list\_set\_item'}{list\_t *$list'$, ...} \{
+  \State listitem\_t *$item' = list'$$\rightarrow$head;
+  \State {\bf while}($item'$ != NULL) \{
+  \State \hspace{0.4cm}$\ldots$
+  \State \hspace{0.4cm}$item' = item'$$\rightarrow$next;
+  \State \}
+  \EndFunction
+  \State \}
+%}
+\end{algorithmic}
+\\
+\hline
+\end{tabular}
+\caption{Two possibly non-mutually terminating versions of \alg{parse\_funccall()} and a newly introduced non-mapped function \alg{list\_set\_item'()}.}
+\label{fig:parse_funccall}
+\end{figure}
+}
+
+
+%\subsection{Soundness proof for \termd} \label{sec:proof2}
+%The proof follows similar lines to that of \mtermdp. We give a proof sketch.
+%Falsely assume that there is a function $f'$ in $m'$ that does not terminate, whereas for all $\pair{g,g'} \in \mapf(m)$, $\callc(g,g')$.
+%There exists a value $in$ such that $f'(in)$ does not terminate. The infinite call stack of $f'(in)$ must contain a call, say from $h'(in_1)$ to $g'(in_2)$, whereas $h(in_1)$ does not call $g(in_2)$ in the call stack of $f(in)$ (assuming $\{$\pairtag{g}, \pairtag{h}$\} \subseteq \mapf$).
+%This contradicts our premise that $\callc(h,h')$.
+
+\full{
+\section{Mutual termination of functions with infinite-type variables} \label{sec:infinite}
+The question whether call equivalence can be proven even when the variable types are infinite is particularly interesting in cases such as the Collatz problem mention in Example~\ref{ex:collatz}, because if the answer is yes, then this stands in stark contrast to the corresponding termination problem (recall that termination of this program is not known). Indeed in this case call equivalence can be verified even when the input $a$ is a true (infinite) integer. Rather than the model-theoretic solution described so far (which relies on CBMC's ability to reason about C programs, in which variables are of a finite type), here we take the proof-theoretic approach instead and formulate a verification condition which is valid only if the two functions are call-equivalent. For this purpose we need to represent the transition relation of the two functions $T_{\upbody{f}}, T_{\upbody{f'}}$, which is easy to do with the help of static single assignment form:
+
+
+\begin{tabular}{p{6 cm}p{6 cm}} \hline
+\begin{algorithmic}
+\Function {$f^{UF}$}{{\bf int} $a_0$}
+\State {\bf int} $even_0 := 0, ret_0 := 0,$\\  \mbox{ }$\qquad a_1, ret_1, ret_2, even_1, even_2$;
+\If {$a_0 > 1$}
+\If {$\lnot(a_0\ \%\ 2)$} %\Comment{even}
+    \State $a_1 := a_0/2$;
+    \State $even_1 := 1$;
+    \Else \ $a_1 := 3a_0 + 1$;
+\EndIf
+\State $even_2 := \lnot(a_0\ \%\ 2)\ ?\ even_1 : even_0$;
+\State $ret_1 := even_2$ + \alg{UF}($f,a_1$);
+\EndIf
+\State $ret_2 := a_0 > 1\ ?\ ret_1 : ret_0$;  
+\State \Return $ret_2$;
+\EndFunction
+\end{algorithmic}
+&
+\begin{algorithmic}
+\Function {$f'^{UF}$}{{\bf int} $a_0'$}
+\State {\bf int} $t_0', odd_0' := 0, ret_0' := 0,$\\ \mbox{ }$\qquad a_1', t_1', odd_1', odd_2', ret_1'$;
+\If {$a_0' \leq 1$} \Return $ret_0'$; \EndIf
+\State 	$t_1' := a_0' / 2$;
+\If {$a_0'\ \%\ 2$}  % \Comment{odd}
+\State		$a_1' := 6 t_1' + 4$;
+\State		$odd_1' := 1$;
+\Else \ $a_1' := t_1'$;	
+\EndIf
+\State $odd_2' := a_0' \% 2\ ?\ odd_1' : odd_0'$;
+\State $ret_1' := odd_2'$ + \alg{UF}($f',a_1'$);
+\State \Return $ret_1'$;
+\EndFunction
+\end{algorithmic} \\ \hline
+\end{tabular}
+\vspace{0.3 cm}
+
+
+
+\comment{
+\vspace{0.3 cm}
+\noindent
+\begin{tabular}{p{6 cm}p{6 cm}} \hline
+\begin{algorithmic}
+\Function {$f^{UF}$}{int $a_0$}
+
+\If{$a_0 > 1$}
+
+\If {$\lnot$($a_0 \% 2$)}
+
+\State $a_1 := a_0/2$;
+
+\Else\ $a_1 := 3a_0 + 1$;
+
+\EndIf
+
+\State $\uf{f}(a_1)$;
+
+\State \Return 0;
+\EndIf
+\EndFunction
+\end{algorithmic}
+&
+\begin{algorithmic}
+\Function {$f'^{UF}$}{int $a'_0$}
+
+\If{$a'_0 \leq 1$} \Return 1; \EndIf
+
+\State $t'_0 := a'_0  / 2$;
+
+\If {$a'_0\% 2$}
+
+\State $a'_1 := 6t'_0 + 4$;
+
+\Else\ $a'_1 := t'_0$;
+
+\EndIf
+
+\State $\uf{f'}(a'_1)$;
+
+\State \Return 1;
+\EndFunction
+\end{algorithmic} \\ \hline
+\end{tabular}
+\vspace{0.3 cm}
+}
+
+\noindent It is not hard to see that the following verification condition is valid if $f,f'$ are call-equivalent, and can be decided with a decision procedure for integer linear arithmetic\footnote{The only operator which is not explicitly linear here is the modulo ($\%$) sign, but it can be reduced to integer linear arithmetic based on the equivalence $x \% 2 = y \leftrightarrow 2 * z + y = x$ for a new integer variable $z$.}.
+%
+\begin{equation}
+(T_{\upbody{f}} \ \land\ T_{\upbody{f'}}\ \land\ a_0 = a'_0)\ \rightarrow
+\big(((a_0 > 1) \leftrightarrow \lnot(a'_0 \leq 1))\ \land\ ((a_0 > 1) \rightarrow (a_1 = a'_1)) \big)\;.
+\end{equation}
+%
+
+
+} 

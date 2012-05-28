@@ -1,0 +1,157 @@
+
+  Changes for version 2.11:
+	Bug fixes.
+
+  Changes for version 2.10:
+	Changed over to GPL for the license.  Bug fixes from Daniel Kroening.
+
+  Changes for version 2.09:
+    Bug-fixes and changes from Patrick Baudin, fixes Bug 023, 047.
+
+  Changes for version 2.08:
+
+  Changes for version 2.07:
+    Compiles using VC++.
+    Merged in some more changes from patrick.
+
+  Changes for version 2.06:
+    Merged with Patrick Baudin:
+        dup -> dup/dup0 template thingy
+ 
+  Changes for version 2.05:
+    Bug fixes, new preprocessor support by Patrick Baudin.
+
+  Changes for version 2.04:
+    A few small bug fixes.
+
+  Changes for version 2.03:
+    Bug fixes.
+
+  Changes for version 2.02:
+    Dropped 'nametbl.h', and started using C++ string class.
+    Switched over to STL vector usage in a few spots.
+    Merged in bug fixes from Brian Chess.
+
+  Changes for version 2.01:
+    Added support for a few gcc extensions, __attribute__
+        and a few other easy ones.
+
+  Changes for version 2.00:
+    Changed name to 'cTool'
+    Redid type system, (moving towards type checking)
+        types are now clearly seperated from declarations
+        where as in earlier versions they were intertwined.
+    Eliminated last of the old code, the parser now
+        constructs the new classes directly while parsing,
+        no more tree.
+
+  Changes for version 1.05:
+    Bug fixes.
+
+  Changes for version 1.04:
+    Merged in code from Brian Chess giving the C++ layer access
+        to the token line/column positions.
+    Added code to make new C++ classes available from the symbol
+        table entries for identifiers.
+    Fixed bug 038.
+
+  Changes for version 1.03:
+    Added support for wide char constant and string literals.
+    Show low and high ascii chars as octal.
+    Eliminated the "old" printing code.
+
+  Changes for version 1.02:
+    Added 'cgraph' example; which generates a call graph.
+    Changed the preprocessor invocation to define "__STDC__".
+    Added a "Project" class to handle the previous file-parsing complexities.
+    Eliminated use of "FILE", all output is done via streams (the parser
+        still uses FILE* for input thought).
+    Added code to determine where the standard include path is.
+
+  Changes for version 1.01:
+    Bug fixes, added a new SizeofExpr class.
+
+  Changes for version 1.00:
+    New-fangled C++ OO interface, hopefully a little easier to understand.
+
+    Improved printing - expressions and types always have parens where
+                        they need them, and extra ones are avoided.
+
+    "un-including" files - ctree attempts to figure out what files
+                           were included when and doesn't print them
+                           mixed in with the rest of the code.
+
+    Started working on adding some regression tests and documentation.
+
+    Types are handled better internally, a type-checking implementation
+        should be easy to add in a future release.
+
+    Changes to prepare for likely C9X changes:
+        - 'long long' is now considered a basic type.
+        - Using C-Tree as a preprocessor is no longer supported; only
+          #line is understood.  This never worked that well anyway,
+          and the C9X changes to the preprocessor will finish it off.
+
+    While I tried to avoid changing the old tree to maintain
+    compatibility with previous versions a few changes could
+    not be avoided without sacrificing the cleanliness/abilities
+    of the new code, which I was not willing to do.
+
+    The plan from here on out is to move away from source-formatting
+    and toward being useful for code-analysis and code-generation tools. 
+    This is what most people seem to be using it for currently anyhow,
+    so this should be good news to most.
+
+    Also, the transformation to C++ will continue, with redesign
+    occurring where ever I feel it's needed. I'll probably leave
+    the parser alone since it works and is "clean C" too.
+
+
+  Changes for version 0.09 -> 0.14:
+    Bug fixes
+
+  Changes for version 0.08:
+    Change in copyright notice and terms.
+
+  Changes for version 0.07:
+    extern "C" {} added around header files.
+
+  Changes for version 0.06:
+
+    A few bug fixes, the specifics are listed in 'bugs' along with
+    dates for the bug find.
+
+  Changes for version 0.05:
+
+    A scoped symbol-table has been added, there's probably a lot
+    of bugs in it still.
+
+    A few fixes for problems noticed by several people: 
+      ctree now works on it's own source.
+
+  Changes for version 0.04:
+    An improved handling of typedef names via find_typedef_name(), allowing
+    them to be correctly located even for more complex declarations.
+    Added by John Harper.
+
+    Ported to DJGPP (gcc for Dos/Windows machines), I changed the unix
+    version to be similar, to try to get as close as possible to a single
+    set of source for both.  Mostly, this was makefile changes, getting
+    rid of the overly elaborate system of symbolic links I was using,
+    and changing the filenames to be workable in the 8.3 format required
+    by older versions of DOS.
+
+    For my DJGPP setup, I also needed to add the line:
+
+      set bison_simple=c:\usr\local\lib\bison.sim
+
+    to my autoexec.bat file.  You might need to add something similar.
+
+    I also cleaned up the "code printing" function a little, now the
+    output bears some vaugue resemblance to the code put in.
+
+    Fixed a bug in the grammar, all shift/reduce errors are now gone.
+
+    The lexer now handles some gcc2 extensions,
+    in particular, __attribute__(...) is treated as a comment.
+

@@ -1,0 +1,25 @@
+digraph G{
+subgraph G0{ 
+side0[label = P0]
+node[color = black];
+sum0[label = "sum",fontcolor = "black"];
+main0[label = "main",fontcolor = "grey"];
+sum0[shape = "ellipse",  style = "filled", fillcolor = "green"]
+main0[shape = "ellipse", color = "blue", style = "filled", fillcolor = "green"]
+sum0->sum0
+main0->sum0
+}
+subgraph G1{ 
+side1[label = P1]
+node[color = black];
+sum1[label = "sum",fontcolor = "black"];
+main1[label = "main",fontcolor = "grey"];
+ident_1[label = "ident_",fontcolor = "grey"];
+sum1[shape = "ellipse",  style = "filled", fillcolor = "green"]
+main1[shape = "ellipse", color = "blue", style = "filled", fillcolor = "green"]
+ident_1[shape = "ellipse",  style = "filled", fillcolor = "white"]
+sum1->sum1
+main1->sum1
+sum1->ident_1
+}
+}

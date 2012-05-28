@@ -1,0 +1,422 @@
+\section{A decomposition algorithm}
+\label{sec:decomposition}
+
+In this section we present an algorithm for proving mutual termination of full programs.
+As mentioned in Sec.~\ref{sec:rule}, the call graph of a program can be viewed
+as a DAG where the nodes correspond to MSCCs. After building a mapping between the MSCCs of the two call graphs, the algorithm traverses the DAG
+bottom-up. For each mapped pair of MSCCs $m,m'$, it attempts to prove the mutual termination of their mapped functions, based on \mtermdp.
+
+The algorithm is inspired by a similar algorithm for verification of \emph{partial
+equivalence}, which is described in a technical report~\cite{GS11}
+\Long{\footnote{\emph{Note to reviewers}: this report is also currently under review
+for a journal~\cite{GS10}}}. The algorithm here is more involved, however,
+because it handles differently cases in which the checked functions are also
+partially equivalent (recall that this information, i.e., which functions are
+known to be partially equivalent, is part of the input to the algorithm).
+Furthermore, the algorithm in~\cite{GS11} is described with a non-deterministic
+step, and here we suggest a method for determinizing it.
+
+The preprocessing and mapping is as in Sec.~\ref{sec:base}. Hence the program is loop-free, globals accessed by a function are sent instead as additional inputs, and there is a (possibly partial) mapping $\mapf$ between the functions of $P$ and $P'$.
+
+%Note that wrong mapping does not affect soundness: it is used for generating the verification conditions. Hence, wrong mapping can only cause a proof failure.
+
+%For a simpler description, the algorithm assumes that each function receives only one parameter. But this is not a limitation: we can consider a function that receives several parameters as if it gets a tuple, i.e., one complex parameter. Thus, the aforementioned expectation of the same input parameters amounts to an expectation of equivalent tuple structures among the members of each function pair.
+
+\subsection{The algorithm}
+\Long{
+Table~\ref{tab:markings} contains the labels we use in the decomposition
+algorithm (Alg.~\ref{alg:ProveMT}).
+
+\begin{table}[here]
+\begin{tabular}{||l|l|p{6.2cm}||} \hline \label{table:markings}
+\textbf{Predicate label}	& \textbf{What labeled}  & \textbf{Meaning} \\ \hline
+\mtlabel      & \pairtag{f}$ \in\mapf$ & The mapped functions \comandtag{f} are mutually terminating \\ \hline
+\equivlabel   & \pairtag{f}$ \in\mapf$ & The mapped functions \comandtag{f} are partially equivalent \\ \hline
+\mscccovered  & \pairtag{m}$ \in\mapm$ & The MSCC pair has been processed. \\ \hline
+\end{tabular}
+\caption{Predicate labels used in the decomposition algorithm.}
+\label{tab:markings}
+\end{table}
+}
+The input to Alg.~\ref{alg:ProveMT} is \comtag{P}, a (possibly partial) mapping $\mapf$ between their functions, and (implicitly) those paired functions that are known to be partially equivalent. Its output is a set of function pairs that are marked as \mtlabel, indicating it succeeded to prove their mutual termination based on \mtermdp. We now describe the three functions used by this algorithm.
+
+
+\subsubsection{\ProveMT.} \label{sec:ProveMT}
+This entry function traverses the call
+graphs of $P,P'$ bottom-up, each time focusing on a pair of MSCCs. In
+line~\ref{step:inline} it inlines all nonrecursive functions that are not
+mapped. In line $\ref{step:rename}$ it uses renaming to resolve possible name
+collisions between the globals of the two input programs. The next line builds
+the MSCC DAGs $MD$ and $MD'$ from the call graphs, as explained in
+Sec.\ref{sec:rule}. Line~\ref{step:generate_map} attempts to build a bijective
+mapping $\mapm$ between the nodes of $MD$ and $MD'$ which is consistent with
+$map_f$. Namely, if $\pair{m,m'} \in \mapm$, $f$ is a function in $m$, and
+$\pair{f,f'} \in \mapf$, then $f'$ is a function in $m'$ (and vice-versa). If
+such a mapping is impossible, the algorithm aborts. In practice one may run the
+algorithm bottom-up until reaching nonmapped MSCCs, but we omit this option
+here for brevity.
+
+The bottom-up traversal starts in line~\ref{step:while}. Initially all MSCCs
+are unmarked. The algorithm searches for a next unmarked pair \pairtag{m} of
+MSCCs such that all its children pairs are marked. If \comtag{m} are trivial
+(see Sec.~\ref{sec:rule} for a definition), then line~\ref{step:Check} simply
+checks the call-equivalence of the function pair \pairtag{f} that constitutes
+\pairtag{m}, and marks them accordingly in line~\ref{step:markTrivial}. 
+Note that even if the descendants of \comtag{m} are mutually-terminating, \comtag{m}
+are not necessarily so, because they may call their descendants with different
+parameters. Also note that if this check fails, we continue to check their ancestors, (in contrast to the case of non-trivial MSCCs listed next), because even if \pairtag{f} are not
+mutually terminating for every input, their callers may still be (they can be mutually
+terminating in the context of their callers). We can check this by inlining
+them, which is only possible because they are not recursive.
+
+
+
+\noindent
+\begin{algorithm}
+\begin{minipage}{\linewidth}
+\begin{algorithmic}[1]
+\Function{ProveMT}{Programs \comtag{P}, map between functions $\mapf$}
+\State \label{step:inline} Inline non-recursive non-mapped functions;
+\State \label{step:rename} Solve name collisions in global identifiers of $P,P'$ by
+renaming.
+\State \label{step:generate} Generate MSCC DAGs \comtag{MD} from the
+call graphs of $P,P'$;
+
+\State If possible, generate a bijective map
+\label{step:generate_map} $\mapm$ between the nodes of $MD$ \newline \mbox{~~~~~~} and $MD'$ that is consistent with $\mapf$;
+\Long{\footnote{It is desirable but not necessary to add pairs of trivial nodes to $\mapm$.}}
+Otherwise \abort.
+
+\While {$\exists \pair{m,m'} \in \mapm$
+          not marked \mscccovered but its children are,} \label{step:while}
+   \State \label{step:choose} Choose such a pair $\pair{m,m'} \in \mapm$ and mark it \mscccovered
+   \If {$m,m'$ are trivial} \label{step:m1}
+     \State Let $f,f'$ be the functions in $m,m'$, respectively;
+     \If {\CheckCallEquiv(\alg{isolate}$(f,f',\emptyset)$)} \label{step:Check}
+     mark $f,f'$ as \mtlabel; \label{step:markTrivial}
+     \EndIf
+   \Else
+    \label{step:select} Select non-deterministically
+         $S \subseteq \{\pair{f,f'}\mid \pair{f,f'}\in\mapf(m)\}$ \newline
+          \mbox{~~~~~~~~~~~~~~~~} that intersect every cycle in \comandtag{m};
+      \For {each $\pair{f,f'} \in S$}\label{step:forall}
+        \If  {$\lnot$\CheckCallEquiv(\alg{isolate}$(f,f',S)$)} \label{step:abort}{mark ancestors as \mscccovered;}
+        \EndIf
+      \EndFor
+      \For {each $\pair{f,f'} \in S$} \label{step:forall2}
+         mark $f,f'$ as \mtlabel; \label{step:markNonTrivial}
+      \EndFor
+   \EndIf
+\EndWhile
+\EndFunction%\newline
+
+\vspace{0.25 cm}
+
+
+\Function{isolate}{functions \comtag{f}, function pairs $S$} \Comment{Builds
+$\mtbody{f}, \mtbody{f'}$}
+  \For {each $\{\pair{g,g'}\in \mapf \mid g,g'$ are reachable from $f,f'$\}}\label{step:forcheckCallequiv}
+    \If {$\pair{g,g'} \in S$ or $\pair{g,g'}$ is marked \mtlabel} \label{step:substitute}
+      \State \label{step:subst_uf}Replace calls to $g(\vec{in})$, $g'(\vec{in'})$ with calls to \pneuf{g}, \pneufp{g'}, resp.;
+    \Else { inline $g,g'$ in their callers; } \label{step:isinline}
+    \EndIf
+  \EndFor
+  \State \Return $\pair{f,f'}$;
+\EndFunction
+\vspace{0.25 cm}
+
+\Function {CallEquiv}{A pair of isolated functions $\pair{\mtbody{f}, \mtbody{f'}}$}
+\label{step:checkCallEquiv}
+  \State \label{step:gen_main} Let $\delta$ denote the program:
+  \[
+  \begin{array}{l}
+ \rhd \mbox{ here add the definitions of {\sc uf()} and {\sc uf'()} (see Fig.~\ref{fig:ufs1}).}\\
+ \vec{in} := nondet(); \mtbody{f}(\vec{in}); \mtbody{f'}(\vec{in}); \\
+% \mbox{assert}(params(${\sc UF}$) \subseteq params(${\sc UF'}$));\\
+ \forall \pair{g,g'} \mbox{ called in } f,f'.\ \mbox{assert}(params[g] \subseteq params[g']);\\
+ \end{array}
+ \]
+  \State \Return CBMC($\delta$); \label{step:cbmc}
+\EndFunction
+
+\end{algorithmic}
+\end{minipage}
+\caption{Pseudo-code for a bottom-up decomposition algorithm for proving that pairs of functions mutually terminate.}
+\label{alg:ProveMT}
+\end{algorithm}
+
+
+Next, consider the case that the selected \comtag{m} in line~\ref{step:choose}
+are not trivial. In line~\ref{step:select} the algorithm chooses
+non-deterministically a subset $S$ of pairs from $\mapf(m)$ that intersects all
+the cycles in \comandtag{m}\Long{\footnote{In graph-theoretic terms, the functions in
+$S$ constitute a \emph{feedback vertex set} of both $m$ and $m'$\Long{~\cite{E79}}.}}.
+This guarantees that we can always inline the functions in \comtag{m}
+that are not in $S$. Determinization of this step will be considered in
+subsection~\ref{sec:determinization}. If \CheckCallEquiv returns \true for all
+the function pairs in $S$, then all those pairs are labeled as \mtlabel in
+line~\ref{step:forall2}. Otherwise it abandons the attempt to prove their ancestors in line~\ref{step:abort}: it cannot prove
+that mapped functions in $\pair{m,m'}$ are mutually
+terminating, nor can it inline these functions in their callers, so we cannot check all its ancestors.
+
+Regardless of whether \pairtag{m} are trivial, they get marked as \coverlabel
+in line~\ref{step:choose}, and the loop in \ProveMT  continues to another
+pair.
+
+
+
+
+\comment{
+\begin{algorithm}[t]
+\begin{minipage}{\linewidth}
+\begin{algorithmic}[1]
+
+\Function{isolate}{functions \comtag{f}, function pairs $S$} \Comment{Builds
+$\mtbody{f}, \mtbody{f'}$}
+  \For {each $\{\pair{g,g'}\in \mapf \mid g,g'$ are reachable from $f,f'$\}}\label{step:forcheckCallequiv}
+    \If {$\pair{g,g'} \in S$ or $\pair{g,g'}$ is marked \mtlabel} \label{step:substitute}
+      \State \label{step:subst_uf}Replace calls to $g(\vec{in})$, $g'(\vec{in'})$, resp., with calls to \pneuf{g}, \pneufp{g'};
+    \Else { inline $g,g'$ in their callers; } \label{step:isinline}
+    \EndIf
+  \EndFor
+  \State \Return $\pair{f,f'}$;
+\EndFunction
+\end{algorithmic}
+\end{minipage}
+\caption{Isolation of functions: from $f$ to $\mtbody{f}$.}
+\label{alg:isolate}
+\end{algorithm} }
+
+\subsubsection{\alg{isolate}.}
+The function \alg{isolate} receives as input a pair $\pair{f,f'} \in \mapf$ and
+a set $S$ of paired functions which, by construction (see
+line~\ref{step:select}) contains only pairs from the same MSCCs as $f,f'$,
+i.e., if $f \in m$ and $f' \in m'$, then $(g,g') \in S$ implies that $g \in m$
+and $g' \in m'$. As output, it generates $\mtbody{f}$ and $\mtbody{f'}$, or
+rather a relaxation thereof as explained after Eq.~(\ref{eq:isolation}). We
+will occasionally refer to them as \emph{side 0} and \emph{side 1}. These
+functions do not have function calls (other than to uninterpreted functions),
+but may include inlined (nonrecursive) callees that were not proven to be
+mutually terminating.
+\Long{\footnote{There is some redundancy in the listing of this
+algorithm, as demonstrated by the following case: $f$ calls $g$, and $g$ calls
+$h$ (assume that $g$ is the only function to call $h$), where $h$ is inlined in
+line~\ref{step:isinline}, but then $g$ is replaced with an uninterpreted
+function in line~\ref{step:subst_uf}, which makes the former inlining
+redundant. Our implementation avoids such cases by reaching the same result by
+only considering  functions for inlining if their callers have already been
+dealt-with.}}
+
+
+The implementations of \pneufname and \pneufpname appear in Fig.~\ref{fig:ufs1}, and are rather self-explanatory. Their main role is to check call-equivalence. This is done by checking that they are called with the same set of inputs. When $\pair{g,g'}$ is marked \equivlabel, \pneufname and \pneufpname emulate the \emph{same} uninterpreted function\Long{(i.e., to return the same output given the same input)}, i.e.,
+\[\forall \vec{in}.\ \mbox{{\sc uf}}(g, \vec{in}) = \mbox{{\sc uf'}}(g', \vec{in})\;.\]
+ %
+ When $\pair{g,g'}$ is not marked \equivlabel, \pneufname and \pneufpname emulate two \emph{different} uninterpreted functions.
+
+
+
+\begin{figure}
+\begin{tabular}{l} \hline
+\begin{minipage}{\linewidth}
+\mbox{ }\newline
+\begin{algorithmic}[1]
+\Function{uf}{function index $g$, input parameters $\vec{in}$}\label{startREs}
+\Comment{Called in side 0}
+  \If {$\vec{in} \in params[g]$} \Return the output of the earlier call \pneuf{$g$};
+  \EndIf
+  \State $params[g] := params[g]\; \bigcup\; \vec{in}$; \label{step:record1}
+  \State \Return a non-deterministic output;
+  \EndFunction \newline
+%
+%
+\Function{uf'}{function index $g'$, input parameters $\vec{in'}$}
+\Comment{Called in side 1}
+  \If {$\vec{in'} \in params[g']$} \Return the output of the earlier call \pneufp{$g'$};
+  \EndIf
+  \State $params[g'] := params[g']\; \bigcup\; \vec{in'}$;
+  \If {$\vec{in'} \in params[g]$} \Comment{$\pairwtag{g} \in \mapf$}\label{step:check_g'_le_g}
+     \If {$\pair{g,g'}$ is marked \equivlabel}
+       \State \Return the output of the earlier call {\sc uf}(g, $\vec{in'}$);
+     \EndIf
+     \State \Return a non-deterministic output;
+  \EndIf
+  \State\label{step:force_failure2}{\bf assert(0)}; \Comment{Not call-equivalent: $params[g'] \not\subseteq params[g]$}
+\EndFunction \label{endREs}
+\end{algorithmic}
+\end{minipage}
+\mbox{ }  \\
+\mbox{ }  \\
+\hline
+\end{tabular}
+%
+\caption{Functions {\sc uf} and {\sc uf'} emulate uninterpreted functions if instantiated with functions that are mapped to one another. They are part of the generated program $\delta$, as shown in \alg{CallEquiv} of Alg.~\ref{alg:ProveMT}. }
+\label{fig:ufs1}
+\end{figure}
+
+
+\subsubsection{\CheckCallEquiv.}
+Our implementation is based on the C model checker
+\tool{CBMC}~\cite{CK03}, which enables us to fully automate the
+check for call-equivalence. \tool{CBMC} is complete for bounded programs (i.e.,
+loops and recursions are bounded), and, indeed, the program $\delta$ we build
+in \CheckCallEquiv is of that nature. It simply calls $\mtbody{f}$,
+$\mtbody{f'}$ (which, recall, have no loops or function calls by construction),
+with the same nondeterministic value, and asserts in the end that the set of
+calls in $f$ is included in the set of calls in $f'$ (the other direction is
+checked in lines~\ref{step:check_g'_le_g},~\ref{step:force_failure2} of {\sc uf'}). Examples of such generated programs
+that we checked with CBMC are available online in~\cite{EKSurl}.
+
+
+\subsection{An example}
+The following example demonstrates Alg.~\ref{alg:ProveMT}. Consider the call graphs in Fig.~\ref{fig:callgraph}.
+%
+\begin{figure}[here]
+\begin{center}
+\scalebox{0.8}{
+\begin{minipage}{0.5\linewidth}
+\begin{tikzpicture}
+\tikzset{node distance = 1.5cm}
+\Vertex[Math=true]{f_1}
+\SOWE[Math=true](f_1){f_2}
+\SOEA[Math=true, style={fill = black!30}](f_1){f_4}
+\WE[Math=true](f_2){f_3}
+\WE[Math=true, style={fill = black!30}](f_3){f_5}
+\GraphLoop[dist=1.0cm,dir=NO,style={->, thick}](f_5)
+\Edge[style={->}](f_1)(f_2)
+\Edge[style={->}](f_1)(f_4)
+\Edge[style={->}](f_2)(f_3)
+\Edge[style={->, bend right}](f_2)(f_4)
+\Edge[style={->, bend right}](f_4)(f_2)
+\Edge[style={->}](f_3)(f_5)
+\end{tikzpicture}
+\end{minipage}
+\hspace{1 cm}
+\begin{minipage}{0.5\linewidth}
+\begin{tikzpicture}
+\tikzset{node distance = 1.5cm}
+\Vertex[Math=true]{f'_1}
+\SOWE[Math=true](f'_1){f'_2}
+\SOEA[Math=true, style={fill = black!30}](f'_1){f'_4}
+\WE[Math=true](f'_2){f'_3}
+\WE[Math=true, style={fill = black!30}](f'_3){f'_5}
+\SO[Math=true](f'_1){f'_6}
+\GraphLoop[dist=1.0cm,dir=NO,style={->, thick}](f'_5)
+\Edge[style={->}](f'_1)(f'_2)
+\Edge[style={->}](f'_1)(f'_4)
+\Edge[style={->}](f'_2)(f'_3)
+\Edge[style={->, bend right}](f'_2)(f'_6)
+\Edge[style={->, bend right}](f'_6)(f'_4)
+\Edge[style={->, bend right}](f'_4)(f'_2)
+\Edge[style={->}](f'_3)(f'_5)
+\end{tikzpicture}
+\end{minipage}
+}
+\end{center}
+\caption{Call graphs of the input programs $P,P'$. Partially equivalent functions are gray.}
+\label{fig:callgraph}
+\end{figure}
+
+
+
+Assume that \map{f_i,f'_i} for $i = 1,\ldots,5$, and that the functions
+represented by gray nodes are known to be partially equivalent to their counterparts.
+%
+Line~\ref{step:generate} generates the following nodes of the MSCC DAGs\Long{(listed bottom-up, left-to-right)}: $MD=\{\{f_5\}$, $\{f_3\}$,$\{f_2,f_4\},\{f_1\}\}$; $MD'=\{\{f'_5\}$, $\{f'_3\}$,$\{f'_2,f'_4,f'_6\}$,$\{f'_1\}\}$.
+\Long{
+\begin{itemize}
+	\item $MD=\{\{f_5\}$, $\{f_3\}$,$\{f_2,f_4\},\{f_1\}\}$;
+	\item $MD'=\{\{f'_5\}$, $\{f'_3\}$,$\{f'_2,f'_4,f'_6\}$,$\{f'_1\}\}$.
+\end{itemize}
+}
+The MSCC mapping $\mapm$ in line~\ref{step:generate_map} is naturally derived from
+$\mapf$.
+
+\begin{table}[h]%[bottom]
+\begin{tabular}{|p{1.5 cm}|l|p{8.6cm}|c|} \hline
+MSCCs & Pair & Description & Res.\\\hline
+%
+$\{f_5\}$, $\{f_5'\}$ & $\pair{f_5, f'_5}$ & In line~\ref{step:select} the only possible $S$ is $\pair{f_5,f_5'}$. \alg{isolate} replaces the recursive call to $f_5, f_5'$ with \pneufname, \pneufpname, respectively \emulatesame.
+%The latter emulate the same uninterpreted functions since $\pair{f_5,f_5'}$ is marked \equivlabel.
+Assume \CheckCallEquiv  returns \true. $\pair{f_5, f'_5}$ is marked \mtlabel  in line~\ref{step:markNonTrivial}. & \checkmark \\ \hline
+%
+$\{f_3\}$, $\{f_3'\}$ & $\pair{f_3, f'_3}$ & This is a case of trivial MSCCs, which is handled in lines~\ref{step:m1}--\ref{step:markTrivial}. \alg{isolate} replaces the calls to $f_5,f_5'$ with \pneufname, \pneufpname, respectively \emulatesame.
+%, emulating the same functions again.
+Assume \CheckCallEquiv  returns \false. & \ding{55} \\ \hline
+%
+$\{f_2,f_4\}$, & & In line~\ref{step:select} let $S = \{\pair{f_2, f_2'}, \pair{f_4, f_4'}\}$. & \\ \cline{2-4}
+%
+$\{f_2', f_4', f_6'\}$& $\pair{f_2,f_2'}$ & In $f_2$ calls to $f_3$ are inlined, and calls to $f_4, f_5$ are replaced with calls to \pneufname. In $f_2'$ calls to $f_3', f_6'$ are inlined, and calls to $f_4', f_5'$ are replaced with calls to \pneufpname\emulatesame.
+%Each replacing function pair emulates a pair of the same functions.
+Assume \CheckCallEquiv  returns \true. & $\checkmark^c$ \\  \cline{2-4}
+%
+& $\pair{f_4,f_4'}$ & In $f_4$, $f_4'$ calls to $f_2$, $f_2'$ are respectively replaced with calls to \pneufname, \pneufpname\emulatedifferent.
+%, which emulate two different uninterpreted functions because $\pair{f_2, f'_2}$ is not labeled \equivlabel.
+Assume \CheckCallEquiv returns \true. Now $\pair{f_2, f'_2}$ and $\pair{f_4, f'_4}$ are marked \mtlabel in line~\ref{step:forall2}. & $\checkmark$ \\ \hline
+%
+$\{f_1\}$, $\{f_1'\}$ & $\pair{f_1, f'_1 }$ & Again, a case of a trivial MSCC. Calls to $f_2$, $f_2'$ are respectively replaced with \pneufname, \pneufpname \emulatedifferent
+%, which emulate two different functions
+, while calls to $f_4$, $f_4'$ are replaced with \pneufname, \pneufpname, respectively \emulatesame.
+%, which emulate the same uninterpreted functions.
+Assume \CheckCallEquiv returns \true. $\pair{\{f_1\}, \{f'_1\}}$ is marked \mtlabel. & $\checkmark$ \\ \hline
+\end{tabular}
+\caption{Applying Alg.~\ref{alg:ProveMT} to the call graphs in
+Fig.~\ref{fig:callgraph}. `\checkmark' means that the pair is marked \mtlabel,
+`$\checkmark^c$' that it is marked conditionally (it becomes unconditional once
+all other pairs in $S$ are marked as well), and `\ding{55}' that it is not
+marked.
+\emulatesame and \emulatedifferent denote that \pneufname, \pneufpname emulate the same, or, respectively, different, uninterpreted functions.} \label{tab:final_iterations}
+\end{table}
+
+The progress of the algorithm is listed in Table~\ref{tab:final_iterations}. The output in this case, based on assumptions about the results of the checks for call-equivalence that are mentioned in the table, is that the following pairs of functions are marked as \mtlabel: $\pair{f_5,f_5'}$, $\pair{f_2,f_2'}$, $\pair{f_4,f_4'}$, and $\pair{f_1,f_1'}$.
+%
+\subsection{Choosing a vertex feedback set deterministically} \label{sec:determinization}
+In line~\ref{step:choose} the choice of the set $S$ is nondeterministic. Our
+implementation determinizes it by solving a series of optimization problems. In
+the worst case this amounts to trying all sets, which is exponential in the
+size of the MSCC. Observe, however, that large MSCCs are rare in real programs
+%(even MSCCs of size 5 are rarely seen),
+and, indeed, this has never posed a
+computational problem in our experiments.
+
+Our objective is to find a maximal
+set $S$ of function pairs, because the larger the set is, the more functions
+are declared to be mutually terminating in case of success. Further, larger
+sets imply fewer functions to inline, and hence the burden on \CheckCallEquiv
+is expected to be smaller.
+%
+Our implementation solves this optimization problem via a reduction to a pseudo-Boolean formula, which is then solved by \tool{minisat+}~\cite{ES06}. Each function node $g$ in $m$ (and $m'$) is associated with a Boolean variable $v_g$, indicating whether it is part of $S$. The objective is thus to maximize the sum of these variables that are mapped (those that are unmapped cannot be in $S$ anyway). In addition, there is a variable $e_{ij}$ for each edge $(i,j)$, which is set to true iff neither $i$ nor $j$ is in $S$. By enforcing a transitive closure, we guarantee that if there is a cycle of edges set to true (i.e., a cycle in which none of the nodes is in $S$), then the self edges (e.g., $e_{i,i}$) are set to \true as well. We then prevent such cycles by setting them to \false.
+Let \emph{mapped($m$)} denote the set of functions in $m$ that are mapped. The problem formulation appears in Fig.~\ref{fig:pbs}, and is rather self-explanatory.
+In case the chosen set $S$ fails (i.e., one of the pairs in $S$ cannot be proven to be mutually terminating), we add its negation (see constraint \#6) and repeat.
+
+\begin{figure}
+maximize $S$: \begin{minipage}{5 cm} \[ \max\sum_{g \in \mbox{\emph{mapped}(m)}}  v_g \] \end{minipage}
+
+\vspace{0.1 cm}
+subject to the following constraints, for $M \in \{m,m'\}$:
+%
+\[
+\begin{array}{p{5 cm}l}
+\mbox{1. Unmapped nodes are not in $S$:} &  \forall g \in (M \setminus mapped(M)).\ \lnot v_g \\
+\mbox{2. Defining the edges:} & \forall \{i, j \mid (i,j) \mbox { is an edge in $M$}\}.\ \lnot v_i \land \lnot v_j \rightarrow \ e_{ij} \\
+\mbox{3. Transitive closure:} &  \forall 0 < i,j,k \leq |M|.\ e_{ij} \land e_{jk} \rightarrow e_{ik} \\
+\mbox{4. Self loops are not allowed:} & \forall 0 < i \leq |M|.\ \lnot e_{ii} \\
+\mbox{5. Enforce mapping:} & \forall \pair{g,g'} \in \mapf, g \in m.\ v_g \leftrightarrow v_g' \\
+\mbox{6. For each  failed solution $Sl$:} & \bigvee_{\pair{g,g'} \in Sl} \lnot v_g \\
+\end{array}
+\]
+%
+\caption{A pseudo-Boolean formulation of the optimization problem of finding the largest set of function pairs from $m,m'$ that intersect all cycles in both $m$ and $m'$.}\label{fig:pbs}
+\end{figure}
+%
+
+\Long{
+Three optimizations to this process that we implemented in \tool{rvt} are:
+\begin{itemize}
+\item \emph{Recycling proofs}: When failing with a set $S$, we save the strict subset $s \subset S$ for which we were able to prove call-equivalence. Let $S'$ be a new set under consideration and let $g \in S' \cap s$. Denote by $\mtbody{g}_S$ the function $\mtbody{g}$ as constructed given the set $S$. Then the positive result of $g$ can be reused if $\mtbody{g}_S$ is equally or more abstract than $\mtbody{g}_{S'}$. This condition holds if none of the functions inlined in $\mtbody{g}_S$ are abstracted in $\mtbody{g}_{S'}$.
+
+\item \emph{Generalizing counterexamples}: When failing with a set $S$, it is frequently possible to  find a strict subset of $S$ that is sufficient to make the proof fail. Specifically, the subset of $S$ equal to the failing node plus nodes in $S$ that can be reached from it not through any other node in $S$, constitute such a subset. As an example, consider the MSCC $\{f \leftrightarrow g, g \leftrightarrow h \}$, and $S = \{f,g,h\}$. If $f$ fails, then we must remove from $S$ either $f$ or	 $g$, regardless of what we do with $h$. Hence here we can return the subset $\{f,g\}$ as the failing set, rather than $S$ itself, which strengthens constraint \#6.
+    %In other words, adding the negation of this subset removes from the solution space sets that are bound to fail.
+
+\item \emph{Higher priority for \pe pairs} Among equal-sized sets, it is better to give priority to pairs that are marked as \equivlabel, because there is a better chance of success with such functions (recall that these are replaced with the same uniniterpreted functions). This strategy can be implemented by giving higher weight to such functions in the objective.
+\end{itemize}
+}

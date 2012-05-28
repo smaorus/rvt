@@ -1,0 +1,350 @@
+
+\begin{example} \label{ex:mterm}
+Consider the following two programs, which are clearly not partially equivalent:
+
+\vspace{0.2 cm}
+\begin{minipage}{5.5 cm}
+\begin{algorithmic}
+\Function{$f$}{unsigned $a$}
+
+\If {$a == 0$} \State \Return 1;
+
+\EndIf
+
+\Return $a * f(a - 1)$;
+
+\EndFunction
+\end{algorithmic}
+\end{minipage}
+\begin{minipage}{5.5 cm}
+\begin{algorithmic}
+\Function{$f'$}{unsigned $a'$}
+
+\If {$a' == 0$} \State \Return 2;
+
+\EndIf
+
+\State \Return $a' * f'(a' - 1)$;
+
+\EndFunction
+\end{algorithmic}
+\end{minipage}
+\vspace{0.2 cm}
+%
+
+\noindent
+We can prove their mutual termination nevertheless, by proving the call equivalence of \upbodiesand{f}:
+
+\vspace{0.2 cm}
+\begin{minipage}{5.5 cm}
+\begin{algorithmic}
+\Function{$\upbody{f}$}{unsigned $a$}
+
+\If {$a == 0$} \State \Return 1 \EndIf
+
+\State \Return $a * \uf{f}( a - 1 )$;
+
+\EndFunction
+\end{algorithmic}
+\end{minipage}
+%
+\begin{minipage}{5.5 cm}
+\begin{algorithmic}
+\Function{$\upbody{f'}$}{unsigned $a'$}
+
+\If { $a' == 0$ } \State \Return 2; \EndIf
+
+\State \Return $a' * \uf{f'}( a' - 1 )$;
+
+\EndFunction
+\end{algorithmic}
+\end{minipage}
+\vspace{0.2 cm}
+%
+
+\noindent Note that now $\uf{f}$ and $\uf{f'}$ are different. According to
+(\ref{eq:new}), we need to prove, using once more the proof-theoretic approach,
+the validity of:
+
+\[ \begin{array}{l}
+(T_{\upbody{f}}\ \land\ T_{\upbody{f'}}\ \land\ a = a')\ \rightarrow \\
+\big((a \neq 0 \leftrightarrow a' \neq 0)\ \land\ (a \neq 0\ \rightarrow\ a-1 = a'-1)\big)\;,
+\end{array}\]
+%
+which is, indeed, a valid formula. In this case, we are able to prove
+termination without partial equivalence because the return values
+of $\uf{f}$ and $\uf{f'}$ affect neither the guarding conditions nor the input arguments of other function calls. \qed
+\end{example}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ATVA
+
+\comment{
+\section{A weaker premise}\label{sec:enhancement}
+The mutual termination rule \mtermg requires $\pe(f,f')$ for each
+$\pair{f,f'}\in \mapf(m)$. We now argue that $\requiv(f,f')$ is sufficient.
+Partial equivalence still plays a role, but only in improving completeness.
+Specifically, for callees $\pair{g,g'} \in \mapf(m)$ of $\pair{f,f'}$,
+respectively, having $\pe(g,g')$ allows us to replace them with the same
+uninterpreted functions. Otherwise we need to replace them with different
+uninterpreted functions, which is still sound for proving mutual termination,
+but hinders completeness. This change is reflected in the way we
+construct $\upbody{f}$ and $\upbody{f'}$. Specifically, the enforcement stated
+in (\ref{eq:enforcement}) is now weaker:
+\begin{equation}\label{eq:enforcementnew}
+\left(\pair{g, g'} \in\mapf \wedge \pe(g, g')\right) \Leftarrow \uf{g} = \uf{g'} \mbox{\ \ \ \ \enforcementnew}\;.
+\end{equation}
+%
+In words, $\uf{g} = \uf{g'}$ only if  $\pe$(\comtag{g}) is proven. Rather than having to prove it for each pair in $\mapf(m)$, then, we construct $\upbody{f},\upbody{f'}$ based on a set of partially-equivalent pairs that are given to us as input. The more pairs from $m$ this set contains, the better chance we have to prove mutual termination.
+
+Using the new definition of $\upbody{f},\upbody{f'}$, the new rule is:
+\begin{equation} \label{eq:new}
+\frac
+{\forall \pair{f, f'} \in\mapf(m).\ \requiv(\upbody{f},\upbody{f'})}
+{\forall \pair{f, f'} \in\mapf(m).\ \mt(f, f')}
+\mbox{\ \mtermd} \;.
+\end{equation}
+%
+The proposed rule \mtermd has a weaker premise than \mtermg and can therefore
+prove mutual termination in more cases.
+The following example demonstrates how \mtermd can be applied.
+}
+
+
+
+
+
+\comment{
+We now show an example in which the prior knowledge on the partial equivalence of the callees is necessary for establishing call equivalence.
+
+\begin{example} \label{ex:mccarthy}
+Consider the two implementations of the McCarthy\mbox{-91}
+function~\cite{MP70} in Fig.~\ref{fig:mccarthy} (top).
+%
+We naturally define the mapping $\mapf = \{\pair{f,f'}\}$. It is not
+hard to see that $f,f'$ are partially equivalent, and, indeed, assume that it
+has been proven. Next, we
+need to prove call equivalence of $\upbody{f}$ and $\upbody{f'}$. Since we
+enforce $\uf{f} = \uf{f'}$ (see (\ref{eq:enforcement})), in the listing at the bottom part of the figure they appear as the same uninterpreted function.
+
+
+\begin{figure}
+\begin{tabular}{p{6 cm}|p{6 cm}} \hline
+\begin{algorithmic}
+\Function{$f$}{int $a$}
+
+\If {$a > 100$} \State \Return $a - 10$; \EndIf
+
+\State \Return $f(f( a + 11 ))$;
+
+\EndFunction
+
+\end{algorithmic}
+&
+\begin{algorithmic}
+\Function{$f'$}{int $a'$}
+
+\If {$a' \leq 100$ } \State \Return $f'(f'( a' + 11 ))$; \EndIf
+
+\State \Return $a' - 10$;
+
+\EndFunction
+\end{algorithmic} \\[-6pt] \hline
+
+\begin{algorithmic}
+\Function{$\upbody{f}$}{int $a$}
+
+\If {$a > 100$ }
+
+\State \Return $a - 10$; \EndIf
+
+\State \Return $\uf{f}(\uf{f}( a + 11 ))$;
+
+\EndFunction
+\end{algorithmic}
+&
+\begin{algorithmic}
+\Function{$\upbody{f'}$}{int $a'$}
+
+\If {$a' \leq 100$ }
+
+\State \Return $\uf{f}(\uf{f}( a' + 11 ))$; \EndIf
+
+\State \Return $a' - 10$;
+
+\EndFunction
+\end{algorithmic} \\ \hline
+\end{tabular}
+\caption{Two implementations of the McCarthy-91 function (top), and their isolated versions (bottom).}\label{fig:mccarthy}
+
+\end{figure}
+
+A \emph{proof-theoretic} method for establishing $\requiv(\upbody{f},
+\upbody{f'})$ amounts to deriving from this code a formula -- a verification
+condition -- which is valid iff these functions are call-equivalent. In this
+case such a formula is:
+\begin{equation} \label{eq:vc}
+\begin{array}{l}
+(T_{\upbody{f}} \ \land\ T_{\upbody{f'}}\ \land\ a = a')\ \rightarrow \\
+\big((\lnot (a > 100)\ \leftrightarrow\ (a' \leq 100))\ \land \hspace{3.5 cm} \triangleright \mbox{ equal guards}\\
+(\lnot (a > 100))\ \rightarrow\ \hspace{5.73 cm} \triangleright \mbox{ if called, then  }  \\
+(a + 11 = a' + 11 \land \uf{f}(a+11) = \uf{f}(a' + 11))\big)\;, \hspace{0.50 cm} \triangleright \mbox{ equal arguments}
+\end{array}
+\end{equation}
+%
+where $T_{\upbody{f}},T_{\upbody{f'}}$ denote respectively the transition
+relation of $\upbody{f}$ and $\upbody{f'}$. The last
+line in (\ref{eq:vc}) corresponds, respectively, to the arguments of the inner
+and outer calls to $f,f'$. This formula is valid, and its validity relies on
+the fact that $\uf{f} = \uf{f'}$. This demonstrates that establishing
+$\pe(f,f')$ can be essential.
+
+The McCarthy-91 function is frequently used in the program-termination literature to demonstrate how a ranking function can be found. As we have shown here, for mutual termination no such ranking function is necessary.
+\qed
+\end{example}
+
+}
+
+
+\comment{
+The proof-theoretic method demonstrated in the above example has the
+disadvantage that it requires program analysis in order to derive the
+conditions. We suggest instead a \emph{model-theoretic} method, which delegates
+most of the analysis to an off-the-shelf model-checker. Instead of analyzing
+the code to derive a general formula expressing the conditions of calls and the
+actual arguments, derived programs are produced that would record all arguments
+to the relevant functions. These programs are never actually executed. Instead,
+an assertion of equivalence between the sets of arguments with which the functions are
+called is model-checked, showing it true in every possible computation, and
+thus automatically detecting call-equivalence. We will elaborate on this method
+in Sect.~\ref{sec:decomposition}.
+} 
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% old
+\comment{
+\begin{figure}
+\begin{tabular}{p{6 cm}p{6 cm}} \hline
+\begin{algorithmic}
+\Function {$f^{UF}$}{int $a$}
+
+\If{$a > 1$}
+
+\If {$\lnot a \% 2$} %{$\lnot$($a \& 1$)}
+
+\State $a := a/2$;
+
+\Else\ $a := 3a + 1$;
+
+\EndIf
+
+\State \alg{UF}$(f,a)$;
+\EndIf
+\State \Return 0;
+
+\EndFunction
+\end{algorithmic}
+&
+\begin{algorithmic}
+\Function {$f'^{UF}$}{int $a'$}
+
+\If{$a' \leq 1$} \Return 1; \EndIf
+
+\State $t' := a' / 2$;
+
+\If {$a'\% 2$}
+
+\State $a' := 6t' + 4$;
+
+\Else\ $a' := t'$;
+
+\EndIf
+
+\State \alg{UF}$(f',a')$;
+
+\State \Return 1;
+\EndFunction
+\end{algorithmic} \\ %\hline
+}
+%%%%%%%%%%%%%%%%%%%% end old
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  old
+\comment{
+\begin{figure}
+\begin{tabular}{p{6 cm}p{6 cm}} \hline
+\begin{algorithmic}
+\Function {$f$}{int $a$}
+\If{$a > 1$}
+    \If {$\lnot (a \% 2)$} \Comment{even } %{$\lnot$($a \& 1$)}
+        \State $a := a/2$;
+        \Else\ $a := 3a + 1$;
+    \EndIf
+    \State \alg{$f$}($a$);
+\EndIf
+\Return 0;
+
+\EndFunction
+\end{algorithmic}
+&
+\begin{algorithmic}
+\Function {$f'$}{int $a'$}
+
+\If{$a' \leq 1$} \Return 1\EndIf
+
+\State $t' := a' / 2$; %\Comment{Divide by 2}
+
+\If {$a'\% 2$} \Comment{odd}
+
+\State $a' := 6t' + 4$;
+
+\Else\ $a' := t'$;
+
+\EndIf
+
+\State \alg{$f$}($a'$);
+
+\State \Return 1;
+
+\EndFunction
+\end{algorithmic} \\[-6pt] \hline
+\end{tabular}
+\caption{Two different implementations of the Collatz (``$3x + 1$") function that are mutually terminating.}\label{fig:collatz}
+\end{figure}
+}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%% end old
+
+
+\comment{DDD
+\Function{isolate}{functions \comtag{f}, function pairs $S$} \Comment{Builds
+$\mtbody{f}, \mtbody{f'}$}
+  \For {each $\{\pair{g,g'}\in \mapf \mid g,g'$ are reachable from $f,f'$\}}\label{step:forcheckCallequiv}
+    \If {$\pair{g,g'} \in S$ or $\pair{g,g'}$ is marked \mtlabel} \label{step:substitute}
+    \State \label{step:subst_uf}Replace calls to $g(\vec{in})$, $g'(\vec{in'})$, resp., with calls to:
+     \begin{list} {$\bullet$}{\setlength{\leftmargin}{1.7cm}}
+     \item \peuf{g}, \peufp{g'}, if $\pair{g,g'}$ is marked \equivlabel;
+     \item \pneuf{g}, \pneufp{g'}, otherwise;
+    \end{list}
+    \Else { inline $g,g'$ in their callers; } \label{step:isinline}
+    \EndIf
+  \EndFor
+  \State \Return $\pair{f,f'}$;
+\EndFunction
+\\}
+
+\comment{DDD
+\Function {CallEquiv}{A pair of isolated functions $\pair{\mtbody{f}, \mtbody{f'}}$}
+\label{step:checkCallEquiv}
+  \State \label{step:gen_main} Let $\delta$ denote the program:
+  \[
+  \begin{array}{l}
+ \quad \quad \vec{in} := nondet(); \mtbody{f}(\vec{in}); \mtbody{f'}(\vec{in}); \\
+ \quad \quad \mbox{{\sc uf()}; {\sc uf'()}; {\sc peuf()}; {\sc peuf'()}}; \hspace{3.7 cm} \triangleright \mbox { Defined in Fig.~\ref{fig:ufs},~\ref{fig:ufs1}}\\
+ \end{array}
+ \]
+  \State \Return CBMC($\delta$); \label{step:cbmc}
+\EndFunction
+
+\\}

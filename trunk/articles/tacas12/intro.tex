@@ -1,0 +1,72 @@
+\section{Introduction} \label{sec:intro}
+
+Whereas termination of a single program has been widely studied~(e.g.,
+\cite{Fl67,CPR05,BMS05,CPR11}) for several decades by now, with the focus
+being, especially in the last few years, on automating such proofs,
+little attention has been paid to the related problem of proving that
+two similar programs (e.g., two consecutive versions of the same
+program) terminate on exactly the same inputs.  Ideally one should
+focus on the former problem, but this is not always possible either
+because the automatic techniques are inherently incomplete, or because
+\emph{by design} the program does not terminate on all inputs. In such
+cases there is value in solving the latter problem, because
+developers may wish to know that none of their changes affect the
+termination behavior of their program. Moreover, the problem and
+solution thereof can be defined in the granularity of functions rather
+than whole programs; in this case the developer may benefit even more from
+a detailed list of pairs of functions that terminate on exactly the
+same set of inputs. Those pairs that are not on the list can help
+detecting termination errors.
+
+Our focus is on successive, closely related versions of a program because it
+both reflects a realistic problem of developers, and offers opportunities for
+decomposition and abstraction that are not possible with the single-program
+termination problem.  This problem, which was initially proposed in~\cite{GS08}
+and coined \emph{mutual termination}, can easily be proven undecidable as can
+be seen via a simple reduction from the halting problem. We argue, however,
+that in many cases it is easier to solve automatically, because unlike termination proofs for a single program, it does not rely on proving that
+the sequence of states in the programs' computations can be mapped into a well-founded
+set. Rather it can be proven by showing that the loops and recursive functions
+have the same set of function calls given the same inputs, which is relatively
+easier to prove automatically. In Sec.~\ref{sec:rule}, for example, we show how to prove mutual termination of two versions of the famous Collatz's $3x + 1$ problem~\cite{G81}; whereas proving termination of this program is open for many decades, proving mutual termination with respect to another version is simple.
+
+Our suggested method for decomposing the proof is most valuable when the two
+input programs $P$ and $P'$ are relatively similar in structure. In fact, its
+complexity is dominated by the \emph{difference} between the programs, rather
+than by their absolute size. It begins by heuristically building a (possibly
+partial) map between the functions of $P$ and $P'$. It then progresses
+bottom-up on the two call graphs, and each time proves the mutual termination
+of a pair of functions in the map, while abstracting their callees. The
+generated verification conditions are in the form of assertions about `flat' programs (i.e., without
+loops and recursive calls), which are proportional in size to the two compared
+functions. It then discharges these verification conditions with a bounded
+model-checker (CBMC~\cite{CK03} in our case). Each such program has the same
+structure: it calls the two compared functions sequentially with the same
+nondeterministic input, records all subsequent function calls and their
+arguments, and asserts in the end that they have an equivalent set of function
+calls. According to our proof rule, the validity of this assertion is
+sufficient for establishing their mutual termination.
+
+
+The algorithm is rather involved because it has to deal with cases in which the
+call graphs of $P$ and $P'$ are not isomorphic (this leads to unmapped
+functions), with mutually recursive functions, and with cases in which the
+proof of mutual termination for the callees has failed. It also improves completeness by utilizing extra
+knowledge that we may give to it on the \emph{partial equivalence} of the
+callees, where two functions are said to be partially equivalent if given the
+same inputs they terminate with the same outputs, or at least one of them does
+not terminate.
+%If we know that two mapped callees are partially equivalent, we
+%abstract them with the same uninterpreted function,
+%which increases our chance
+%to prove mutual termination.
+Partial equivalence was studied in~\cite{GS08,GS09} and is implemented in \tool{rvt}~\cite{GS09} and Microsoft's
+\tool{SymDiff}~\cite{KLR10}. We also implemented our algorithm in \tool{rvt}, which enables us to gain this information in a preprocessing step.
+
+
+To summarize our contributions in this paper, we present a) a proof rule for inferring mutual termination of recursive (and mutually-recursive) functions at the leaves of their respective call graphs,
+%, which requires a weaker premise than the one in~\cite{GS10}
+ b) an extension of the first rule that applies also to internal nodes in the call graphs, and c) a proof rule for inferring \emph{termination} (not mutual termination) in case the other function is known to be terminating. More importantly, we show how these rules can be applied to whole programs via a bottom-up decomposition algorithm, and report on a prototype implementation of this algorithm -- the first to deal with the mutual termination problem.
+
+%In the next section we give a formal definition of our problem and a description of the preprocessing that we %apply to programs in order to be able to use our proof rules and decomposition algorithm.
+%Section~\ref{sec:rule} describe a proof rule for proving mutual termination of functions in mutual recursion. Section~\ref{sec:decomposition} suggests a method for applying the rule for whole programs, based on a bottom-up traversal of the two call graphs. In Sec.~\ref{sec:term} we consider a related problem: \emph{assuming} that $P$ terminates, prove that $P'$ terminates. Experiments and conclusions are summarized in Sec.~\ref{sec:experiments}.

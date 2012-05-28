@@ -1,0 +1,36 @@
+#!/bin/tcsh
+# $1 - .opb input file for minisat
+# $2 - output file where the assignments will be written
+# In addition to the result written to $1 it returns one of the following statuses:
+#  0    - Success
+# 11    - Unsatisfiable task
+# 13    - Output of minisat cannot be parsed (check minisat)
+# Other - Some internal error inside minisat
+
+source "$0:h"/rv_set
+
+set ret_status = 13
+\rm -rf "$2"
+
+dos2unix $1 #minisat cannot read CR
+# echo Running minisat+_64-bit_static "$1"
+minisat+_64-bit_static "$1" > tmp.$$
+set ret_status = $status
+
+grep UNSAT tmp.$$
+if ($status == 0) then
+    # echo unsat
+	set ret_status = 11
+else
+    # echo sat
+	grep '^v ' tmp.$$ > "$2"
+	if ($status == 0) then
+		set ret_status = 0
+	else
+		set ret_status = 13
+	endif
+endif
+
+\rm -f tmp.$$
+# echo returning with status $ret_status
+exit $ret_status

@@ -1,0 +1,4 @@
+`P0  P1   Result
+`--- ---- ------
+main main syntactically-equal
+f    f    

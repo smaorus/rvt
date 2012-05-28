@@ -1,0 +1,8 @@
+#!/bin/tcsh
+source "$0:h"/rv_set
+# *************  from visual studio this script is not run ************
+set CILLY_FLAGS = "--save-temps --noPrintLn --rmUnusedInlines --dosimpleMem --decil --noInsertImplicitCasts"
+#if ( $5 == 0 ) then 
+echo `which cilly` $CILLY_FLAGS $1
+#endif
+cilly $CILLY_FLAGS $1  >& /dev/null

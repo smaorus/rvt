@@ -1,0 +1,65 @@
+
+    cTool
+
+    Copyright 1994-2001 - Shaun Flisakowski
+
+    This is the latest version of cTool.
+    Please keep the complaints rolling in, or I'll never work on it :).
+
+    The latest version is currently available at:
+        ftp.spf-15.com:/pub/users/flisakow/pkg/ctoolXXX.tar.gz
+
+    I announce major new versions to a private mailing list I
+    maintain; send mail to me at flisakow@spf-15.com to get
+    on or off the list.
+
+    Newer versions have bug fixes, code and ideas donated by
+    various programmers, the list keeps growing. In particular,
+    I would like to thank:
+          Kurt Cockrum
+          Robert O'Callahan
+          John Harper
+          Joerg Schoen
+          Franklin Chen
+          Keith Thompson
+          Pavel Kalugin
+          Mark Willey
+          Richard O'Keefe
+          Brian Chess
+          Dickon Reed
+          Patrick Baudin
+
+    And also thanks to the many more people who have
+    pointed out bugs and made suggestions.
+
+    If you're interested in working on ctool, or have some code
+    you want to merge in, just let me know.
+ 
+    The file ctdemo.cpp implements a simple main() that reads
+    in C files, parses them and then prints them back out. 
+    This is only supposed to be an example, and is
+    not meant to be a real program.  You would of course write
+    your own main() which did something useful :). 
+
+    Read ANNOUNCE, which is my hard-sell for why you want this
+    C lexer/parser package instead of Roskind's (which doesn't even
+    include a symbol table).
+
+    Also, read COPYING which releases me from all responsibilites
+    relating to the use or mis-use of this code.
+
+    The 'gram' directory contains ansi specs I got off the
+    net somewhere, I didn't use them (I didn't find them until
+    after I had already done mine) but I tossed them in anyway.
+
+    The 'regression' directory contains some programs to test it
+    on, and a perl script to run them.
+
+    The 'tri' directory contains code to make a simple preprocessor
+    that will translate trigraphs.
+
+    If you have problems/comments/suggestions I would like to hear 
+    from you:
+        flisakow@spf-15.com
+        flisakow@acm.org
+

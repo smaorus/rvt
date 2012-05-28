@@ -1,0 +1,47 @@
+
+    Need to make sure everything is hooked into the symbol table.
+
+    If we want expressions to always have a type do we need
+    to make fake types for things like labels, enum constants, etc?
+
+    Add more gcc extensions, particularly the easy or commonly
+    used ones.  typeof(), alignment attribute, etc. 
+----- 
+    Continue revamping type system, important changes so far:
+        struct/union/enum are _base_ types, and are defined
+        via StructDef/EnumDef, they do not fit into the type
+        tree except at the bottom.  (Eliminated EnumType
+        and StructType).
+
+        type qualifiers (const/volatile) are only allowed on
+        base types and pointer types, nothing else has them.
+
+        Should really switch EnumDef and StructDef over
+        to using vectors...
+--------- 
+
+    Write IsEquiv() function to check for structural type-equivilence.
+ 
+    Full symbol table - moving toward type-checking.
+        - Struct/Unions need their own namespace.
+
+    Errors need improvement, some parsing errors result in
+    internal errors rather than useful diagnostics.  Need
+    a generalized error reporting scheme that provides file/line#
+    for higher-level errors.
+
+    Start using STL. 
+---
+    Typedef names present in new declarations.
+
+    Documentation of the new C++ interface (in HTML)
+
+    Write a few example programs using the library.
+        - Call graph generator
+
+    --------------
+Kinda work, maybe need to be revisted:
+
+    Array usage - handle multidimensional array with a single class
+    casts
+

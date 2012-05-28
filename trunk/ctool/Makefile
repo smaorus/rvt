@@ -1,0 +1,93 @@
+# $Id: Makefile.in,v 1.3 2003/09/08 00:19:29 stefan Exp $
+#
+# This source file is a part of the ctool Project.
+# Copyright (C) 2003 Stefan Seefeld
+#
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Library General Public
+# License as published by the Free Software Foundation; either
+# version 2 of the License, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Library General Public License for more details.
+#
+# You should have received a copy of the GNU Library General Public
+# License along with this library; if not, write to the
+# Free Software Foundation, Inc., 675 Mass Ave, Cambridge,
+# MA 02139, USA.
+
+SHELL		:= /bin/sh
+
+include local.mk
+
+srcdir		:= .
+top_srcdir	:= .
+builddir	:= ./lib/
+
+distdir		:= CTool-2.11
+
+subdirs		:= src examples
+
+action		:= all
+
+.PHONY: all $(subdirs)
+
+all:	$(subdirs)
+
+$(subdirs):
+	@echo making $(action) in $@
+	$(MAKE) -C $@ $(action)
+
+depend:
+	$(MAKE) action="depend"
+
+doc:
+	$(MAKE) action="doc"
+
+dist: $(distdir).tar.gz
+
+$(distdir).tar.gz:
+	@echo "generating $@..."
+	-rm -rf $(distdir)
+	cp -pr $(srcdir) $(distdir)
+	-chmod -R a+r $(distdir)
+	tar czhf $(distdir).tar.gz \
+       --exclude CVS \
+       --exclude .cvsignore \
+       --exclude autom4te.cache \
+       --exclude '*.m4' \
+       --exclude '*.ac' \
+       --exclude '*~' \
+       $(distdir)
+	-rm -rf $(distdir)
+
+install:
+	$(MAKE) action="install"
+
+uninstall:
+	$(MAKE) action="uninstall"
+
+test:
+	$(MAKE) -C test
+
+clean:
+	$(MAKE) action="clean"
+
+distclean:
+	@echo 'This command removes Makefiles and auxiliary files;'
+	@echo 'run configure to regenerate them.'
+	$(MAKE) action="distclean"
+	rm -rf Makefile local.mk config.cache config.log config.status \
+               $(top_srcdir)/autom4te.cache $(top_srcdir)/aclocal.m4
+
+
+maintainer-clean:
+	@echo 'This command is intended for maintainers to use;'
+	@echo 'it deletes configure and auxiliary files;'
+	@echo 'run autogen.sh to regenerated them.'
+	$(MAKE) action="maintainer-clean"
+	rm -rf Makefile local.mk config.cache config.log config.status \
+               $(top_srcdir)/autom4te.cache $(top_srcdir)/aclocal.m4 \
+               $(top_srcdir)/configure 

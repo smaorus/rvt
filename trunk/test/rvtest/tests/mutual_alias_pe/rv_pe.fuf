@@ -1,0 +1,9 @@
+`P0            P1             Result
+`------------- -------------- ------
+F              F              partially-equivalent
+myempty        myempty        syntactically-equal partially-equivalent
+Loop_main_for1 Loop_main_for1 syntactically-equal partially-equivalent
+G              G              partially-equivalent
+Loop_main_for2 Loop_main_for2 partially-equivalent
+main           main           syntactically-equal partially-equivalent
+M              M              partially-equivalent

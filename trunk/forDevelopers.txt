@@ -1,0 +1,252 @@
+This file contains:
+1. Install.
+2. Tips for developers.
+3. Change tags.
+
+
+  /******************************************************************/
+ /*                    INSTALL                                     */
+/******************************************************************/
+1. Cilly:
+   It is desired to have installed Cilly: 
+   http://www.cs.berkeley.edu/~necula/cil/
+   
+2. Minisat:
+   You must install Minisat from http://minisat.se/Main.html or take its 
+   executable from one of the team mates. The name of the executable must be:
+   minisat+_64-bit_static under Linux, minisat+_64-bit_static.exe otherwise. 
+   
+3. Cygwin - if    
+   If you work on Windows you should install X-cygwin from http://x.cygwin.com
+   
+4. RVT:
+   If you work on Linux or have cygwin installed, you can install RVT and its
+   necessary subcomponents (CBMC, etc.) with:
+   > make install
+   If you work on Windows, first of all, you need cygwin installed and, before
+   you build RVT, make sure that the following components are installed:
+   "/cygdrive/c/Program Files/Microsoft Visual Studio 10.0"
+   "/cygdrive/c/Windows/Microsoft.NET/Framework"
+
+   make install might take long time.
+   The following command checks that the install was successful:
+   > make test_rvt
+
+   During 99.9% of the time you will touch only the files of RVT. Since you 
+   once ran make install, you can quickly recompile the changes in RVT only
+   by running:
+   > make all
+
+   You can work also with Microsoft Visual Studio. It takes longer to set up 
+   the project for the first time. Ofer and Dima approach it in different 
+   manners. For example, Dima uses both Microsoft Visual Studio for debugging
+   and cygwin for other tasks.
+
+
+
+  /******************************************************************/
+ /*                    TIPS FOR DEVELOPERS                         */
+/******************************************************************/
+1. Strive to minimize or even avoid changes under ctool/ code.  
+
+2. There are thousands of ctool/ objects created. Most of them have field 
+   m_uniqId (see macros GLOB_UNIQ_ID and ALLOC_UNIQ_ID). If the type of the
+   object which is interesting to you is missing m_uniqId, you can add it.
+
+3. Many times RVT generates some weird piece of code or writes into rv_errstrm
+   a message, but you cannot easily find in the code of RVT where those things
+   are generated. RVT has a utility for capturing a sequence of characters 
+   that interest you. You need to do the following: 
+   a) Set a breakpoint in RVErrStreamBuf::breakpoint(), defined in rv_dbg.cpp;
+   b) Tell RVT what is the sequence you search for. You can do it in either of
+      the following ways:
+        *) Manually call breakOnSeq("XXX") from a debugger OR
+       **) Add that call into the code and recompile OR
+      ***) Start RVT with -break "XXX" command line option.
+      "XXX" stands for the sequence of characters you search for.
+   When RVT has just generated that sequence it invokes 
+   RVErrStreamBuf::breakpoint(), where your breakpoint will be hit. 
+   Remark: regrettably under some circumstances, RVErrStreamBuf::breakpoint() 
+   can be called with a very short delay. However, even in such a case if you
+   look back through the stack, you can easily locate where the sequence of 
+   matter is generated.  
+   
+4. When PROC, TRY_PROC, REP_PROC or TRY_REP_PROC return false, it is followed
+   by a call to tryRepProcBreakpoint(). You can set a breakpoint there.
+   
+5. If RVMain::main() fails, you can quickly catch where it takes place by 
+   setting a breakpoint in RVStatus::breakpoint().
+
+6. Set breakpoints in fatal_error(). Set a conditional breakpoint in exit() 
+   with condition: code!=0
+
+7. Sometimes you need to run scripts from tools/scripts from a command line
+   shell. Before running them you should setenv RVT_PLATFORM properly. The 
+   possible values are:
+   setenv RVT_PLATFORM windows
+   setenv RVT_PLATFORM linux
+   setenv RVT_PLATFORM cygwin
+   RVT sets RVT_PLATFORM automatically in file RVCommands::runScript().
+
+
+  /******************************************************************/
+ /*                   CHANGE TAGS                                  */
+/******************************************************************/
+Change tags: 
+1. NO_ALLOCATION_IN_MAIN 
+before: an output arg. int x to a function was handled in main as follows: 
+int *rvp_x;
+rvp_x = (int *)malloc(sizeof(int));
+f(rvp_x);
+
+after: 
+int rvp_x;
+f(&rvp_x);
+
+
+same thing inside UF: 
+before any output of the UF was
+rv_UF_...[rv_...].in_v = (T *)malloc(sizeof(T))
+*rv_UF_...[rv_...] = *v;
+
+now: 
+rv_UF_...[rv_...].in_v = &v_dummy;
+*rv_UF_...[rv_...] = *v;
+
+
+2. ADD_VAR_NAME_TO_DECLARATION
+Adding variable names to declarations of the form f(int, int) (e.g. in library functions). 
+In decl.cpp
+
+3. OUTLINE_FUNCS
+outlining '*', '/', %' from within the parser.
+
+
+4. PPE
+partial partial equivalence. partial equivalence with respect to subsets of the inputs and outputs. 
+Includes proving the equivalence between functions with different interface.
+
+5. ARRAYS_IN_UF
+ arrays in the cbmc-based UF.
+ The solution is complicated among other things because we cannot use an array of arrays (the cbmc array macros don't support it). So we need a switch statment according to the index just to make assignments. 
+ Each input array to side 0 is saved in a new array variable, which is declared through arr_save_decl and assigned that input array in arr_save_assign.
+ 
+ Suppose the input to the UF is: int *a, int x; where a is an array.
+ 
+ This becomes: 
+ 
+ Global declarations: 
+ int  RV_ARR_SAVE_1_rvs0_a_0[5]; // since the UF can be called max_records times, the suffix _0 here is an index in that range.
+ int  RV_ARR_OUT_s0_rvs0_a_0_0[5]; // in case 'a' is also an output, we have two possible array values. _i_j means: the j-th call to the i-th UF. 
+ int  RV_ARR_OUT_s1_rvs0_a_0_0[5]; // see above
+
+ //* UF side 0: *
+ static unsigned char rv_call_counter = 0; // this maintains which call it is to this UF (there cannot be more than max_record)
+ int *RV_ARR_P_s0_rvs0_a; // local pointer to be used soon
+ int *RV_ARR_P_s1_rvs0_a; // same
+ switch(rv_call_counter) {  // here we switch according to the call number (because we cannot use a2-dimentionsal arrays with the array macros -- see above)
+    case 0:
+            RV_ARR_P_s0_rvs0_a = RV_ARR_OUT_s0_rvs0_a_0_0; // 
+            RV_ARR_P_s1_rvs0_a = RV_ARR_OUT_s1_rvs0_a_0_0; 
+            RVT_COPY_ARRAY(RV_ARR_SAVE_1_rvs0_a_0, rvs0_a, 5); break; // saving the input array
+ //... similar for case 1
+ }
+ rv_call_counter++;
+ if (__CPROVER_uninterpreted_1_rvs0_a(1, x))  // in side 0 we make each array argument into '1'. On side 1 this will be a predicate equivalent to 1 only if the input arrays are the same.
+  {RVT_COPY_ARRAY(rvs0_a, RV_ARR_P_s0_rvs0_a, 5);} // rvs0_a is the output. We copy to it one of the two outputs.
+  else
+  {RVT_COPY_ARRAY(rvs0_a, RV_ARR_P_s1_rvs0_a, 5);} // the other output. 
+
+//* UF side 1: *
+ _Bool RV_ARR_EQ_1_rvs1_a; // this will be 1 if the input arrays are the same.
+  static unsigned char rv_call_counter = 0; // same as in side 0
+  int *RV_ARR_P_s0_rvs1_a; // same as in side 0
+  int *RV_ARR_P_s1_rvs1_a; // same as in side 0
+  switch(rv_call_counter) { // same as in side 0
+    case 0:
+            RV_ARR_P_s0_rvs1_a = RV_ARR_OUT_s0_rvs0_a_0_0; 
+            RV_ARR_P_s1_rvs1_a = RV_ARR_OUT_s1_rvs0_a_0_0;   
+            RV_ARR_EQ_1_rvs1_a = __CPROVER_array_equal(rvs1_a,RV_ARR_SAVE_1_rvs0_a_0);  break;
+ ... same for case 1
+ }
+ rv_call_counter++;
+  if (__CPROVER_uninterpreted_1_rvs0_a(RV_ARR_EQ_1_rvs1_a, x)) // note that instead of the '1' in side 0, now we send 1 only if the input arrays are the same. 
+  {RVT_COPY_ARRAY(rvs1_a, RV_ARR_P_s0_rvs1_a, 5);} // if yes then use the same output
+  else
+  {RVT_COPY_ARRAY(rvs1_a, RV_ARR_P_s1_rvs1_a, 5);}
+
+ * in main: *
+ int  rv_nd_RV_ARR_OUT_s1_a_2_1[5]; // declare a nondet array (nondet because it is local) for each output array
+  __CPROVER_array_copy(RV_ARR_OUT_s0_rvs0_a_1_0,  rv_nd_RV_ARR_OUT_s0_rvs0_a_1_0);  // assign it to the corresponding output array. 
+
+
+
+6. NULL_DEREF_IN_UF
+If an input/global pointer variable arrives to a UF as null, we now allocate it. Otherwise the automatic 'assume not null deref' 
+will block the path, and make it unsound. For example, the original program could have been: 
+f() {
+ if (g(0)) return 1;
+ return 2;
+}
+g(int *p) {
+if (p == 0) return 1;
+return 2;
+}
+
+suppose that g is equivalent to g' and hence becomes UF. 
+
+So now we have: 
+f() {
+ if (rvt_g(0)) return 1;
+ return 2;
+}
+rvt_g(int *p) {
+int retval;
+retval = __CPROVER_UNINTERPRETED_P(*p);
+}
+
+Note that rvt_g is called with a NULL pointer. Hence the detrererence of p is an assertion failure. 
+But because of the flag --assert-to-assume, this simply blocks this path. But it is possible that exactly in this path f,f' are not 
+equivalent.
+
+so to solve it we now have
+
+int tmp;
+
+rvt_g(int *p) {
+int retval;
+if (p == 0) p = &tmp;
+retval = __CPROVER_UNINTERPRETED_P(*p);
+}
+
+
+  
+TD1. soundness bug: inputs to UF representing the recursive call should be inputs + outputs (rvt currently takes only the inputs). 
+To be more refined, it is inputs + outputs that are not assigned a value in at least one path in the function (because in that case the value of that output is implicitly read).
+
+Here is an example: 
+int g; //global
+ 
+F(int i){
+     if (i < 0) {return 1;}
+     g := 1;
+     return F(i-1);    //ret = UF_ret(i-1), g = UF_g(i-1);
+}
+
+F’(int i){
+     if (i < 0) {return 1;}
+     g' := 2;
+     return F'(i-1);    //ret' = UF_ret(i-1), g' = UF_g(i-1);
+}
+ 
+
+The input to F (and F’) = {i} and the output = {ret, g}. Here “ret” denotes the return of F (and F’).
+ 
+Since the read set is {i}, the recursive calls will be replaced by the lines in comments. This will prove F,F' to be equivalent although they are not. So the solution is to make g an input to the UF. 
+What's happening here? in the base case g retains its old value, which means that implicitly g is an input to the function.  Hence we must make it an input.
+
+
+TD15. Completeness bug:
+local variables that are used inside loops are part of the interface of the loop function, even if they are written-to before being read. 
+The problem is that these variables are local and hence receive a nondet value and hence make the UF representing the loop to return different values. 
+cil introduces such temp. variables, and it ruins proofs (see test: bug15_pe)

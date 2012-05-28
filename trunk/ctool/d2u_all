@@ -1,0 +1,1 @@
+find ! -type d -print -exec d2u_in_place {} \;

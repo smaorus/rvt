@@ -1,0 +1,11 @@
+#!/bin/tcsh
+source "$0:h"/rv_set
+set rv_inc = "$0:h"/../rv_inc
+mkdir -p "$1"
+rm -rf "$1"/*.* "$1"/ansi-c-lib
+cp "$rv_inc/rv_inputs.c" "$1"
+cp "$rv_inc/rv_declarations.h" "$1"
+cp -r "$CBMC_ANSI_C_LIB" "$1"/ansi-c-lib
+if ( $2 == 0 ) then
+echo made dir "$1"
+endif

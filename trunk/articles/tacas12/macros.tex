@@ -1,0 +1,199 @@
+
+% Macros
+\newcommand\limply{\rightarrow}
+\newcommand\type[1]{{\tt #1}}
+\newcommand\nin{\noindent}
+\newcommand\true{\mbox{{\sc true}}\xspace}
+\newcommand\false{\mbox{{\sc false}}\xspace}
+% \newcommand\comment[1]{}
+% \newcommand\note[2]{\begin{itemize} \item[$\Diamond$ \emph{Side-Note $\rangle$}] {\bf #1: }#2 $\Diamond$\end{itemize}}
+\newcommand\brackets[1]{\vspace{0.5 cm}\begin{center}#1\end{center}\vspace{0.3 cm}}
+\newcommand\alg[1]{{\sc #1}}
+\newcommand\margparams[1]{\marginpar{\fbox{#1}}}
+\newcommand\textfirst[1]{\emph{#1}\index{#1}}
+%\newcommand\first[2]{\margin{#2}\label{page:#1}}
+% we need a separate macro for each chapter because we keep the name of the figure equal to the name of the .fig file, and we cannot use ':' in the file name
+\newcommand\graph[2]{\begin{figure} \begin{center}\scalebox{0.7}{\input{#1.pstex_t}}\caption{\label{fig-eq:#1}#2}\end{center}\end{figure}}
+\newcommand\graphsa[2]{\begin{figure} \begin{center}\scalebox{0.7}{\input{#1.pstex_t}}\caption{\label{fig-sa:#1}#2}\end{center}\end{figure}}
+\newcommand\term[1]{\emph{#1}\index{#1}}
+\newcommand\function[1]{{\sc #1}}
+\newcommand\tool[1]{{\sc #1}}
+\newcommand\SEM[1]{\mathopen{{[}\kern-.25ex{[}}\;#1\;\mathclose{]}\kern-.25ex{]}}
+\newcommand\rulename[1]{{\sc #1}\index{inference rules!#1}\xspace}
+\newcommand\infrule[3]{\displaystyle{\frac{#1}{#2}}\ \ (\mbox{\rulename{#3}})}
+%\newcommand\corn{\ \lower 5pt\hbox{\hskip 4pt\vrule width 3pt height 1pt depth
+%  1pt\hbox{\vrule width 2pt height 4.5pt depth 1pt}}}        % end of def
+
+\newcommand\Corn{\hfill $\diamond$}
+
+\newcommand\corn{\hfill\hbox{\hskip 4pt
+                \vrule width 3pt height 1pt depth 1pt
+                \hbox{\vrule width 2pt height 3.5pt depth 1pt}}}
+
+
+% eq specific macros
+
+
+
+\newcommand\E{\mbox{\tiny E}} % for superscript E
+\newcommand\eq{\varphi^{\E}} % Equality formula (after reduction)
+\newcommand\peq{{\psi^{\E}}}  % Equality formula (after reduction)
+\newcommand\equf{\varphi^{\mbox{\tiny UF}}}% Equality formula with Uninterpreted Functions (before reduction)
+\newcommand\eqfc{consistent^{\E}} % Functional consistency constraints
+\newcommand\eqflat{flat^{\E}} % same as \equf, when ufs are replaced with variables
+\newcommand\eqF{\varphi^{\E}_\star} % same as \equf, when ufs are replaced withthe \F variables
+\newcommand\bool{{\mathcal B}} % Propositional formula
+\newcommand\enc{\bool_{enc}} % Boolean encoding
+\newcommand\transitivity{\bool_{trans}} % Transitivity constraints due to Boolean encoding
+\newcommand\transsparse{\bool_{sparse}} % Transitivity constraints due to the sparse method
+\newcommand\transopt{\bool_{rtc}} % Transitivity constraints due to the reduced transitivity constraints method
+\newcommand\alphaopt{\alpha_{rtc}} % assignment due to the reduced transitivity constraints method
+\newcommand\alphasparse{\alpha_{sparse}} % assignment due to the sparse method
+\newcommand\eqgraph{G^{\E}}
+\newcommand\eqp{=^*} % Equality path
+\newcommand\neqp{\neq^*} % disequality path
+\newcommand\eqsp{=^*_s}
+\newcommand\neqsp{\neq^*_s}
+\newcommand\size[1]{\vert #1\vert}
+\newcommand\Ene{E_{\neq}} % set of \neq edges
+\newcommand\Eeq{E_=} %  set of = edges
+\newcommand\Geq{\eqgraph_=} %   dashed sub-graph (representing \Eeq)
+\newcommand\Gne{\eqgraph_{\neq}} % solid sub-graph (representing \Ene)
+\newcommand\Gin{G_{\emph{inc}}}
+\newcommand\cha{\emph{char}}
+\newcommand\F{F^\star}
+\newcommand\G{G^\star}
+% from cav01
+\newtheorem{Yrule}{Rule}
+\newtheorem{YTrule}{(Suggested) Rule}
+\newcommand{\simple}[1]{{\it simp}({#1})}
+% uf specific macros
+\newcommand\Fcase[1]{$\left( \mbox{\begin{tabular}{lll}#1 \end{tabular}} \right)$}
+\newcommand\Fcaseb[1]{$\left( \mbox{\begin{tabular}{lllll}#1 \end{tabular}} \right)$}
+
+%\renewcommand\vec[1]{\overline{#1}}
+\renewcommand\term[1]{term(#1)}
+\newcommand\is{\mathbb{L_{UP}}} % inference system with UP
+\newcommand\lmt{\mathbb{L_{RE}}} % inference system with MT
+\newcommand\codesize{\footnotesize}
+\newcommand\recur{{\sc (proc-p-eq)}\xspace}
+\newcommand\recurs{{\sc (proc-p-eq$_s$)}\xspace}
+\newcommand\recurn{proc-p-eq}
+\newcommand\mtermg{{\sc (m-term-pe)}\xspace}
+\newcommand\mtermd{{\sc (m-term)}\xspace}
+\newcommand\mtermdp{{\sc (m-term$^+$)}\xspace}
+\newcommand\termd{{\sc (term)}\xspace}
+\newcommand\callc{{\sc call\mbox{-}contains}\xspace}
+\newcommand\mapf{map_{\cal F}}
+\newcommand\mapg{map_g}
+\newcommand\mapt{map_t}
+\newcommand\mapm{map_m}
+\newcommand\mapl[1]{$\langle #1 \rangle \in map$} % inside the first alg.
+\newcommand\map[1]{$\langle #1 \rangle \in \mapf$}
+\newcommand\upbody[1]{{#1}^{UF}}
+\newcommand\upbodiesand[1]{$\upbody{#1}$ and $\upbody{#1'}$}
+\newcommand\upproc{\mbox{UF}}
+\newcommand\upprocl[1]{\textbf{\upproc(#1)}}
+\newcommand\upprocsand[1]{$\upproc(#1)$ and $\upproc(#1')$}
+\newcommand\upprocs[1]{$\upproc(#1)$, $\upproc(#1')$}
+\newcommand\ufpdef[1]{PV_f[#1]}
+\newcommand\ufpdefp[1]{PV_{f'}[#1]}
+
+% for the eval expression tree example:
+\newcommand\isleaf{\mbox{isleaf}}
+\newcommand\isplus{\mbox{isplus}}
+\newcommand\ismult{\mbox{ismult}}
+\newcommand\mkplus{\mbox{mkplus}}
+\newcommand\mkmult{\mbox{mkmult}}
+\newcommand\leftson{\mbox{leftson}}
+\newcommand\rightson{\mbox{rightson}}
+\newcommand\doplus{\mbox{doplus}}
+\newcommand\domult{\mbox{domult}}
+
+\newcommand\from{\mathit{from}}
+\newcommand\RT{RT\xspace}
+\newcommand\RV{RV\xspace}
+\newcommand\Tree{Stack-level tree}
+\newcommand\tree{stack-level tree}
+\newcommand\trees{stack-level trees}
+
+
+
+\newcommand\cb{check-block\xspace}
+\newcommand\cbr{check-block$^r$\xspace}
+\newcommand\cbs{check-blocks\xspace}
+%\newcommand\uf{uninterpreted function\xspace}
+\newcommand\ufs{uninterpreted functions\xspace}
+\newcommand\UFs{Uninterpreted Functions\xspace}
+\newcommand\UF{Uninterpreted Function\xspace}
+\newcommand\rsp{related subprogram}
+\newcommand\rsps{related subprograms}
+\newcommand\lrf{loop recursive function}
+\newcommand\lrfs{loop recursive functions}
+\newcommand\ufstr{UF-struct}
+\newcommand\ufstrs{UF-structs}
+\newcommand\ufarr{UF-array}
+\newcommand\ufarrs{UF-arrays}
+\newcommand\ub{unbounded structure}
+\newcommand\ubs{unbounded structures}
+\newcommand\ua{uninterpreted array}
+\newcommand\uas{uninterpreted arrays}
+
+\newcommand\difflabel{{``Failed''}\xspace}
+
+\newcommand\equivscclabel{{``Conditional-Equivalent''}\xspace}
+
+\newcommand\call{\mbox{call }}
+\newcommand\body{\mbox{ body}}
+\newcommand\nextup{\alg{next-unmarked-pair()}\xspace}
+\newcommand\Checkr{Check$^r$}
+\newcommand\Long[1]{} % redefine for long version
+\newcommand\pe{p\mbox{-}equiv\xspace}
+\newcommand\requiv{call\mbox{-}equiv}
+\newcommand\rimplic{\xrightarrow{reach}}
+
+
+\newcommand\mtbody[1]{{#1}^{UF}}
+\newcommand\mtproc{\mbox{UF}}
+\newcommand\mtprocl[1]{{\sc uf}\_{#1}}
+\newcommand\mtufprocl[1]{{\sc peuf}\_{#1}}
+\newcommand\pneuf[1]{{\sc uf}(#1, $\vec{in}$)}
+\newcommand\pneufp[1]{{\sc uf'}(#1, $\vec{in'}$)}
+\newcommand\peuf[1]{{\sc peuf}(#1, $\vec{in}$)}
+\newcommand\peufp[1]{{\sc peuf'}(#1, $\vec{in'}$)}
+\newcommand\uf[1]{UF_{#1}}
+\newcommand\ufp[1]{\ufpdef{\uf{#1}}}
+\newcommand\ufpp[1]{\ufpdefp{\uf{#1}}}
+
+\newcommand\pneufname{{\sc uf}\xspace}
+\newcommand\pneufpname{{\sc uf'}\xspace}
+\newcommand\peufname{{\sc peuf}\xspace}
+\newcommand\peufpname{{\sc peuf'}\xspace}
+
+\newcommand\emulatesame{\xspace{\sc ($^=$)}\xspace}
+\newcommand\emulatedifferent{\xspace{\sc ($^{\neq}$)}\xspace}
+
+\newcommand\mtname{reach\mbox{-}equivalent\xspace}
+\newcommand\mt{m\mbox{-}term\xspace}
+\newcommand\comtag[1]{$#1$, $#1'$}
+\newcommand\comandtag[1]{$#1$ and $#1'$}
+\newcommand\upcomtag[1]{\upproc($#1$), \upproc($#1'$)}
+\newcommand\mscccovered{$covered$\xspace}
+\newcommand\ProveMT{\alg{ProveMT}\xspace}
+\newcommand\CheckCallEquiv{\alg{CallEquiv}\xspace}
+\newcommand\abort{{\bf abort}}
+\newcommand\mtlabel{$m\_term$\xspace}
+\newcommand\equivlabel{$partially\_equiv$\xspace}
+\newcommand\coverlabel{$mscc\_covered$\xspace}
+\newcommand\pair[1]{\langle#1\rangle}
+\newcommand\pairtag[1]{$\langle$\comtag{#1}$\rangle$}
+\newcommand\pairbodies[1]{$\pair{\upbody{#1}$, $\upbody{#1'}}$}
+\newcommand\enforcement{{\sc (Enforce)}\xspace}
+\newcommand\enforcementnew{{\sc (Enforce-new)}\xspace}
+\newcommand\attachmentProveMT{Fig.~\ref{alg:attachment}}
+
+\newcommand\requivpair[1]{\requiv{(#1, #1'})}
+\newcommand\mtpair[1]{\mt{(#1, #1'})}
+\newcommand\calls[2]{#1\xrightarrow{calls}#2}
+\newcommand\pairwtag[1]{\pair{#1,#1'}}
+\newcommand\callspair[2]{\calls{\pairwtag{#1}}{\pairwtag{#2}}}
