@@ -1,0 +1,6 @@
+#!/bin/tcsh
+source "$0:h"/rv_set
+
+echo `which gcc` -fsyntax-only $2 "$1"
+endif
+gcc -fsyntax-only $2 "$1" 

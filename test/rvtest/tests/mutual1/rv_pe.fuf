@@ -1,0 +1,10 @@
+`P0                P1                 Result
+`----------------- ------------------ ------
+F                  F                  partially-equivalent
+putchar            putchar            syntactically-equal partially-equivalent
+__CPROVER_printf_0 __CPROVER_printf_0 syntactically-equal partially-equivalent
+Loop_main_for1     Loop_main_for1     partially-equivalent
+__CPROVER_printf_1 __CPROVER_printf_1 syntactically-equal partially-equivalent
+main               main               
+M                  M                  partially-equivalent
+puts               puts               syntactically-equal partially-equivalent

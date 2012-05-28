@@ -1,0 +1,46 @@
+
+Requested:
+	Add support for __builtin_next_arg
+	it basically needs to be defined as: 	void* __builtin_next_arg( char* format );
+	before we start parsing.
+
+Gcc Extensions:
+  Supported:
+    X Char Escapes
+    X Long Long:
+    X Zero Length Arrays
+    X Dollar Signs
+    X Variable attributes
+    X Function Attributes: __attribute__
+    X Alternate keywords
+    X Case Ranges
+    X Incomplete Enums
+    X Function Names ( __FUNCTION__ and __PRETTY_FUNCTION__ )
+
+  Might add these:
+    Inline
+    Labeled Elements in initializers
+    Typeof
+    Alignment: __alignof__
+
+  Not adding these:
+    Conditionals with ommitted operands
+    Labels as values
+    Variable Length Arrays
+    Statement Exprs
+    Local Labels
+    Nested Functions
+    Constructing calls
+    Naming Types
+    LValues
+    Macro Varargs
+    Subscripting
+    Pointer Arith
+    Initializers (non constant)
+    Constructors
+    Cast to union
+    Function Prototypes
+    Extended Asm
+    Asm Labels
+    Explicit Reg Vars
+

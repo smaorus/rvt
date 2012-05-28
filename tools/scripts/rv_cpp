@@ -1,0 +1,6 @@
+#!/bin/tcsh
+source "$0:h"/rv_set
+
+#if ( $3 == 0 )  
+echo `which cpp` -D'__FUNCTION__="<unknown>"' -I $CBMC_ANSI_C_LIB -x c "$1" "$2"
+cpp -D'__FUNCTION__="<unknown>"' -I "$CBMC_ANSI_C_LIB"  -x c "$1" "$2"

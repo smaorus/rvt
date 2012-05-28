@@ -1,0 +1,21 @@
+
+
+  To compile the ctool example program, you should first edit the file:
+    src/makefile
+
+  Most of the things that might need to be changed should be near the
+  top of the file.
+
+  To try building, cd into src and type 'make' or 'make all'.
+
+  This 'ctool' program is just an example of course, you would
+  want to compile in the parts you want (everything except 'ctdemo.cpp')
+  into your own executable.  By default, a library 'libct.a' is
+  built in the src directory containing all the objects you would
+  normally want.
+
+  Please read the file README also.
+
+  I hope you like it.
+
+  Shaun

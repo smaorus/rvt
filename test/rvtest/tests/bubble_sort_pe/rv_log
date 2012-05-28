@@ -1,0 +1,15 @@
+
+
+
+ Syntactically equivalent 
+------------------------------------------------------
+------------------------------------------------------
+
+
+
+ Semantic Checks Results 
+------------------------------------------------------
+Loop_bubble_sort_for1_for1 == Loop_bubble_sort_for1_for1
+Loop_bubble_sort_for1 == Loop_bubble_sort_for1
+init_array == init_array
+main == main

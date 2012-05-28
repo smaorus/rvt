@@ -1,0 +1,6 @@
+#!/bin/tcsh
+source "$0:h"/rv_set
+set rv_inc = "$0:h"/../rv_inc
+#echo cat "$rv_inc/$1"  "$2" 
+cat "$rv_inc/$1" "$2" > tmp
+mv tmp "$2"

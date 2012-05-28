@@ -1,0 +1,6 @@
+if (! $?CBMC_ANSI_C_LIB) then
+    set CBMC_ANSI_C_LIB = "$0:h"/../ansi-c-lib
+	if ( $1 == 0 ) echo CBMC_ANSI_C_LIB = "$CBMC_ANSI_C_LIB"
+endif
+# echo RVT_PLATFORM=$RVT_PLATFORM
+set path = ("$0:h"/../external/$RVT_PLATFORM $path)

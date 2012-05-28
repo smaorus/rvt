@@ -1,0 +1,152 @@
+%\conferenceinfo{DAC'09}{July 26-31, 2009, San-Francisco, California, USA}
+\documentclass{llncs}
+\usepackage{xspace}
+\usepackage{epsfig}
+\usepackage{amsmath, amssymb}
+\usepackage{algorithmicx,algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage{pifont}
+\newcommand\comment[1]{}
+\usepackage{listings}
+\usepackage{tkz-graph}
+\usepackage{graphics}
+\usetikzlibrary{arrows,shapes}
+%
+\lstset{language=C}
+
+\input{macros.tex}
+\begin{document}
+\title{Proof of the Weaker Inference Rule\mbox{\ \mtermd}}
+
+
+\author{
+Dima Elenbogen$^1$ \quad
+Shmuel Katz$^1$\quad
+Ofer Strichman$^2$
+}
+\institute{
+$^1$ CS, Technion, Haifa, Israel. \email{\{katz,edima\}@cs.technion.ac.il}  \\
+$^2$ Information Systems Engineering, IE, Technion, Haifa, Israel\ \email{ofers@ie.technion.ac.il}\\
+}
+
+\newcommand\bpar[1]{{\bf #1} }
+\maketitle
+
+\begin{abstract}
+This is the proof of the inference rule\mbox{\ \mtermd} given in Section 3 of the main aticle.
+\end{abstract}
+
+The rule is reminded in Fig.~\ref{fig:rule}.
+\begin{figure}%[here]
+{\large $\frac
+{\forall \pair{f, f'} \in\mapf(m).\ \requiv(\upbody{f},\upbody{f'})}
+{\forall \pair{f, f'} \in\mapf(m).\ \mt(f, f')}
+\mbox{\ \mtermd} \;.
+$}
+\label{fig:rule}
+\caption{Inference rule\mbox{\ \mtermd}}
+\end{figure}
+
+In order to make proofs more readable, assume that all the non-mapped calls are inlined as mentioned in Section 2.
+
+\begin{lemma}If $f$ is called with parameter $\vec{in}$ (even undirectly) under $f(\vec{in})$, then $f(\vec{in})$ will not terminate.
+\end{lemma}
+This follows from the fact that all values which affect the computation are passed as call parameters (no function has side effects). Thus the same computation would repeat forever if $f(\vec{in})$ occurred twice for any $\vec{in}$.
+
+\begin{lemma}If $f(\vec{in})$ terminates, then the number of different parameters with which $f$ is called (even undirectly) under $f(\vec{in})$ is finite.
+\end{lemma}
+
+Denote by $\ufpdef{f}$ the {\emph set} (not a multiset) of parameter vectors with which function $f$ is called.
+
+\begin{lemma}If \pairbodies{f} are call-equivalent, so are \pairtag{f}.
+\end{lemma}
+
+Proof: We shall prove the statement in the reverse direction: if \pairtag{f} are not call-equvalent, then neither are \pairbodies{f}. 
+
+Consider \pairtag{g}$\in\mapf$, so that, without loss of generality $g$, is called with parameter $\vec{in}$ from $f$, while $g'$ is never called with parameter $\vec{in}$ from $f'$, when \comandtag{f} are called with the same value. This fact makes \pairtag{f} non-call-equivalent. $\vec{in}\in$\ufpdef{g}. In $\upbody{f}$, each call of $g(\vec{in})$ is replaced with a call of \upprocl{g}. If $\vec{in}$ does not depend on the result of any of recursive functions, then the parameter passed into the corresponding call to \upprocl{g} in $\upbody{f}$ will not depend on the result of any uninterpreted function and, therefore, will be equal to $\vec{in}$. Otherwise, namely, $\vec{in}$ depends on the result of any of recursive functions, then non-deterministic values returned by uninterpreted functions will influence the parameter passed into the corresponding call to \upprocl{g} in $\upbody{f}$. But among all the possibilities for those non-deterministic values, there are values that were actually returned by the recursive functions replaced by those uninterpreted functions. Those actual values caused that $\vec{in}$ was passed into the mentioned call of $g$. Those actual values (returned by the uninterpreted functions) cause \upprocl{g} to be called with $\vec{in}$ in $\upbody{f}$. Hence, $\vec{in}\in$\ufp{g}. 
+
+If there are no calls of $g'$ in $f'$ at all, then $\upbody{f'}$ contains no calls of \upprocl{g'} either. Hence, \ufp{g'}$=\emptyset$, i.e., \ufp{g}$\neq$\ufp{g'}. 
+Otherwise, namely, there is a call of $g'$ in $f'$, but we know that $\vec{in} \notin $\ufpdef{g'}.
+Analogously, we can show that in this case when all uninterpreted functions return actual values that their corresponding original functions would, some value different from $\vec{in}$ is passed into \upprocl{g'} in $\upbody{f'}$. Hence, there exists a computation with a set of non-deterministic values for which $\vec{in}\notin$\ufp{g'}, i.e., \ufp{g}$\neq$\ufp{g'}.
+
+So in the both cases we found a computation where \ufp{g}$\neq$\ufp{g'}. This makes \pairbodies{f} not call-equivalent. \qed
+
+
+\begin{lemma}If all the functions called in \pairtag{f}$\in\mapf$, except \comandtag{f}, are assumed mutually-terminating, and \comtag{f} are call-equivalent, then \comandtag{f} are mutually-terminating.
+\end{lemma}
+
+Proof: Consider \pairtag{f}$ \in\mapf$ called with the same parameter $\vec{in}$. Since there are no loops, only calls to non-terminating functions can cause $f$ or $f'$ not to terminate. Assume by negation \pairtag{f} are not mutually terminating. Without loss of generality, assume that $f(\vec{in})$ terminates, while $f'(\vec{in})$ does not. 
+
+Consider any function $g \neq f$ called in $f(\vec{in})$ with parameter $\vec{X}$ such that \pairtag{g}$\in\mapf$. The call-equivalence of \pairtag{f} implies that $f'(\vec{in})$ also calls $g'$ with the parameter $\vec{X}$. If $g'(\vec{X})$ did not terminate, then $g(\vec{X})$ would not terminate either because \pairtag{g} are mutually-terminating. Hence, no $g \neq f$ can prevent the termination of $f'(\vec{in})$. 
+
+Consequently, only a recursive call to $f'$ itself can cause $f'(\vec{in})$ not to terminate. Consider $\vec{X_1}$, the parameter passed into the non-returning recursive call to $f'$. Since \comtag{f} are call-equivalent, $f$ is called with $\vec{X_1}$ too. $\vec{X_1} \neq \vec{in}$ because otherwise $f(\vec{in})$ would not terminate according to Lemma 1.
+
+Now consider terminating $f(\vec{X_1})$ and non-terminating $f'(\vec{X_1})$. The situation is quite similar to $f(\vec{in})$ and $f'(\vec{in})$. Thus we conclude that there must be terminating $f(\vec{X_2})$ under $f(\vec{X_2})$ and non-terminating $f'(\vec{X_2})$ under $f(\vec{X_1})$ such that $\vec{X_2} \notin \{\vec{in}, \vec{X_1}\}$. We can go on descending the call stacks discovering a new value $\vec{X_n} \notin \{\vec{in}, \vec{X_1}, ..., \vec{X_{n-1}}\}$ with which both \comandtag{f} are called. But the number of such unique values passed into $f$ is finite according to the Lemma 2. Hence, we must reach a situation where either:
+\begin{itemize}
+\item $f(\vec{X_n})$ calls $f$ with some $\vec{X_i}$ that is already found in the call stack, which contradicts the assumption that $f(\vec{in})$ terminates (Lemma 1);
+\item $f(\vec{X_n)}$ calls $f$ with some value $\vec{Y}$ such that $f'(\vec{Y})$ is never called in $f'(\vec{X_n})$. It contradicts the call-equivalence of \pairtag{f};
+\item $f(X_n)$ has no more calls to $f$. However, since $f'(\vec{X_n})$ does not terminate and, as earlier shown, only infinite recursive calls to $f'$ can prevent its termination, $f'(\vec{X_n})$ must call $f'$. Again, it contradicts the call-equivalence of \pairtag{f}.
+\end{itemize}
+Consequently, the assumption that $f(\vec{in})$ and $f'(\vec{in})$ are not mutually terminating cannot be true. \qed
+
+Meanwhile, we have proven the soundness of the inference rule for simple recursion only. The next lemma addresses mutual recursion. 
+
+\begin{lemma}For matched MSCC's \pairtag{m}, if all matched pairs of \pairtag{f} $\in$ \pairtag{m} have call-equivalent \pairbodies{f} and all the called functions which are not in \pairtag{m} belong to mutually-terminating pairs, then all the pairs of functions in \pairtag{m} are mutually-terminating. 
+\end{lemma}
+Proof sketch: according to Lemma 3, if for all the pairs \pairtag{f} $\in$ \pairtag{m},   \pairbodies{f} are call-equivalent, then all those pairs are call-equivalent by themselves. 
+
+Consider \pairtag{f}$\in$ \pairtag{m} called with the same parameter $\vec{in}$. Similarly to the proof of Lemma 4, we can show that only recursive calls to some functions from \pairtag{m} can cause $f$ or $f'$ not to terminate. Assume by negation \pairtag{f} are not mutually terminating. Without loss of generality, assume that $f(\vec{in})$ terminates, while $f'(\vec{in})$ does not.
+
+The number of functions in \pairtag{m} is finite. Hence, the infinite call stack of $f'(\vec{in})$ must include calls to some function $g'$ that repeat an infinite number of times such that \pairtag{g} $\in$ \pairtag{m}.
+
+From now on, the proof is very similar to that of Lemma 4. We start traversing the infinite call stack of $f'(\vec{in})$ and compare every call to $h'$ to the call of $h$ such that \pairtag{h} $\in$ \pairtag{m}. The only difference is that instead of descending to the same function pair in every call stack level (i.e., \pairtag{f} in the proof of Lemma 4), we now descend to some pair among the pairs of \pairtag{m}. According to Lemma 2, the number of unique values for every function from $m$ found in the call stack of $f(\vec{in})$ is finite because $f(\vec{in})$ is assumed to terminate. On the other side, as mentioned above, there exists infinitely repeating calls to $g'$ that will cause a contradiction to the assumption that $f(\vec{in})$ terminates, while $f'(\vec{in})$ does not: it can be shown that either $f(\vec{in})$ does not terminate or \pairtag{g} are not call-equivalent. \qed
+
+\begin{theorem}
+The inference rule\mbox{\ \mtermd} is sound.
+\end{theorem}
+Proof sketch: by induction over the maximal distance of MSCC node pair from leaf MSCC nodes in the call graph of compared programs (similar to decomposition of compared programs, see Section 4 of the main article). Each such pair satisfies the premise of Lemma 5. Consequently, the functions of the pair are mutually terminating. \qed
+\end{document}
+\comment{
+\begin{definition}[Potentially non-terminating functions]
+A function is said \emph{potentially non-terminating} if it is recursive and/or  calls a potentially non-terminating function.
+\end{definition}
+\section{Proof}
+
+The proof is restricted to programs \comtag{P} such that all their functions:
+\begin{enumerate}
+\item receive one parameter\footnote{This is not a limitation: we can consider a function that receives several parameters as if it gets a tuple, i.e., one complex parameter.},
+\item may be recursive, but not part of mutual recursion.
+\item do not call more than once any potentially non-terminating function\footnote{We made this restriction in order to make the proof easier. The proof of the decomposition algorithm addresses general functions without this restriction.}.
+% call themselves from a single call site if they are recursive. This means that the call chain is “linear”: once we return from a recursive call, we go all the way up and leave the function.
+\end{enumerate}
+All the MSCCs of \comtag{P} are of size 1 because of the absence of mutual recursion.
+
+Assume by negation that the programs are not mutually terminating but the premise holds.
+The proof is by induction on the maximum distance of the node (in terms of the number of MSCCs) from a leaf.
+
+\subsection{Base}
+Let \comtag{f} be the functions constituting the leaf nodes.
+\begin{itemize}
+\item If \comandtag{f} are not recursive, then they both terminate. Hence they are mutually terminating.
+\item If exactly one of \comtag{f} is recursive, then either the check fails trivially, and this fact contradicts our assumption, or the recursive call has never been invoked. The latter means that both \comandtag{f} terminate.
+\item If both \comandtag{f} are recursive, then let $i$ be an input to \comandtag{f} that causes $f$ to get stuck in an infinite call chain, but not $f'$. Since they passed the test, it means that they call \comtag{f} with the same values given the same inputs. Let $j$ be the input of $f'$ that caused it to return. We know that it did not cause $f$ to return. $\ufp{f'} = \emptyset$. However, $\ufp{f'} \neq \emptyset$ since $f$ is called from $f(j)$. This means that for the input $j$, $\ufp{f}\neq \ufp{f'}$, which contradicts our assumption that the premise  holds.
+
+
+Remark: if the function body of $f$ contained more than one recursive call to $f$, it would complicate the proof because the non-returning invocation of $f$ (i.e., which causes the infinite calling chain) might be preceeded by several returning invocations of $f$.
+\end{itemize}
+
+\subsection{Step}
+Assume that all the children of the compared functions \comtag{f} are mutually terminating. 
+\begin{itemize}
+\item If neither $f$ nor $f'$ are potentially non-terminating, then they both terminate, and hence are mutually terminating.
+\item Otherwise, assume without loss of generality $f$ does not terminate while $f'$ does. One of the next reasons can cause $f$ not to return:
+\begin{itemize}
+\item $f$ is repeated infinitely in the infinite call chain of $f$. Let $i$ be an input to \comandtag{f} that causes $f$ to get stuck in an infinite call chain, but not $f'$. Since they passed the test, it means that they call \comtag{f} with the same values given the same inputs. All values with which the descendents of f are called under f(i) cause them to terminate. Hence, this case is essentially the same as in the base case. Let $j$ be the input of $f'$ that caused it to return. We know that it did not cause $f$ to return. $\ufp{f'} = \emptyset$. However, $\ufp{f'} \neq \emptyset$ since $f$ is called from $f(j)$. This means that for the input $j$, $\ufp{f}\neq \ufp{f'}$, which contradicts our assumption that the premise holds.
+\item Otherwise, let $g$ be a child function of $f(i)$ $g$ that never returns. Let $j$ be the input of $g$ that caused it to never return. If $g'$ was called with $j$ from $f'(i)$, where \pairtag{g} $\in \mapf$, then by the induction hypothesis $g'$ should not return either. It contradicts our assumption that $f'$ terminates (i.e., at this stage we already proved the premise of the rule for lower levels, and the induction hypothesis is that it implies that the children are mutually terminating, indeed). Otherwise it means that $g'(j)$ was never called from $f'(i)$. But this contradicts the premise, namely, for $f(i)$ and $f'(i)$, $j \in \ufp{g}$ while $j \notin \ufp{g'}$.
+
+Remark: if the function body of $f$ contained more than one invocation of $g$, it would complicate the proof because the non-returning invocation of $g$  might be preceeded by several returning invocations of $g$.
+\end{itemize}
+\end{itemize}
+}
+
+

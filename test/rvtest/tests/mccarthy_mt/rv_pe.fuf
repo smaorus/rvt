@@ -1,0 +1,4 @@
+`P0  P1   Result
+`--- ---- ------
+f91  f91  partially-equivalent
+main main syntactically-equal partially-equivalent

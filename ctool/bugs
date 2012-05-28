@@ -1,0 +1,151 @@
+
+          Known Bugs in cTool
+
+Num    Date     Status   Description
+---  --------   ------   -------------------------------------------------
+000  07/18/97   FIXED    No listing of known bugs in place yet.
+001  07/18/97   FIXED    A typedef name cannot be used as a label.
+002  07/20/97   FIXED    Program gives warnings for many declarations.
+003  07/20/97   FIXED    Program gives parse errors for a few lines
+                         in the auto-generated gram.c and lexer.c.
+004  07/23/97   FIXED    Printing portions of a parse tree gives extra
+                         semicolons inside a struct/union definition.
+                         (Fix: use new function print_frag() for this.)
+005  07/16/97   FIXED    Running 'ctree -h' dumps core on some machines.
+006  08/07/97   FIXED    The line cnt is not incremented for string
+                         concatenation that crosses a line boundry.
+007  08/21/97   FIXED    In a declaration list, only the first symbol in
+                         the list is entered into the symbol table.
+008  12/09/97   FIXED    Solaris /usr/include/floatingpoint.h causes
+                         a problem (the decl on line 53).
+                         It appears a more complex typedef is not
+                         entered into the symbol table.
+009  01/13/98   FIXED    After trigraph replacement the trigraph
+                         preprocessor does not terminate lines properly.
+010  01/13/98   FIXED    Digraphs are replaced within strings, they 
+                         should not be.
+011  01/13/98   FIXED    integer suffixes are not allowed in either
+                         order, fix by Keith Thompson [aka kst].
+012  01/13/98   FIXED    Printing problem for the code:
+                            int x=1, y=1;
+                         which drops the comma.
+013  01/15/98   FIXED    Ellipsis not handled correctly, and also
+                         consistently spelled incorrectly (as elipsis) [kst].
+014  05/09/98   FIXED    extern "C" added to header files.
+015  07/15/98   FIXED    cannot typedef multiple names at once
+016  07/15/98   FIXED    cannot use a typedef name as a struct member [kst].
+017  07/15/98   FIXED    trailing comma not permitted in enum def [kst].
+018  07/15/98   FIXED    implicit int function def not permitted.
+019  07/15/98   FIXED    various problems with floating point literals [kst].
+020  07/18/98   FIXED    find_ident_name not finding all identifiers [kst].
+---  07/19/98            C-Tree Version 0.09
+
+021  07/21/98   FIXED    find_ident_name not handling ellipsis [kst].
+---  07/24/98            C-Tree Version 0.10
+
+022  07/29/98   FIXED    function parameters not inserted in sym table.
+023  08/01/98   FIXED    symbol redefinition is always allowed.
+---  08/02/98            C-Tree Version 0.11
+
+024  08/03/98   FIXED    hex char constant not read properly [kst].
+025  08/04/98   FIXED    struct/union members not entered into symtabs.
+---  08/08/98            C-Tree Version 0.12
+
+026  08/12/98   FIXED    '->' shown as '.' [willey].
+027  08/12/98   FIXED    Function ptrs printed incorrectly [willey].
+                         (every identifier now has a ptr to its definition).
+---  08/14/98            C-Tree Version 0.13
+
+028  08/16/98   FIXED    Patches for 64-bit Alpha machines [okeefe].
+029  08/16/98   FIXED    Problems printing array initializers, extra
+                         semicolon added after do-while loop [okeefe].
+---  08/18/98            C-Tree Version 0.14
+
+030  08/27/98   FIXED    Core dump for usage of an undefined function [willey].
+031  08/28/98   FIXED    No comma printed in some identifier lists [willey].
+---  08/27/98            C-Tree Version 0.14a, to fix the serious bug (#030).
+
+---  09/09/98            C-Tree Version 1.00 (beta), C++ wrappers and printing.
+
+032  11/26/98   FIXED    sizeof(type) broken, [Goncalo Lage]. 
+
+---  11/26/98            C-Tree Version 1.01, fix for bug #032 via a
+                         new SizeofExpr class.
+
+033  11/28/98   FIXED    parameters with ptrs not being added to sybol table.
+034  11/29/98   FIXED    Preprocessor invocation was not defining __STDC__.
+
+---  12/01/98            C-Tree Version 1.02, call-graph example.
+
+035  12/01/98   NBUG     offsetof not supported.
+036   1/15/99   NBUG     cast precedence wrong with respect to assignment 
+                         reported by casse@irit.fr
+037   5/31/99   MERGE    Merged in code from Brian Chess that gives the
+                         C++ level access to the token line/column positions.
+038   6/17/99   FIXED    Bug printing something like:
+                            struct y { struct x *y; }; [Dickon Reed]
+
+---  06/28/99            C-Tree Version 1.04, symbol table improvements.
+
+039  06/30/99   FIXED    cpp directives within functions are broken. [DR]
+040  06/30/99   FIXED    Precedence problems with casts and arrays. [DR]
+041  06/30/99   FIXED    Dereferencing NULL in stement.cpp [DR]
+042  06/30/99   FIXED?   Field names need a namespace per struct/union. [DR]
+043  06/30/99   FIXED    Enum constants can be any expression.
+
+---  07/01/99            C-Tree Version 1.05, bug fixes.
+
+---  02/05/2000          cTool Version 2.00 - (name change) (BETA version).
+                         Includes redesigned type-system, and C++ 
+                         structures created directly in the parser
+                         (finished cleaning up design changes).
+
+044  04/30/2000 FIXED    Incorrect behavior for some octal constants
+                         within strings. [Cedric Adjih]
+045  04/30/2000 FIXED    Label at the end of a block crashes.[Cedric Adjih]
+046  04/30/2000 FIXED    Declaration involving const ptrs. [Cedric Adjih] 
+047  04/30/2000 FIXED    Problems with function ptrs. [Cedric Adjih] 
+                         [Some work was done on this for v2.05, but
+                          it still isn't perfect yet. -spf]
+
+---  06/19/2000          CTool Version 2.03, bug fixes.
+
+048  06/20/2000 FIXED    Problem with K&R declarations. [Dickon Reed]
+
+---  06/20/2000          CTool Version 2.04, bug fixes.
+
+049  06/25/2000 FIXED    Function call precedence was ignored. [Dickon Reed]
+050  08/10/2000 FIXED    Crasher for 'ctdemo -s types.c' [Patrick Baudin]
+051  06/30/1999 OPEN     Includes not supported within functions/structs. [DR]
+052  08/20/2000 FIXED    Numerous printing bugs [DR - for SPECINT95]
+053  08/20/2000 FIXED    K&R input functions need to be output that
+                         way also [DR - for SPECINT95]
+054  08/20/2000 REPRO    Multiple variables defined with same struct
+                         are broken apart, repeating the struct. [DR]
+
+---  08/20/2000          CTool Version 2.05, bug fixes.
+
+---  08/26/2000          CTool Version 2.06, merged with Patrick Baudin.
+
+---  09/16/2000          CTool Version 2.07, builds using VC++.
+
+---  11/05/2000          CTool Version 2.09.
+                           Bugfixes and other changes from Patrick Baudin.
+
+---  08/26/2001          CTool Version 2.10. Switched to GPL license.
+
+055  03/31/2002 FIXED    Trouble with bitfield definitions.
+056  03/31/2002 FIXED    Function pointers in structs having problem with
+                         prototype parameters.
+
+---  03/31/2002          CTool Version 2.11.
+
+
+OPEN  = problem/bug exists and needs to be addressed.
+FIXED = bug fixed.
+WORK  = workaround for bug is in place.
+NBUG  = not a bug.
+REPRO = cannot reproduce.
+DUP   = duplicate of another bug.
+MERGE = merged in code from someone for new feature/bugfix. 
+

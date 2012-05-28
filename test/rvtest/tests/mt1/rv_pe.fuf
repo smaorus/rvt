@@ -1,0 +1,4 @@
+`P0  P1   Result
+`--- ---- ------
+sum  sum  partially-equivalent
+main main partially-equivalent

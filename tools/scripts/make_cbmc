@@ -1,0 +1,67 @@
+#! /bin/sh -f
+
+# 1. Detect of OS
+
+make_cbmc_bbb=`set | grep -w DevEnvDir`
+if [ -n "$make_cbmc_bbb" ]
+then
+  make_cbmc_os=windows
+  make_cbmc_srcdirname=windows
+else
+  make_cbmc_bbb=`set | grep -wy shell`
+  if [ -n "$make_cbmc_bbb" ]
+  then
+    make_cbmc_bbb=`uname -o | grep -yw linux`
+    if [ -n "$make_cbmc_bbb" ]
+    then
+      make_cbmc_os=linux
+      make_cbmc_srcdirname=linux
+    else
+      make_cbmc_bbb=`uname -o | grep -yw cygwin`
+      if [ -n "$make_cbmc_bbb" ]
+      then
+        make_cbmc_os=cygwin
+        make_cbmc_srcdirname=linux # cbmc projects for linux and cygwin are identical
+      else
+        echo "Cannot recognize the type of OS. cbmc, goto-cc, goto-instrument won't be built"
+        exit 2
+      fi
+    fi
+  else
+    make_cbmc_os=windows
+    make_cbmc_srcdirname=windows
+  fi
+fi
+
+echo "Building cbmc, goto-cc, goto-instrument for platform: $make_cbmc_os"
+
+# 2. Prepare build directory
+make_cbmc_builddir=generated
+mkdir -p $make_cbmc_builddir
+make_cbmc_builddir=$make_cbmc_builddir/cbmc_trunk_$make_cbmc_os
+# rm -rf $make_cbmc_builddir/$make_cbmc_builddir/* $make_cbmc_builddir
+# rm -rf $make_cbmc_builddir/$make_cbmc_builddir/* $make_cbmc_builddir
+# rm -rf $make_cbmc_builddir/$make_cbmc_builddir/* $make_cbmc_builddir
+if [ ! -d $make_cbmc_builddir ]
+then
+  cp -r cbmc_trunk/cbmc_trunk_$make_cbmc_srcdirname $make_cbmc_builddir
+  cp -r cbmc_trunk/common/zlib-1.2.5 $make_cbmc_builddir
+fi
+
+# 3. Build
+make_cbmc_cwd=`pwd`
+cd $make_cbmc_builddir
+# rm -f  */*/*/*.o */*/*/*.obj */*/*/*.d */*/*/*.a */*/*/*.lib */*/*/*.exe */*/*.o */*/*.obj */*/*.d */*/*.a */*/*.lib */*/*.exe
+cd src
+make -j8
+
+# 4. Copy the built targets into tools/external/.../
+cd "$make_cbmc_cwd"
+mkdir -p tools/external/$make_cbmc_os
+for f in $make_cbmc_builddir/src/cbmc/cbmc $make_cbmc_builddir/src/goto-cc/goto-cc $make_cbmc_builddir/src/goto-instrument/goto-instrument
+do
+  chmod a+rx $f
+  cp $f tools/external/$make_cbmc_os
+done
+
+exit 0

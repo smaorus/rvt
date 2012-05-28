@@ -1,0 +1,7 @@
+`P0                        P1                         Result
+`------------------------- -------------------------- ------
+Loop_bubble_sort_for1_for1 Loop_bubble_sort_for1_for1 partially-equivalent
+Loop_bubble_sort_for1      Loop_bubble_sort_for1      partially-equivalent
+init_array                 init_array                 partially-equivalent
+main                       main                       partially-equivalent
+bubble_sort                bubble_sort                syntactically-equal

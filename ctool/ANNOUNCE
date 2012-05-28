@@ -1,0 +1,34 @@
+
+    Announcing cTool
+
+    ctool is a free package, it takes the name of a file to parse as
+    input, and returns a pointer to the parse tree generated; or
+    NULL if there are errors, printing the errors to stderr.
+    It is written using flex and bison.
+
+    Notable features:
+
+        All tokens remaining in the parse tree (some are eliminated)
+        are marked with the line# and col# they originated at.
+
+        Includes a scoped symbol table, and is basically
+        ready-to-run. I include a small example that parses its
+        input and attempts to print it back out as code.
+    
+        Lexer understands C++ style comments, giving a warning for
+        '//*' and parsing it as ANSI/ISO C requires.
+
+    Current sites are:
+        ftp.spf-15.com:/pub/users/flisakow/pkg/ctoolXXX.tar.gz
+
+    or find it on my webpage:
+        http://www.spf-15.com/ctool.html
+
+--
+   Shaun Flisakowski 
+   flisakow@spf-15.com
+   flisakow@acm.org
+
+   http://www.spf-15.com/
+   http://www.spf-15.com/ctool.html
+

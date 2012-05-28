@@ -1,0 +1,105 @@
+
+\section{An inference rule for proving termination} \label{sec:term}
+We now consider a different variant of the mutual termination problem:
+%\begin{quote}
+\emph{Given that a program $P$ terminates, does $P'$ terminate as well? }
+%\end{quote}
+%
+Clearly this problem can be reduced to that of mutual termination, but in fact it can also
+be solved with a weaker premise. We first define $term(f)$ to denote that $f$ terminates and
+\[
+\begin{array}{l}
+  \ \ \ \ \\
+\callc(f,f') \doteq \\
+  \ \ \ \forall \text{\pairtag{g}} \in \mapf, in_f, in_g.\ g'(in_g) \in calls (f'(in_f)) \Rightarrow g(in_g) \in calls(f(in_f))\;.\\
+  \ \ \ \
+\end{array}
+\]
+%\begin{definition}[Call-containment of functions]
+%Define \emph{call-containment} of $f$ in $f'$ as following
+%$f$ \emph{call-contains} in $f'$  if and only if
+%\[
+%\forall \text{\pairtag{g}} \in \mapf, in_f, in_g.\ g'(in_g) \in calls (f'(in_f)) \Rightarrow g(in_g) \in calls(f(in_f))\;. \]
+%\end{definition}
+%Denote by $\callc(f,f')$ that $f$ call-contains $f'$.
+\newline Using these predicates, we can now define the rule for leaf MSCCs \comtag{m}:
+\begin{equation}
+\frac
+{\forall\left\langle f, f' \right\rangle\in\mapf(m).\left(term(f)\wedge \callc(\upbody{f}, \upbody{f'}\right)}
+{\forall\left\langle f, f' \right\rangle\in\mapf(m).~term(f')}
+\mbox{\ \termd} \;.
+\end{equation}
+%A soundness proof appears in Appendix~\ref{sec:proof2}.
+
+\begin{theorem} \termd is sound. \end{theorem}
+\begin{proof}
+The proof follows similar lines to that of \mtermdp. We give a proof sketch.
+Falsely assume that there is a function $f'$ in $m'$ that does not terminate, whereas for all $\pair{g,g'} \in \mapf(m)$, $\callc(g,g')$.
+There exists a value $in$ such that $f'(in)$ does not terminate. The infinite call stack of $f'(in)$ must contain a call, say from $h'(in_1)$ to $g'(in_2)$, whereas $h(in_1)$ does not call $g(in_2)$ in the call stack of $f(in)$ (assuming $\{$\pairtag{g}, \pairtag{h}$\} \subseteq \mapf$).
+This contradicts our premise that $\callc(h,h')$ is true. \qed
+\end{proof}
+
+
+%
+Note that call-equivalence (Def.~\ref{def:re_func}) is simply bi-directional
+call-containment.
+%, which implies that the premise of \termd is weaker than that of \mtermd (see~(\ref{eq:new})) for proving mutual termination. Observe that a
+A generalization to non-leaf MSCCs can be done as in (\ref{eq:new1}).
+
+The decomposition algorithm of the previous section (Alg.~\ref{alg:ProveMT}) applies with the following
+change: the last statement of line~\ref{step:gen_main} (asserting $params[g] \subseteq
+params[g']$) should be removed. The only assertion that should be verified is thus inside
+\pneufname (line \ref{step:force_failure2} in Fig.~\ref{fig:ufs1}), which checks that every call on side 0 is matched by a call on side 1.
+
+\section{Experience and conclusions} \label{sec:experiments}
+We implemented Alg.~\ref{alg:ProveMT} in RVT~\cite{GS09,EKSurl}, and tested it with many small programs and one real software project, as follows.
+
+\subsubsection{Small programs.}
+Our benchmark suite of small programs\footnote{The programs are available online in~\cite{EKSurl}} includes: (a) various small programs that check different cases handled by Alg.~\ref{alg:ProveMT}, (b) 11 programs from the \tool{rvt}
+regression test suite, which on the one hand were designed
+for testing various features of RVT, including non-isomorphic call graphs and
+complex MSCCs, and on the other are interesting for checking mutual termination, (c) various famous termination problems, such as McCarthy91, Collatz, the Ackermann function and more (see Example %s~\ref{ex:mccarthy} and~
+\ref{ex:collatz}), and (d) each of the (single-threaded) examples
+from Cook et al.~\cite{CPR11}, where each program was checked against a variation thereof that we attained by
+modifying the code in a non-trivial manner.
+
+Since the only exponential component in Alg.~\ref{alg:ProveMT} is the call to
+CBMC (and also choosing $S$ - but the MSCCs we encountered were not large, and
+never took a significant amount of time), we do not list here the run times.
+Run time has been a problem in very few cases, all of which due to line~\ref{step:cbmc} in Alg.~\ref{alg:ProveMT} -- the call to CBMC. Such performance problems occurred in our experiments either when the program included difficult operators (such as multiplication  over
+32 bit integers) that RVT could not abstract, or when the compared functions
+received recursive data structures as input. In such cases RVT sends a
+nondeterministic yet equal data structure unrolled $k$ times, where $k$ is user-defined, as explained in~\cite{GS09}. This unrolling sometimes causes performance problems to CBMC.
+
+
+\subsubsection{A real software project.}
+We also tested our tool on the open source project \alg{Betik}~\cite{Betik}, which is an interpreter for a scripting language. The code has 2 -- 2.5 KLOC (depending on the version). It has many loops and recursive functions, including mutual recursion forming an MSCC of size 14. % (large MSCCs are typical in parsers).
+%, as well as advanced C features such as function pointers, heap allocation [*?*], complex data structures and unions.
+%
+We compared eight consecutive versions of this program from the code repository, i.e., seven comparisons. The amount of changes between the versions varied with an average of 3--4 (related) functions. Somewhat to our surprise, many of the changes do \emph{not} preserve termination behavior in a free context, mostly because these functions traverse global data structures on the heap.
+
+In five out of the seven comparisons, RVT discovered correctly, in less than 2 minutes each, that the programs contained mapped functions that do not mutually terminate.
+An example is a function
+\Long{Fig.~\ref{fig:int_value} displays two versions of a function} called \alg{int\_value()}, which receives a pointer to a node in a syntax tree.
+The old version compared the type of the node to several values, and if none of them
+matched it simply returned the input node. In the new code, a `default' branch was added, that
+called \alg{int\_value()} with the node's subtype.
+In an arbitrary context, it is possible that the syntax `tree' is not actually a tree, rather a cyclic graph, e.g., owing to data aliasing. Hence, there is a context in which the old function terminates whereas the new one is trapped in infinite recursion. \full{
+Appendix~\ref{sec:sample}} \notfull{The full version of this article~\cite{EKS12}} includes the code of this function as well as an additional example in which mutual termination is not preserved.
+
+In the remaining two comparisons \alg{rvt} marked correctly, in less than a minute each, that all mapped functions are mutually terminating.
+
+
+
+\subsubsection{Conclusion and future research.}
+We showed a proof rule for mutual termination, and a bottom-up decomposition algorithm for
+handling whole programs. This algorithm calls a model-checker for discharging
+the premise of the rule. Our prototype implementation of this algorithm in \alg{rvt} is the first to
+give an automated (inherently incomplete) solution to the mutual termination
+problem.
+
+An urgent conclusion from our experiments is that checking mutual termination under free context is possibly insufficient, especially when it comes to programs that manipulate a global structure on the heap. Developers would also want to know whether their programs mutually terminate under the context of their specific program. \Long{This is not an easy modification to our algorithm, because the decomposition is based on a bottom-up traversal, hence ignoring the context. Perhaps a method can be found that propagates information down the call graphs that can restrict the context in which pairs of functions are checked for mutual termination. Another direction for future research is to improve the information that is propagated \emph{upwards}. Specifically we would like to refine the abstraction imposed by the use of uninterpreted functions. Adding \emph{function summaries} that provide more information about what these functions do -- making them more interpreted -- is bound to make the method more complete. A third direction } Another direction is to interface \alg{rvt} with an external tool that checks termination: in those cases that they can prove termination of one side but not of the other, we can use the results of Sec.~\ref{sec:term} to prove termination in the other side. We can also benefit from knowing that a pair of functions terminate (not just mutually terminate) because in such a case they should be excluded from the call-equivalence check of their callers.
+%
+Finally, it seems plausible to develop methods for proving termination by using the rule \mtermdp. One needs to find a variant of the input program that on the one hand is easier to prove terminating, and on the other hand is still call-equivalent to the original program.
+
+%The limitations of the tool are inherited from \alg{rvt} itself, namely the fact that it does not support various features of C.

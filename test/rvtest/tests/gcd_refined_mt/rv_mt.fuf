@@ -1,0 +1,7 @@
+`P0             P1              Result
+`-------------- --------------- ------
+simplify        simplify        mutually-terminating
+main            main            mutually-terminating
+gcd             gcd             mutually-terminating
+swap            swap            syntactically-equal mutually-terminating
+Loop_gcd_while1 Loop_gcd_while1 mutually-terminating
