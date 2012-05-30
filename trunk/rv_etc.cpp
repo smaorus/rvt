@@ -383,3 +383,10 @@ void RVSide::badIndexError(const char *where) const {
 	fatal_error(err.str().data());
 }
 
+
+
+
+
+void warn(const string& warning, const string& where_) {
+	rv_errstrm << "RVT warning: " << warning << "(at: " << where_ << ")\n";
+}

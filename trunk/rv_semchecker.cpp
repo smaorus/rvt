@@ -23,7 +23,9 @@ using namespace std;
 
 
 
-RVSemChecker::RVSemChecker(const RVMain& o) : RVMain(o) {
+RVSemChecker::RVSemChecker(const RVMain& o)
+  : RVMain(o), m_boundedMemchkUsed(false)
+{
 	RVGlob::pushPtr(RVGlob::GLOB_RV_ARRAYS, new RVArrays(m_temps));
 }
 
@@ -400,3 +402,13 @@ RVRenameTree* RVSemChecker::prepare_side(const RVSide& side,
 }
 
 
+void RVSemChecker::warnBoundedMemchkUsed(void) {
+	if (m_boundedMemchkUsed) return;
+	stringstream w;
+	w << "The check of (" << getMainPair()->side_name[0] << ", "
+	  << getMainPair()->side_name[1]
+	  << ") relied on an assumption that the contents dereferenced by a void* pointer cannot exceed "
+	  << RV_VOID_PTR_SIZE << " bytes (this size is controlled by RV_VOID_PTR_SIZE).\n";
+	warn(w.str(), DBG_INFO);
+	m_boundedMemchkUsed = true;
+}

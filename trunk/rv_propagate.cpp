@@ -854,7 +854,7 @@ bool RVTypePropIgnoreNondet::ignored(const Variable* fv) {
 
 
 void RVDequalifier::dequalify(Project *pt, const RVSide& side) {
-	//decl_to_symbol = true;
+	decl_to_symbol = true;
 	RVBoolStatus ret(true);
 	Statement* first_st = get_glob_stemnt(pt);
 

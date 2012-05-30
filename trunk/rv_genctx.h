@@ -128,6 +128,7 @@ class RVGenCtx : public RVCtool
 	bool is_union() const;
 	bool is_pointer2pointer() const;
 	bool is_long() const;
+	void throw_on_void_pointer(void) const;
 
 	unsigned get_size() const;
 
