@@ -218,6 +218,9 @@ bool RVGen::gen_single_op(ItemOp op, RVGenCtx& ctx, std::string& by, int depth /
 
 	std::string my_str = (is_array) ? " true" : " false";
 	
+	if (op == ADD || op == NONDET || op == NONDET_SAVE || op == COMPARE || op == COPY_S1_to_S0)
+		ctx.throw_on_void_pointer();
+
 	switch( op )
 	{
 	case ADD: // used in gen_side(0/1)_cbmc_uf
@@ -282,9 +285,12 @@ bool RVGen::gen_single_op(ItemOp op, RVGenCtx& ctx, std::string& by, int depth /
 		break;
 
 	case COPY_S1_to_S0:
-		if (is_array) {
+		if (is_array)
 			temps.gen_save_val_arr(item,var,arr_sz,the_arr, ACT_BY);
-		} else temps.gen_copy_val(item, var, ACT_BY, pointer);
+		else if( is_basetype(ctx.get_real_type(1), BT_Void) )
+			temps.gen_memcpy(item, var, RV_VOID_PTR_SIZE, ACT_BY);
+		else
+			temps.gen_copy_val(item, var, ACT_BY, pointer);
 		break;
 
 	case ASSERT_EQ:				
@@ -1157,14 +1163,6 @@ void RVUFGen::gen_side0_cbmc_uf(int counter)
 		}
 		string type = ren[0]->convert_ids(m_vars[i].type);
 
-        if (type == "void ") {
-        	throw RVSemCheckException("void * parameter to an uninterpreted function is not supported. Replace void * in the source with an actual type.");
-			//SearchTypeofArg search(pfp->side_name[0], i);
-			//if (!search.RVWalk::process(m_pSemChecker->getMainPair()->side_func[0]) || search.argType == NULL) throw RVSemCheckException; // return false;
-			//RVCtool::is_pointer(search.argType, location.data(), &search.argType);
-			//type = convert_type(RVGenCtx::get_print_type_basic(search.argType, NULL), 0);
-            //type = ren[0]->convert_ids(type);
-		}
 		UF_proto.append(type);
 	}
 	m_vars.clear();	

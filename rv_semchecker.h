@@ -19,6 +19,7 @@ class RVSemChecker: public RVMain {
 private:
 	RVTemp m_temps;
 	RVFuncPair   *m_mainPair;
+	bool          m_boundedMemchkUsed;
 
 public:
 	RVSemChecker(const RVMain&);

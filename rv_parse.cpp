@@ -59,7 +59,7 @@ void fatal_error(const char *msg, const std::string& more, bool parsing )
   if( parsing )
 	yyerr(const_cast<char *>(msg), more);
   else
-	rv_errstrm << msg << more << "\n";
+	rv_errstrm << "RVT fatal error: " << msg << more << "\n";
 
   close_all_streams();
 

@@ -375,6 +375,12 @@ bool RVGenCtx::is_pointer2pointer() const {
 		RVCtool::is_pointer(get_real_type(var_lane()), where) );
 }
 
+void RVGenCtx::throw_on_void_pointer(void) const {
+	for (unsigned lane = 0; lane < get_width(); ++lane)
+		if (is_pointer(lane) && is_basetype(lanes[lane].tp, BT_Void))
+			throw RVSemCheckException("void * type is not supported. Replace void * in the source with an actual type.");
+}
+
 unsigned RVGenCtx::get_size() const {
 	if( is_aggregate() ) {
 		rv_errstrm << "Warning: RVGenCtx::get_size(): current type is struct/union: ";
