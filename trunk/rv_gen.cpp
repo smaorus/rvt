@@ -423,7 +423,6 @@ bool RVGen::gen_struct_op(ItemOp op, RVGenCtx& ctx, std::string& by, int depth /
 
 bool RVGen::protect_pointer(ItemOp op, int depth, RVGenCtx& ctx, bool& out_continue, std::string& by)
 {
-	bool ret = true;
 	int  var_lane = ctx.var_lane();
 	bool pointer = ctx.var_is_pointer();
 	Type* tp0 = ctx.get_real_type(0);
@@ -457,7 +456,7 @@ bool RVGen::localize_and_alloc_pointer(ItemOp op, int depth, RVGenCtx& ctx, stri
 		by.append(" [op=").append(Utils::itoa(op)).append("]");
 
 		bool pointer = ctx.var_is_pointer(); // side 0 is a pointer iff side 1 is
-		for (int i = 0; i < ctx.get_width(); ++i) {
+		for (unsigned int i = 0; i < ctx.get_width(); ++i) {
 			std::string old_name, local_name, type_text;
 
 			old_name = ctx.get_old_full_name(i);
@@ -1158,9 +1157,13 @@ void RVUFGen::gen_side0_cbmc_uf(int counter)
 		}
 		string type = ren[0]->convert_ids(m_vars[i].type);
 
-		if (type == "void") {
-			SearchTypeofArg search(pfp->side_name[0], i);
-			if (!search.RVWalk::process(m_pSemChecker->getMainPair()->side_func[0]) || search.argType == NULL) assert(0); // return false;
+        if (type == "void ") {
+        	throw RVSemCheckException("void * parameter to an uninterpreted function is not supported. Replace void * in the source with an actual type.");
+			//SearchTypeofArg search(pfp->side_name[0], i);
+			//if (!search.RVWalk::process(m_pSemChecker->getMainPair()->side_func[0]) || search.argType == NULL) throw RVSemCheckException; // return false;
+			//RVCtool::is_pointer(search.argType, location.data(), &search.argType);
+			//type = convert_type(RVGenCtx::get_print_type_basic(search.argType, NULL), 0);
+            //type = ren[0]->convert_ids(type);
 		}
 		UF_proto.append(type);
 	}
@@ -1426,7 +1429,7 @@ void RVUFGen::gen_side1_cbmc_uf(int counter)
 	}
 	// for the return value
 	if(pretvar) {						
-		Type* side0_type = ((FunctionType*)pfp->side_func[1]->decl->form)->subType;
+		//DIMAXXX Type* side0_type = ((FunctionType*)pfp->side_func[1]->decl->form)->subType;
 		//DIMAXXX RVGenCtx ctx((Symbol *) NULL ,side0_type, *pretvar, "",	proto->subType, *pretvar, SIDE1, false, false, m_where, this);
 
 		RVGenCtx ctx(m_where, false, this, SIDE1);

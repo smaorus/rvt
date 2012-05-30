@@ -42,6 +42,39 @@ unsigned rv_debug_flags = 0;
 
 RVParse* prvhooks = NULL;
 
+
+///<summary>Removes assert(...) statements from the source code </summary>
+class RVDeassertifier : public RVWalk {
+public:
+	void deassertify(Project *pt) {
+		RVBoolStatus ret(true);
+		Statement* first_st = get_glob_stemnt(pt);
+
+		for(Statement* st = first_st; st; st = st->next)
+			ret.assign( RVWalk::process(st) && ret , __FUNCTION__, DBG);
+	}
+
+	virtual bool process(Symbol* s0p) { return true; }
+
+	virtual bool try_replace(Statement** s0p) {
+    	if ((*s0p)->type != ST_ExpressionStemnt)
+    		return true;
+    	Expression *expr = static_cast<ExpressionStemnt*>(*s0p)->expression;
+    	if (expr->etype != ET_FunctionCall)
+    		return true;
+
+    	FunctionCall *call = static_cast<FunctionCall*>(expr);
+    	if (call->function->etype != ET_Variable)
+    		return true;
+
+    	if (((Variable *)call->function)->name->name == "assert")
+    		*s0p = new Statement(ST_NullStemnt, call->location);
+
+    	return true;
+    }
+};
+
+
 const string RVMain::UNINITED("UNINITED");
 
 RVMain::RVMain(void) {
@@ -613,6 +646,10 @@ RVIntStatus RVMain::main(void) {
 	 pt1.prt_array_vec(0,1);
 	 pt1.prt_array_vec(1,1);
   }
+
+  RVDeassertifier deassertifier;
+  deassertifier.deassertify(rv_parser.get_parsetree(SIDE0));
+  deassertifier.deassertify(rv_parser.get_parsetree(SIDE1));
 
   if( !create_call_graph(0) || !create_call_graph(1) )
 	return RVIntStatus(1, DBG_INFO, DBG);
