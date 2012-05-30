@@ -266,4 +266,13 @@ class RVMainGen : public RVGenRename
 	RVFuncPair* get_main_pair() { return main_pair; }
 };
 
+
+class RVSemCheckException {
+public:
+	RVSemCheckException(const char *msg) : m_msg(msg) {}
+	const char *getMsg(void) const { return m_msg; }
+private:
+	const char *m_msg;
+};
+
 #endif  /* RV_GEN_H */

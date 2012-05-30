@@ -862,13 +862,6 @@ void RVDequalifier::dequalify(Project *pt, const RVSide& side) {
 		ret.assign( RVWalk::process(st) && ret , __FUNCTION__, DBG);
 }
 
-bool RVDequalifier::process(Symbol* s0p) {
-	RVBoolStatus ret(true);
-	//if (s0p != NULL)
-	//	ret.assign(RVWalk::process(s0p) && ret , __FUNCTION__, DBG);
-	return ret;
-}
-
 bool RVDequalifier::try_replace(Type** s0p) {
 	if (s0p == NULL || *s0p == NULL)
 		return true;

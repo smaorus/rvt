@@ -69,7 +69,7 @@ public:
 class RVDequalifier : public RVWalk {
 public:
 	void dequalify(Project *pt, const RVSide&);
-	virtual bool process(Symbol* s0p);
+	virtual bool process(Symbol* s0p) { return true; }
     virtual bool try_replace(Type** s0p);
 };
 

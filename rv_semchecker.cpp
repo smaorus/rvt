@@ -257,37 +257,41 @@ bool RVSemChecker::generate_output(const std::string& fname,
   ufgen->set_read_only_globals(read_only_globals);
   ufgen->setMain(this);
 
-  ufgen->gen_ufs(decision_params.allow_cps_in_ufs); // makes equivalent descendants uninterpreted. 
-  
-  if( gen_recursive ) {
-	  ufgen->gen_one_uf(semchk_pair, decision_params.allow_cps_in_ufs); // makes a recursive call uninterpreted.
+  try {
+	  ufgen->gen_ufs(decision_params.allow_cps_in_ufs); // makes equivalent descendants uninterpreted.
+
+	  if( gen_recursive ) {
+		  ufgen->gen_one_uf(semchk_pair, decision_params.allow_cps_in_ufs); // makes a recursive call uninterpreted.
+	  }
+	  //ren[0]->delete_parsetree(); // Could be executed automatically
+	  //ren[1]->delete_parsetree(); // upon leaving this method.
+
+	  //DIMA_REACH_EQ
+	  check_cps = mutual_term_check;
+
+	  if(DBG) rv_errstrm << DBG_INFO << "P26\n";
+	  if (check_cps) ufgen->generate_aux();
+	  if(DBG) rv_errstrm << DBG_INFO << "P27\n";
+
+	  // Generating the main function
+	  m_temps.print("  /* now starting main */\n");
+	  m_temps.gen_main_head();
+	  m_temps.separate_uf_streams();
+	  maingen.gen_main(check_cps);
+	  //m_temps.unite_uf_streams();  // we now unite inside gen_main
+
+	  if(DBG) rv_errstrm << DBG_INFO << "P28\n";
+
+	  m_temps.close(discharger);
+
+	  if (mutual_term_check)
+		  ufgen->determineLoopBackDepths(ofname, *this);
+
+	  return true;
+  } catch(RVSemCheckException e) {
+	  rv_errstrm << "Aborting semantic check: " << e.getMsg() << '\n';
+	  return false;
   }
-
-  //ren[0]->delete_parsetree(); // Could be executed automatically
-  //ren[1]->delete_parsetree(); // upon leaving this method.
-
-  //DIMA_REACH_EQ
-  check_cps = mutual_term_check;
-
-  if(DBG) rv_errstrm << DBG_INFO << "P26\n";
-  if (check_cps) ufgen->generate_aux();
-  if(DBG) rv_errstrm << DBG_INFO << "P27\n";
-
-  // Generating the main function
-  m_temps.print("  /* now starting main */\n");
-  m_temps.gen_main_head();
-  m_temps.separate_uf_streams();
-  maingen.gen_main(check_cps);
-  //m_temps.unite_uf_streams();  // we now unite inside gen_main
-
-  if(DBG) rv_errstrm << DBG_INFO << "P28\n";
-
-  m_temps.close(discharger);
-
-  if (mutual_term_check)
-	  ufgen->determineLoopBackDepths(ofname, *this);
-
-  return true;
 }
 
 void RVSemChecker::generate_channels()
