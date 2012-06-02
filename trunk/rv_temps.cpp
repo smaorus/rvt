@@ -165,24 +165,6 @@ void RVTemp::include_rv_declarations() {
 	(*outstreamP) << "#include \"rv_declarations.h\"\n";
 }
 
-void RVTemp::gen_assert_proto(void)
-{
-  (*outstreamP) << "\nvoid assert(_Bool);\n";
-} 
-
-void RVTemp::gen_cbmc_func_headers()
-{
-  gen_assert_proto();
-  (*outstreamP) <<
-"void __CPROVER_assume(_Bool);\n"
-"void assume(_Bool assumption)\n"
-"{ __CPROVER_assume(assumption); }\n\n"
-"_Bool nondet_Bool();\n"
-"int nondet_int();\n"
-"long nondet_long();\n\n"
-"void* malloc(unsigned int);\n\n";
-} // obselete: can be reused to regenerate inputs.h
-
 void RVTemp::gen_channel_def()
 {
   (*outstreamP) << "\n"
@@ -326,7 +308,7 @@ void RVTemp::gen_safe_alloc(const std::string& var, const std::string& type_text
 		if (type_text[i] != '*') break;
 	}
 	std::string old, curr, basetype = type_text;
-	basetype.resize(i);  // makes "int **" into "int".
+	basetype.resize(i+1);  // makes "int **" into "int".
 	for (unsigned int j = 0; j < len - i; j++) {
         string declEnding = ";";
 		// Storing the declaration of the dummy variable in declarations_stream. During UF generation (*declarations_stream )= declarations_stream 
@@ -368,12 +350,6 @@ void RVTemp::gen_assert_eq(const std::string& var0, const std::string& var1, std
   //(*outstream) << 
 	(*assertStreamP) <<
 	"  assert( " << (pointer?"*":"") << var0 << " == "<< (pointer?"*":"") << var1 << " );"<< BY(by);
-}
-
-void RVTemp::gen_assert_neq(const std::string& var0, const std::string& var1, std::string& by, bool pointer /*=false*/)
-{
-  (*outstreamP) << 
-	"  assert( " << (pointer?"*":"") << var0 << " != "<< (pointer?"*":"") << var1 << " );"<< BY(by);
 }
 
 void RVTemp::gen_eq_null(const std::string& var, std::string& by)
@@ -425,7 +401,7 @@ void RVTemp::gen_nondet_value_arr(const std::string& var, const std::string& typ
 
 void RVTemp::gen_assert_eq_arr(const std::string& var0, const std::string& var1, int arr_sz, const array_item *the_arr, std::string& by)
 {
-  (*outstreamP) << "  RVT_ASSERT_EQ_ARRAY(" << var0 << "," << var1 << "," << arr_sz << " );"<< BY(by);
+  (*assertStreamP) << "  RVT_ASSERT_EQ_ARRAY(" << var0 << "," << var1 << "," << arr_sz << " );"<< BY(by);
 }
 
 void RVTemp::gen_nondet_save_val(const std::string& item, const std::string& var, const std::string& type_text, bool pointer, bool is_long, std::string& by)

@@ -265,7 +265,7 @@ class Type : public DupableType
     const Type*           equalTo;
 
   private:
-    Type*           link;    // For linking all type classes togather.
+    Type*           link;    // For linking all type classes together.
     GLOB_UNIQ_ID;   //m_uniq_id
 };
 
