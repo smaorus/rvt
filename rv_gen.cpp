@@ -623,66 +623,6 @@ bool RVGen::gen_item_or_struct_op(ItemOp op, RVGenCtx& ctx, std::string& by, int
 	return ret;
 }
 
-///<summary>
-/// Obselete(?). Originally called from gen_item_or_Struct_op, but currently not called. 
-/// Apparently it reads user-defined assumptions about the ubs shape (?) (e.g. no aliasing assumptions, which makes it a tree). 
-///</summary>
-// bool RVGen::add_UBS_shapers(ItemOp op, RVGenCtx& ctx) 
-//{
-//	bool ret = true, has_block = false;
-//	int  side;
-//	Block* assume_block[2];
-//
-//	int  var_lane = ctx.var_lane();
-//	Type* shape_type = ctx.get_nominal_type(var_lane);
-//	bool pointer = ctx.var_is_pointer();
-//
-//	/* find the right shape assumptions block by shape_type */
-//	for(side = 0; side < 2; ++side)
-//		if( (assume_block[side] = m_pSemChecker->accessDirectives().get_shape_block(side, shape_type)) ) {
-//			assume_block[side]->labels.resize(0); // remove the type label.
-//			has_block = true;
-//		}
-//
-//		if( !has_block )
-//			return ret;
-//				
-//		temps.print("{\n");		
-//		temps.get_strm() << "_Bool RV_SHAPE_NONDET["<< NUM_SHAPE_NONDETS <<"];\n";
-//
-//		unsigned num_lanes = ctx.get_width();
-//		for(unsigned lane = 0; lane < num_lanes; lane++) 
-//		{
-//			side = ctx.get_side(lane).index();
-//			if( side != 1 ) 
-//				side = 0; /* for rv_UF_..._struct items lane use side 0 names. */
-//
-//			if( !assume_block[side] )
-//				continue;
-//
-//			std::string local_name("it");
-//			std::string name = ctx.get_old_full_name(lane);
-//			std::string type_text = convert_type(ctx.get_print_type(lane), 
-//				                                 ctx.get_side(lane));
-//						
-//			if(pointer)
-//				temps.gen_if_eq_null(name, false);
-//			else
-//				temps.print("{\n");
-//			
-//			if(!pointer)
-//				name = std::string("&") + name;
-//			temps.gen_local_copy(type_text, local_name, name, true);
-//
-//			/* dump shape assumptions block as is: */
-//			assume_block[side]->print(temps.get_strm(), (indent+1)/*?*/);
-//						
-//			temps.print("}\n");
-//		}			
-//		temps.print("}\n\n");
-//
-//		return ret;
-//}
 
 ///<summary>
 /// utility to turn 'struct s' into e.g., 'struct rvs0_s'. Same for "union s" and enum s;

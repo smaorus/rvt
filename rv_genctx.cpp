@@ -254,7 +254,7 @@ bool RVGenCtx::localize_lanes()
 #endif
 			buf[sizeof(buf)-1] = '\0';
 			lane.name = name_base + "_" + buf;
-			lane.pref = lane.side.toString("s");
+			lane.pref = lane.side.toString(RV_LOCAL_PREFIX);
 		}
 
 		lane.localized = true;

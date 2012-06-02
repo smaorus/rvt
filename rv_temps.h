@@ -38,9 +38,7 @@ class RVTemp : public RVIDischargee
 	 void separate_uf_streams(); // ofer
 	 void unite_uf_streams(); // ofer
 	 void separate_protect_streams(); // ofer
-     void gen_assert_proto(void);
 	 void include_rv_declarations(); // ofer 
-     void gen_cbmc_func_headers();
      void gen_rvt_array_macros();
      void gen_cbmc_array_macros();
      void gen_nondet_arr_sz(int sz);
@@ -67,7 +65,6 @@ class RVTemp : public RVIDischargee
 //     void gen_take_addr(const std::string& pointer_var, const std::string& addr_var);
      void gen_copy_val(const std::string& v0, const std::string& v1, std::string& by, bool pointer = false);
      void gen_assert_eq(const std::string& var0, const std::string& var1, std::string& by, bool pointer = false);
-     void gen_assert_neq(const std::string& var0, const std::string& var1, std::string& by, bool pointer = false);
      void gen_eq_null(const std::string& var, std::string& by);
      void gen_nondet_value(const std::string& var, const std::string& type_text, bool pointer, bool is_long, std::string& by);
      void gen_nondet_save_val(const std::string& item, const std::string& var,

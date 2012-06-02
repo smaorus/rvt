@@ -46,7 +46,8 @@ extern const std::string UFPREFIX;
 #define RV_OUTPUT_EXT ".rv.c"
 #define RV_AUF_EXT    ".auf"
 #define RV_LOOPS_TO_REC_EXT ".rec.c"
-
+// used in localize lane: 
+#define RV_LOCAL_PREFIX "local"
 //Qualifiers of matched function pairs (in map_func):
 extern const std::string PARTIALLY_EQUIVALENT;
 extern const std::string SYNTACTICALLY_EQUAL;
