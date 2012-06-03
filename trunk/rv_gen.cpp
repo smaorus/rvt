@@ -605,8 +605,7 @@ bool RVGen::gen_item_or_struct_op(ItemOp op, RVGenCtx& ctx, std::string& by, int
 	
 	if( depth == 0 ) return true; 	// if we have reached maximal depth	
 	
-	// DIMAXXX  if (op != ADD)
-	ret = protect_pointer(op, depth, ctx, should_continue, ACT_BY) && ret; // !! ofer: check when needed.
+	ret = protect_pointer(op, depth, ctx, should_continue, ACT_BY) && ret; 
 	if( !should_continue )	return ret;
 
 	// This is the main work-horse:
@@ -2294,32 +2293,39 @@ bool RVMainGen::gen_equal_nondet_globals()
 
 	/* For each input global: */
 	SymbolVector::const_iterator i;
+	bool first = true;
 	FORVEC(i,vec0) {
 		sym0 = (*i);
 		assert(sym0 && sym0->entry && sym0->entry->IsVarDecl() && sym0->entry->uVarDecl && (tp0 = sym0->entry->uVarDecl->form)); 				
 		if( ignore_in_global(sym0, 0) )	continue; // if this global is not written-to at all in both programs (the entire programs, not just in the current functions), then it is equal to 0. No need to inititizlize to equal non-det.
-
+		if (first) {
+			temps.print("\n  /* Begin: Assume globals are equal: */ \n");
+			first = false;
+		}
 		sym1 = vec1.find_related(sym0);
 		if( !sym1 ) continue; /* if no related side 1 var - nothing to do. */			
 		assert(sym1->entry && sym1->entry->IsVarDecl() && sym1->entry->uVarDecl && (tp1 = sym1->entry->uVarDecl->form));
 			
+		temps.print("//nondet values for side 0:\n");
 		RVGenCtx ctx0(m_where, true);
 		ctx0.add_lane(sym0,tp0, sym0->name, SIDE0, arg_prefix[0]);
 		ret = gen_item_or_struct_op(NONDET, ctx0, location) && ret;
-
+		temps.print("//alloc for side 1:\n");
 		RVGenCtx ctx1(m_where, true);
 		ctx1.add_lane(sym1,tp1, sym1->name, SIDE1, arg_prefix[1]);
 		ret = gen_item_or_struct_op(ALLOC, ctx1, location) && ret;
 
+		temps.print("//copy leaves from side 0 to 1:\n");
 		/* copy sym0 value to sym1 */
 		RVGenCtx ctx2(m_where, true);
 		ctx2.add_lane(sym0,tp0, sym0->name, 0, arg_prefix[0]);
 		ctx2.add_lane(sym1,tp1, sym1->name, 1, arg_prefix[1]);
 		ret = gen_item_or_struct_op(COPY_S0_to_S1, ctx2, location) && ret;
+		temps.print("//until here\n");
 		//dont_alloc_root = false;
 		//ret = gen_item_or_struct_op(NONDET_SAVE, ctx2, location) && ret;
 	}
-
+	if (first == false) temps.print("\n  /* End: Assume globals are equal: */ \n");
 
 	/* set nondet value to side 1 globals without side 0 counterpart */
 	FORVEC(i,vec1) {
@@ -2470,6 +2476,7 @@ bool RVMainGen::gen_globals_check_output()
 
 		first_compare = true; 
 		RVGenCtx ctx(m_where, false);
+		temps.print("// for asserting global equality:\n");
 		ctx.add_lane(sym0,tp0, sym0->name, 0, arg_prefix[0]);
 		ctx.add_lane(sym1,tp1, sym1->name, 1, arg_prefix[1]);		
 		ret = gen_item_or_struct_op(ASSERT_EQ, ctx, location) && ret;		
@@ -2523,11 +2530,8 @@ void RVMainGen::gen_main(bool reach_equiv_check)
 	gen_args_equality(proto0->nArgs, proto0->args, proto1->args, true);	
 	// globals should be initialized to nondet because in the real program, 
 	// by the time we reached the checked functions (f,f'), the global may have been modified, so the initial value of 0 is not relevant.
-	temps.print("\n  /* Assume globals are equal: */ \n");
-	gen_equal_nondet_globals(); 
 	
-	
-	
+	gen_equal_nondet_globals(); 	
 
 	if (reach_equiv_check) {
 		temps.print("\n  /* run each side's main() */\n");

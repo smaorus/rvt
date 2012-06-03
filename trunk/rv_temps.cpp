@@ -378,7 +378,7 @@ void RVTemp::gen_memcmp(const std::string& item, const std::string& var, int arr
 
 void RVTemp::gen_nondet_value(const std::string& var, const std::string& type_text, bool pointer, bool is_long, std::string& by)
 {
-  (*outstreamP) << "    " <<
+  (*outstreamP) << "  " <<
 	(pointer ? "*" : "") << var << " = (" << type_text << ")" << 
 	(is_long ? "nondet_long()" : "nondet_int()") << ";"<< BY(by);  
 }
