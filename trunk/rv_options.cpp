@@ -366,7 +366,7 @@ bool RVOptions::parse_options(int argc, char* const argv[])
 			rv_errstrm << RVLocMsg<16>();
 			return false;
 		}
-		breakOnSeq(buf);
+		breakOnSeq(argv[i]);
 	}
 	else
 	  if( argv[i][0] == '-' ) {

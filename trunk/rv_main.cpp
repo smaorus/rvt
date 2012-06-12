@@ -790,7 +790,7 @@ RVIntStatus RVMain::main(void) {
 	list<Match> mapf;
 	list<int> syntacticEquiv0, loopFuncs0, loopFuncs1;
 	vector<string> names0, names1;
-	rv_ufs.prepareDecompositionData(rv_parser.get_parsetree(0), rv_parser.get_parsetree(1), 
+	rv_ufs.prepareDecompositionData(rv_parser.get_parsetree(SIDE0), rv_parser.get_parsetree(SIDE1), 
 									edges0, edges1, 
 									mapf, 
 									syntacticEquiv0, 

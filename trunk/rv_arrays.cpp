@@ -8,6 +8,7 @@
 #include <rv_arrays.h>
 #include "rv_etc.h"
 #include "rv_glob.h"
+#include "rv_dataflow.h"
 
 #include <ctool/decl.h>
 #include <ctool/stemnt.h>
@@ -1422,10 +1423,15 @@ bool RVCollectArrayRefs::collect_array_in_expr_type(Expression* s0p)
 bool RVCollectArrayRefs::collect_array_in_func_ret(FunctionCall* s0p)
 {
 	CHK_NULL("RVCollectArrayRefs::collect_array_in_func_ret()");
-	FunctionDef* func = NULL;               // FIN <<========
 
-	fatal_error("RVCollectArrayRefs::collect_array_in_func_ret() is unimplemented yet.\n"
-			"  Array return form function is not supported yet.\n", false);
+	Symbol *funcSymb = NULL;
+	assert(RVInterProcOutlineAnalysis::getCalledFuncName(s0p, &funcSymb) && funcSymb); //Check if is a function call, indeed
+
+	FunctionDef* func = RVCtool::valid_function(funcSymb)? funcSymb->entry->u2FunctionDef
+                                                         : NULL;
+
+	//fatal_error("RVCollectArrayRefs::collect_array_in_func_ret() is unimplemented yet.\n"
+	//		"  Array return form function is not supported yet.\n", false);
 
 	RVArrayRef* ref = new RVArrayRef();
 	ref->inFuncRet(func, body, s0p);

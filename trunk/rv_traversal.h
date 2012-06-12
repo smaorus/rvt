@@ -87,8 +87,9 @@ public:
       bool ret;
 
       (*sz) = 0;
-	  if (sym == NULL) return false; // Dima: tried to add: || sym->entry == NULL, but it leads to an infinite loop in find_arrays().
-      ret = ((sym->entry == tsym->entry) && (sym->entry->scope == tsym->entry->scope));
+	  if (sym == NULL || sym->entry == NULL || tsym == NULL || tsym->entry == NULL) 
+          return false; // Dima: tried to add: || sym->entry == NULL, but it leads to an infinite loop in find_arrays().
+      ret = sym->entry->IsEquivalent(tsym->entry);
       if (ret) { (*sz) = array_size; }
       return ret;
   }

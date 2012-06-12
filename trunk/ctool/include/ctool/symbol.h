@@ -139,6 +139,8 @@ class SymEntry
 
     void    Show(std::ostream& out) const;
 
+    bool    IsEquivalent(const SymEntry *) const;
+
   public:
     SymEntryType    type;    // what kind of entry this is.
     std::string     name;    // The name of the thing.
@@ -183,6 +185,11 @@ class SymEntry
     // This would probably be a good place to add more attributes, 
 
     SymEntry       *next;
+
+private:
+    void allocSymEntryUniqId(void);
+
+    GLOB_UNIQ_ID; //m_uniq_id
 };
 
 SymEntry  *mk_typedef   (const std::string& sym, Decl *);
@@ -237,6 +244,8 @@ class ScopeTbl
 
     void        PostOrderTblDelete();
     bool        ChildInsert(ScopeTbl *kid);
+
+    bool        IsEqualScopeId(const ScopeTbl*) const;
 
   public:
     int               nsyms; // The num of syms declared at this scope.
