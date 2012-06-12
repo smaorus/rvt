@@ -10,6 +10,11 @@ long nondet_long();
 
 void* malloc(unsigned int);
 
+/* Used for void * replacement with an array of bytes: */
+#include <stddef.h>
+void *memcpy(void *dest, const void *src, size_t n);
+int memcmp(const char*, const char*, size_t);
+
 
 /*  RVT style (method 1) array macros */
 /*#define RVT_COPY_ARRAY(dst,src,sz) {int i; for(i=0;i<sz;i++) dst[i] = src[i];}

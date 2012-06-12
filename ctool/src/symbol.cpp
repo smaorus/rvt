@@ -33,6 +33,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <cassert>
+#include <sstream>
 
 #include <ctool/symbol.h>
 #include <ctool/stemnt.h>
@@ -88,6 +89,7 @@ SymEntry::SymEntry(SymEntryType _type)
     next = NULL;
 // benny added:
     equalTo = NULL;
+    allocSymEntryUniqId();
 }
 
 // o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o
@@ -100,6 +102,7 @@ SymEntry::SymEntry(SymEntryType _type, const std::string& sym, Label *labelDef)
     next = NULL;
 // benny added:
     equalTo = NULL;
+    allocSymEntryUniqId();
 }
 
 SymEntry::SymEntry(SymEntryType _type, const std::string& sym, Expression *enumVal)
@@ -111,6 +114,7 @@ SymEntry::SymEntry(SymEntryType _type, const std::string& sym, Expression *enumV
     next = NULL;
 // benny added:
     equalTo = NULL;
+    allocSymEntryUniqId();
 }
 
 SymEntry::SymEntry(SymEntryType _type, const std::string& sym, Decl *varDecl)
@@ -122,6 +126,7 @@ SymEntry::SymEntry(SymEntryType _type, const std::string& sym, Decl *varDecl)
     next = NULL;
 // benny added:
     equalTo = NULL;
+    allocSymEntryUniqId();
 }
 
 SymEntry::SymEntry(SymEntryType _type, const std::string& sym, BaseType *defn)
@@ -133,6 +138,7 @@ SymEntry::SymEntry(SymEntryType _type, const std::string& sym, BaseType *defn)
     next = NULL;
 // benny added:
     equalTo = NULL;
+    allocSymEntryUniqId();
 }
 
 /*  o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o  */
@@ -302,12 +308,28 @@ SymEntry::Show(std::ostream& out) const
     out << "\n-------------\n";
 }
 
+
+/*  o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o  */
+void SymEntry::allocSymEntryUniqId(void) {
+	m_uniqId = RVGlob::allocUniqId(sizeof(SymEntry));
+}
+
+
 /*  o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o  */
 SymEntry*
 mk_typedef(const std::string& sym, Decl *typeDef)
 {
     SymEntry *ret = new SymEntry(TypedefEntry,sym,typeDef);
     return ret;
+}
+
+/*  o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o  */
+//Dima added:
+bool SymEntry::IsEquivalent(const SymEntry *o) const
+{
+	assert(o != NULL);
+	return type == o->type && name == o->name &&
+		   scope->IsEqualScopeId(o->scope);
 }
 
 /*  o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o  */
@@ -689,6 +711,18 @@ ScopeTbl::ShowScopeId(std::ostream& out) const
     {
         out << "1";
     }
+}
+
+/*  o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o  */
+//Dima added:
+bool
+ScopeTbl::IsEqualScopeId(const ScopeTbl* other) const
+{
+	assert(other != NULL);
+	std::ostringstream mine, others;
+	ShowScopeId(mine);
+	other->ShowScopeId(others);
+	return mine.str() == others.str();
 }
 
 /*  o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o  */

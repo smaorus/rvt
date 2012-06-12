@@ -84,5 +84,5 @@ extern const RVSide &NO_SIDE, &SIDE0, &SIDE1;
 
 #define RV_AU_DATA_PREFIX "uad_"
 
-extern const int RV_VOID_PTR_SIZE;
+extern const int RV_VOID_PTR_SIZE, RV_DEFAULT_ARRAY_SIZE;
 #endif /* RV_CONSTS_H */

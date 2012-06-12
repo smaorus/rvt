@@ -509,6 +509,8 @@ private:
 ///</summary>
 abstract class RVInterProcOutlineAnalysis : public RVMonotonousFramework {
 public:
+	static FunctionCall *getCalledFuncName(Expression *e, Symbol **pSymbPtr = NULL, bool *pWrapped = NULL);
+
 	virtual ~RVInterProcOutlineAnalysis();
 
 	///<summary>
@@ -580,8 +582,6 @@ protected:
 			                                 RVDataflowAnalysisInfo& io);
 
 	const Symbol* getStartFunc(void) const { return &m_startFunc; }
-
-	static FunctionCall *getCalledFuncName(Expression *e, Symbol **pSymbPtr = NULL, bool *pWrapped = NULL);
 
 private:
 	RVAnalysisRes runIntraAnalysis(RVMonotonousFramework **ppAnal,

@@ -17,9 +17,10 @@ using namespace std;
 #include <ctool/project.h>
 #include <ctool/express.h>
 #include <ctool/symbol.h>
-#include <rv_traversal.h>
 #include <algorithm>
 #include <vector>
+#include "rv_error.h"
+#include "rv_traversal.h"
 
 #define DBG_TRV 0
 
@@ -306,10 +307,8 @@ void RvTraversal::traverse_array(ArrayType *arr)
 		   if (DBG_TRV) out << "CT_UINT size of array is " << tmp->ulng << "\n";
 		   current_fixed_array_size = (int) tmp->ulng; // hold the current size
 		}
-	} else {
-		out << "ARRAY traverse should not be here\n";
-	}
-
+	} else
+		warn("ARRAY traverse should not be here\n", "RvTraversal::traverse_array");
 }
 
 void RvTraversal::traverse_bit_field(BitFieldType *bfld)
@@ -753,7 +752,7 @@ int RvTraversal::get_the_malloc_size(ExprVector    args)
 {
 	ExprVector::iterator  j;
 	ExprVector    new_args;
-	int ret = 0;
+	int ret = RV_DEFAULT_ARRAY_SIZE;
 
 	for (j=args.begin(); j != args.end(); j++)
 	{

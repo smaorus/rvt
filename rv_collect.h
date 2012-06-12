@@ -85,7 +85,7 @@ class RVCollect : public RVCollectBase
 
 private:
     bool collect_bodyless();
-	void mark_aliased(Symbol* sym, AssignExpr *ass, bool pointer_deref); 
+	void mark_aliased(Symbol* sym, Expression* leftExpr, Expression *rightExpr, bool pointer_deref);
 
   public:
     RVCollect(bool part_equiv_check);
@@ -100,6 +100,7 @@ private:
 
     virtual bool process(Statement* it);
     virtual bool process(Expression* expr);
+    virtual bool process(Decl*);
     virtual bool process_binary(BinaryExpr* it);
 
     Symbol* get_assigned_symbol(Expression* s0p, bool* pderef, bool* parray);

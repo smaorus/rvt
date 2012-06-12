@@ -48,3 +48,4 @@ const int RV_PREFIX_LEN = determinePrefixLength(RV_SIDE0_PREFIX, RV_SIDE1_PREFIX
 const std::string UFPREFIX("__CPROVER_uninterpreted_");
 
 const int RV_VOID_PTR_SIZE(128);
+const int RV_DEFAULT_ARRAY_SIZE(128);

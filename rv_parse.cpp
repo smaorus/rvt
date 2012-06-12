@@ -472,8 +472,6 @@ void RVGlobLists::outlineBaseTypesFuncName(string& func_name,
 
 	RVOutlineMapping::key_type funcName_side(current_side, func_name);
 	if (m_outlineFuncNames.find(funcName_side) == m_outlineFuncNames.end()) {
-		lTypeName.insert(0, "const ");
-		rTypeName.insert(0, "const ");
 		RVOutlineArgTypes* pV = new RVOutlineArgTypes(_op, lExpr.get(), rExpr.get(),
 				                                      lTypeName, rTypeName);
 		RVTypeProp type_prop;

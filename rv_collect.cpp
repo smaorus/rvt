@@ -660,8 +660,21 @@ bool RVCollect::process(Expression* s0p)
   return go(s0p);
 }
 
+bool RVCollect::process(Decl* s0p)
+{
+  CHK_NULL("RVCollectBase::process()");
 
-void RVCollect::mark_aliased(Symbol* sym, AssignExpr *ass, bool pointer_deref) {
+  /* we are only interested in local var initializers: */
+  if( !is_global_var( s0p->name ) ) {
+    TRY_REP_PROC( initializer );
+    if (s0p->initializer != NULL)
+        mark_aliased(s0p->name, NULL, s0p->initializer, false);
+  }
+
+  return true;
+}
+
+void RVCollect::mark_aliased(Symbol* sym, Expression *leftExpr, Expression *rightExpr, bool pointer_deref) {
 	static const char *where_ = "RVCollect::mark_aliased";
 	int  ind = -1;
 
@@ -669,14 +682,16 @@ void RVCollect::mark_aliased(Symbol* sym, AssignExpr *ass, bool pointer_deref) {
 		fatal_error(std::string(where_).append(": received wrong symbol, or body is not a function").data(), false);
 
 	if (!RVCtool::is_pointer(sym->entry->uVarDecl->form, where_)) return;
-	Type *rightType = ass->rightExpr()->type;
+	Type *rightType = rightExpr->type;
 	if (RVCtool::is_basetype(rightType) || rightType->type == TT_BitField) return;
 	//Yet the two filters above are not complete, for instance: (void*)0x8A = (void*)0x76;
 
-	sym = try_var2symbol( ass->leftExpr() );
-	Symbol* sym_right = try_var2symbol( ass->rightExpr() );
+	//Check that the destination is a flat variable (no derefs, etc.):
+	if (leftExpr != NULL)
+		sym = try_var2symbol( leftExpr );
+	Symbol* sym_right = try_var2symbol( rightExpr );
 	if (sym && sym_right) { // we now maintain only the simplest case of p = q, where both p and q are pointers
-		assert(sym_right->entry->uVarDecl->form->isPointer());
+		assert(sym_right->entry->uVarDecl->form->isPointer() || sym_right->entry->uVarDecl->form->isArray());
 		ind = get_general_arg_index( (FunctionType*)body->decl->form, sym_right );
 
 		// It may be it is not a parameter, but the right hand side was already
@@ -725,9 +740,7 @@ bool RVCollect::process_binary(BinaryExpr* it)
       AssignExpr *ass = (AssignExpr*)it;
       sym = get_assigned_symbol( ass->leftExpr(), &pointer_deref, &is_array );
 	  
-      mark_aliased(sym, ass, pointer_deref);
-
-     
+      mark_aliased(sym, ass->leftExpr(), ass->rightExpr(), pointer_deref);
 
       if( !sym ) break;
 

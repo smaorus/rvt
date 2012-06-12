@@ -15,6 +15,55 @@
 #define RV_SECTION RV_SEC_REPLACE
 
 
+using namespace std;
+
+
+#if 0
+///DIMADEL
+///<summary>
+///Replaces pointer declarations with array declarations if it is known
+///that the pointer is actually used as an array. CBMC does not agree to
+///get just a pointer in __CPROVER_array_copy() calls. However,
+///substituting a pointer declaration with a single array is wrong when
+///the array is dynamically allocated. The same pointer can be allocated
+///twice, for instance.
+///</summary>
+class RVPtrToArray : public RVWalk {
+	const RVSide &m_side;
+
+public:
+    RVPtrToArray(const RVSide &side) : RVWalk(true), m_side(side) {}
+
+	void ptrsToArrays(Statement* first_st) {
+		for(Statement* st = first_st; st; st = st->next)
+			process(st);
+	}
+
+	virtual bool process(Symbol* s0p) { return true; }
+	virtual bool process(Statement* s0p) { return go(s0p); }
+
+	bool try_replace(Decl** pit) {
+		Decl *it = *pit;
+		if (!it->form->isPointer())
+			return true;
+
+		int arr_sz = -1;
+		Symbol *org_arr_sym = NULL;
+		int the_ind = RVGlob::getArrHooks().find_sym(it->name, &arr_sz, &org_arr_sym, m_side);
+	    if( the_ind == -1)
+	    	return true;
+
+	    // array
+	    ArrayType *atype = new ArrayType(new IntConstant(arr_sz, false, NoLocation));
+	    atype->subType = static_cast<PtrType*>(it->form)->subType;
+	    *pit = it->dup();
+	    (*pit)->form = atype;
+	    return true;
+	}
+};
+#endif
+
+
 /* RVRenameTree functions: */
 /* ======================= */
 
@@ -300,7 +349,7 @@ bool RVRenameTree::rename_all(const RVDecisionParams& params)
       ret = process(ufProto);
 
   Statement* first_st = get_glob_stemnt(parsetree);
-  for(Statement* st = first_st; st; st = st->next) 
+  for(Statement* st = first_st; st; st = st->next) {
 	if( st->isFuncDef() )
 	  ret = process_func((FunctionDef*)st) && ret;
 	else
@@ -310,6 +359,7 @@ bool RVRenameTree::rename_all(const RVDecisionParams& params)
 				  st->print(rv_errstrm, 0);
 				  rv_errstrm << "\n"; }
 	  }
+  }
   return ret;
 }
 
@@ -756,8 +806,8 @@ bool RVRenameTree::fix_symbol_entry(Symbol* sym)
 
   SymEntry* se = NULL;
 
-  std::string new_name = side.get_side_prefix();
-  new_name += sym->name;
+  std::string new_name = sym->name;
+  prependPrefix(new_name, side.get_side_prefix());
 	
   if( parsetree ) {    
 	scope = get_file_scope(parsetree, VarDeclEntry, false);
