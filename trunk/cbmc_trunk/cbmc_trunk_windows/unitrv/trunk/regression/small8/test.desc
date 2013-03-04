@@ -1,0 +1,8 @@
+CORE
+test.c
+f1 f2
+^EXIT=0$
+^SIGNAL=0$
+^PROGRAMS ARE EQUIVALENT$
+--
+^warning: ignoring
