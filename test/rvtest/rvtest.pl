@@ -15,7 +15,6 @@ use File::Basename;
 use File::Copy::Recursive qw(rcopy fcopy);
 use Cwd;
 use Cwd 'abs_path';
-use Switch;
 
 undef my %torun;
 
@@ -360,15 +359,22 @@ sub get_test_names {
 sub parse_command_line_options {
     while (@_ > 0) {
         my $option = shift;
-        if ($option =~ /^-/) {
-            switch($option) {
-                case "-args" {my $add_args = shift;
-                              $value{"global_rvt_args"} .= $add_args." ";
-                              print "Additional options ".$add_args." will be enforced on the tests.\n";}
-                case "--"    {return @_;}
-                case /-h(elp)?/ {print_help_and_exit();}
-                else         {print "Illegal option ".$option."\n"; print_help_and_exit(); } 
-            }            
+        if ($option            if ($option == '-args') {
+                my $add_args = shift;
+                $value{"global_rvt_args"} .= $add_args." ";
+                print "Additional options ".$add_args." will be enforced on the tests.\n";
+            }
+            elsif ($option == '--') {
+                return @_;
+            }
+            elsif ($option =~ /-h(elp)?/) {
+                print_help_and_exit();
+            }
+            else {
+                print "Illegal option ".$option."\n"; 
+                print_help_and_exit(); 
+            } 
+           
         } 
         else {
             unshift(@_, $option);
