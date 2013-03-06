@@ -124,7 +124,7 @@ Function: cpp_token_buffert::read_token
 \*******************************************************************/
 
 int yycpplex();
-int yyansi_clex();
+extern char yycpptext[];
 
 void cpp_token_buffert::read_token()
 {
@@ -132,12 +132,12 @@ void cpp_token_buffert::read_token()
   token_vector.push_back(--tokens.end());
 
   int kind;
-  
-  #if 1
-  kind=yycpplex();
-  #else
-  kind=yyansi_clex();
-  #endif
+
+  //do
+  //{
+    kind=yycpplex();
+  //}
+  //while(kind==TOK_Ignore);
 
   tokens.back().kind=kind;
   tokens.back().pos=token_vector.size()-1;

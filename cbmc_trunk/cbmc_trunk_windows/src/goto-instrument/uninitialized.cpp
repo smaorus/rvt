@@ -10,9 +10,9 @@ Date: January 2010
 
 #include <std_code.h>
 #include <std_expr.h>
-#include <symbol_table.h>
+#include <context.h>
 
-#include <analyses/uninitialized_domain.h>
+#include "uninitialized_domain.h"
 
 /*******************************************************************\
 
@@ -25,9 +25,9 @@ Date: January 2010
 class uninitializedt
 {
 public:
-  uninitializedt(symbol_tablet &_symbol_table):
-    symbol_table(_symbol_table),
-    ns(_symbol_table),
+  uninitializedt(contextt &_context):
+    context(_context),
+    ns(_context),
     uninitialized_analysis(ns)
   {
   }
@@ -35,7 +35,7 @@ public:
   void add_assertions(goto_programt &goto_program);
 
 protected:
-  symbol_tablet &symbol_table;
+  contextt &context;
   namespacet ns;
   uninitialized_analysist uninitialized_analysis;
 
@@ -116,12 +116,12 @@ void uninitializedt::add_assertions(goto_programt &goto_program)
     new_symbol.location=symbol.location;
     new_symbol.mode=symbol.mode;
     new_symbol.module=symbol.module;
-    new_symbol.is_thread_local=true;
-    new_symbol.is_static_lifetime=false;
-    new_symbol.is_file_local=true;
-    new_symbol.is_lvalue=true;
+    new_symbol.thread_local=true;
+    new_symbol.static_lifetime=false;
+    new_symbol.file_local=true;
+    new_symbol.lvalue=true;
     
-    symbol_table.move(new_symbol);
+    context.move(new_symbol);
   }
 
   Forall_goto_program_instructions(i_it, goto_program)
@@ -233,12 +233,12 @@ Function: add_uninitialized_locals_assertions
 \*******************************************************************/
 
 void add_uninitialized_locals_assertions(
-  symbol_tablet &symbol_table,
+  contextt &context,
   goto_functionst &goto_functions)
 {
   Forall_goto_functions(f_it, goto_functions)
   {
-    uninitializedt uninitialized(symbol_table);
+    uninitializedt uninitialized(context);
 
     uninitialized.add_assertions(f_it->second.body);
   }
@@ -257,11 +257,11 @@ Function: show_uninitialized
 \*******************************************************************/
 
 void show_uninitialized(
-  const class symbol_tablet &symbol_table,
+  const class contextt &context,
   const goto_functionst &goto_functions,
   std::ostream &out)
 {
-  const namespacet ns(symbol_table);
+  const namespacet ns(context);
 
   forall_goto_functions(f_it, goto_functions)
   {

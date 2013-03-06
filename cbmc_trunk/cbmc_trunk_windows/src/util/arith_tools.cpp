@@ -6,11 +6,10 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <cassert>
+#include <assert.h>
 
 #include "arith_tools.h"
 #include "std_types.h"
-#include "std_expr.h"
 
 /*******************************************************************\
 
@@ -72,61 +71,57 @@ Function: from_integer
 
 \*******************************************************************/
 
-constant_exprt from_integer(
+exprt from_integer(
   const mp_integer &int_value,
   const typet &type)
 {
+  exprt expr;
+
+  expr.clear();
+  expr.type()=type;
+  expr.id(ID_constant);
+
   const irep_idt &type_id=type.id();
 
   if(type_id==ID_integer)
   {
-    constant_exprt result(type);
-    result.set_value(integer2string(int_value));
-    return result;
+    expr.set(ID_value, integer2string(int_value));
+    return expr;
   }
   else if(type_id==ID_natural)
   {
-    if(int_value<0) { constant_exprt r; r.make_nil(); return r; }
-    constant_exprt result(type);
-    result.set_value(integer2string(int_value));
-    return result;
+    if(int_value<0) { expr.make_nil(); return expr; }
+    expr.set(ID_value, integer2string(int_value));
+    return expr;
   }
   else if(type_id==ID_unsignedbv)
   {
     unsigned width=to_unsignedbv_type(type).get_width();
-    constant_exprt result(type);
-    result.set_value(integer2binary(int_value, width));
-    return result;
+    expr.set(ID_value, integer2binary(int_value, width));
+    return expr;
   }
   else if(type_id==ID_signedbv)
   {
     unsigned width=to_signedbv_type(type).get_width();
-    constant_exprt result(type);
-    result.set_value(integer2binary(int_value, width));
-    return result;
+    expr.set(ID_value, integer2binary(int_value, width));
+    return expr;
   }
   else if(type_id==ID_bool)
   {
     if(int_value==0)
-      return false_exprt();
-    else if(int_value==1)
-      return true_exprt();
-  }
-  else if(type_id==ID_pointer)
-  {
-    if(int_value==0)
     {
-      constant_exprt result(type);
-      result.set_value(ID_NULL);
-      return result;
+      expr.make_false();
+      return expr;
+    }
+    else if(int_value==1)
+    {
+      expr.make_true();
+      return expr;
     }
   }
 
-  {
-    constant_exprt r;
-    r.make_nil();
-    return r;
-  }
+  expr.make_nil();
+  return expr;
 }
 
 /*******************************************************************\

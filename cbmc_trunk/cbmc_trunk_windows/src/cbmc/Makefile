@@ -1,21 +1,17 @@
 SRC = main.cpp parseoptions.cpp bmc.cpp dimacs.cpp languages.cpp \
       bv_cbmc.cpp symex_bmc.cpp show_vcc.cpp cbmc_solvers.cpp \
       xml_interface.cpp cover.cpp \
-      counterexample_beautification.cpp
+      counterexample_beautification.cpp \
+      counterexample_beautification_greedy.cpp \
+      counterexample_beautification_pbs.cpp
 
 OBJ += ../ansi-c/ansi-c$(LIBEXT) \
-      ../linking/linking$(LIBEXT) \
       ../big-int/bigint$(OBJEXT) \
       ../goto-programs/goto-programs$(LIBEXT) \
       ../goto-symex/goto-symex$(LIBEXT) \
-      ../pointer-analysis/value_set$(OBJEXT) \
-      ../pointer-analysis/dereference$(OBJEXT) \
-      ../pointer-analysis/add_failed_symbols$(OBJEXT) \
-      ../pointer-analysis/rewrite_index$(OBJEXT) \
-      ../pointer-analysis/goto_program_dereference$(OBJEXT) \
+      ../pointer-analysis/pointer-analysis$(LIBEXT) \
       ../langapi/langapi$(LIBEXT) \
       ../xmllang/xmllang$(LIBEXT) \
-      ../assembler/assembler$(LIBEXT) \
       ../solvers/solvers$(LIBEXT) \
       ../util/util$(LIBEXT)
 
@@ -60,8 +56,6 @@ endif
 cbmc$(EXEEXT): $(OBJ)
 	$(LINKBIN)
 
-.PHONY: cbmc-mac-signed
-
 cbmc-mac-signed: cbmc$(EXEEXT)
-	strip cbmc$(EXEEXT) ; codesign -v -s $(OSX_IDENTITY) cbmc$(EXEEXT)
+	codesign -v -s $(OSX_IDENTITY) cbmc$(EXEEXT)
 

@@ -11,7 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <irep.h>
 
-class symbol_tablet;
+class contextt;
 class exprt;
 class symbolt;
 class typet;
@@ -33,7 +33,9 @@ public:
     return lookup(irep.get(ID_identifier));
   }
   
-  virtual ~namespace_baset();
+  virtual ~namespace_baset()
+  {
+  }
    
   void follow_symbol(irept &irep) const;
   void follow_macros(exprt &expr) const;
@@ -50,14 +52,14 @@ class namespacet:public namespace_baset
 {
 public:
   // constructors
-  explicit namespacet(const symbol_tablet &_symbol_table)
-  { symbol_table1=&_symbol_table; symbol_table2=NULL; }
+  explicit namespacet(const contextt &_context)
+  { context1=&_context; context2=NULL; }
    
-  namespacet(const symbol_tablet &_symbol_table1, const symbol_tablet &_symbol_table2)
-  { symbol_table1=&_symbol_table1; symbol_table2=&_symbol_table2; }
+  namespacet(const contextt &_context1, const contextt &_context2)
+  { context1=&_context1; context2=&_context2; }
   
-  namespacet(const symbol_tablet *_symbol_table1, const symbol_tablet *_symbol_table2)
-  { symbol_table1=_symbol_table1; symbol_table2=_symbol_table2; }
+  namespacet(const contextt *_context1, const contextt *_context2)
+  { context1=_context1; context2=_context2; }
  
   using namespace_baset::lookup;
    
@@ -65,13 +67,32 @@ public:
   virtual bool lookup(const irep_idt &name, const symbolt *&symbol) const;
   virtual unsigned get_max(const std::string &prefix) const;
   
-  const symbol_tablet &get_symbol_table() const
+  const contextt &get_context() const
   {
-    return *symbol_table1;
+    return *context1;
   }
   
 protected:
-  const symbol_tablet *symbol_table1, *symbol_table2;
+  const contextt *context1, *context2;
+};
+
+class dual_namespacet:public namespacet
+{
+  // constructors
+  dual_namespacet(const contextt &_context):namespacet(_context)
+  {
+  }
+   
+  dual_namespacet(const contextt &_context1, const contextt &_context2):
+    namespacet(_context1, _context2)
+  {
+  }
+  
+  dual_namespacet(const contextt *_context1, const contextt *_context2):
+    namespacet(_context1, _context2)
+  {
+  }
+ 
 };
 
 class multi_namespacet:public namespacet
@@ -82,9 +103,9 @@ public:
   {
   }
 
-  explicit multi_namespacet(const symbol_tablet &symbol_table):namespacet(NULL, NULL)
+  explicit multi_namespacet(const contextt &context):namespacet(NULL, NULL)
   {
-    add(symbol_table);
+    add(context);
   }
 
   // these do the actual lookup
@@ -93,14 +114,14 @@ public:
   virtual bool lookup(const irep_idt &name, const symbolt *&symbol) const;
   virtual unsigned get_max(const std::string &prefix) const;
   
-  inline void add(const symbol_tablet &symbol_table)
+  inline void add(const contextt &context)
   {
-    symbol_table_list.push_back(&symbol_table);
+    context_list.push_back(&context);
   }
   
 protected:
-  typedef std::vector<const symbol_tablet *> symbol_table_listt;
-  symbol_table_listt symbol_table_list;
+  typedef std::vector<const contextt *> context_listt;
+  context_listt context_list;
 };
  
 #endif

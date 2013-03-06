@@ -11,8 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <i2string.h>
 #include <xml.h>
-#include <xml_expr.h>
-#include <cout_message.h>
+#include <xml_irep.h>
 
 #include "ui_message.h"
 
@@ -33,8 +32,10 @@ ui_message_handlert::ui_message_handlert(
 {
   switch(__ui)
   {
+  case OLD_GUI:
+    break;
+    
   case XML_UI:
-    std::cout << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << std::endl;
     std::cout << "<cprover>" << std::endl;
     
     {
@@ -109,7 +110,7 @@ void ui_message_handlert::print(
   unsigned level,
   const std::string &message)
 {
-  if(get_ui()==XML_UI)
+  if(get_ui()==OLD_GUI || get_ui()==XML_UI)
   {
     locationt location;
     location.make_nil();
@@ -117,8 +118,10 @@ void ui_message_handlert::print(
   }
   else
   {
-    console_message_handlert console_message_handler;
-    console_message_handler.print(level, message);
+    if(level==1)
+      std::cerr << message << std::endl;
+    else
+      std::cout << message << std::endl;
   }
 }
 
@@ -140,7 +143,7 @@ void ui_message_handlert::print(
   int sequence_number,
   const locationt &location)
 {
-  if(get_ui()==XML_UI)
+  if(get_ui()==OLD_GUI || get_ui()==XML_UI)
   {
     std::string tmp_message(message);
 
@@ -205,7 +208,10 @@ void ui_message_handlert::ui_msg(
   const std::string &msg2,
   const locationt &location)
 {
-  xml_ui_msg(type, msg1, msg2, location);
+  if(get_ui()==OLD_GUI)
+    old_gui_msg(type, msg1, msg2, location);
+  else
+    xml_ui_msg(type, msg1, msg2, location);
 }
 
 /*******************************************************************\
@@ -226,16 +232,20 @@ void ui_message_handlert::xml_ui_msg(
   const std::string &msg2,
   const locationt &location)
 {
-  xmlt result;
-  result.name="message";
+  xmlt xml;
+  xml.name="message";
 
   if(location.is_not_nil() && location.get_file()!="")
-    result.new_element(xml(location));
+  {
+    xmlt &l=xml.new_element();
+    convert(location, l);
+    l.name="location";
+  }
 
-  result.new_element("text").data=msg1;
-  result.set_attribute("type", type);
+  xml.new_element("text").data=msg1;
+  xml.set_attribute("type", type);
   
-  std::cout << result;
+  std::cout << xml;
   std::cout << std::endl;
 }
 

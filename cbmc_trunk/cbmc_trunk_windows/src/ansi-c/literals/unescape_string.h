@@ -10,6 +10,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #define CPROVER_C_TYPECHECK_UNESCAPE_STRING_H
 
 #include <string>
+#include <vector>
 
 void unescape_string(
   const std::string &src,
@@ -17,6 +18,6 @@ void unescape_string(
 
 void unescape_wide_string(
   const std::string &src,
-  std::basic_string<unsigned int> &dest);
+  std::vector<unsigned int> &dest);
 
 #endif

@@ -54,17 +54,17 @@ void cpp_typecheckt::convert_argument(
   symbol.mode=mode;
   symbol.module=module;
   symbol.type=argument.type();
-  symbol.is_state_var=true;
-  symbol.is_lvalue=!is_reference(symbol.type);
+  symbol.is_statevar=true;
+  symbol.lvalue=!is_reference(symbol.type);
 
   assert(!symbol.base_name.empty());
 
   symbolt *new_symbol;
 
-  if(symbol_table.move(symbol, new_symbol))
+  if(context.move(symbol, new_symbol))
   {
     err_location(symbol.location);
-    str << "cpp_typecheckt::convert_argument: symbol_table.move("
+    str << "cpp_typecheckt::convert_argument: context.move("
         << symbol.name << ") failed";
     throw 0;
   }
@@ -213,7 +213,6 @@ irep_idt cpp_typecheckt::function_identifier(const typet &type)
     const typet &pointer=it->type();
     const typet &symbol =pointer.subtype();
     if(symbol.get_bool(ID_C_constant)) result+="const$";
-    if(symbol.get_bool(ID_C_volatile)) result+="volatile$";
     result+="this";
     first=false;
     it++;

@@ -6,15 +6,11 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <cassert>
-#include <cstdlib>
-#include <cctype>
+#include <assert.h>
+#include <stdlib.h>
 
 #include <arith_tools.h>
 #include <config.h>
-#include <std_types.h>
-#include <std_expr.h>
-#include <expr_util.h>
 
 #include "convert_integer_literal.h"
 
@@ -30,12 +26,13 @@ Function: convert_integer_literal
 
 \*******************************************************************/
 
-exprt convert_integer_literal(const std::string &src)
+exprt convert_integer_literal(
+  const std::string &src,
+  unsigned base)
 {
-  bool is_unsigned=false, is_imaginary=false;
+  bool is_unsigned=false;
   unsigned long_cnt=0;
   unsigned width_suffix=0;
-  unsigned base=10;
   
   for(unsigned i=0; i<src.size(); i++)
   {
@@ -46,47 +43,26 @@ exprt convert_integer_literal(const std::string &src)
     else if(ch=='l' || ch=='L')
       long_cnt++;
     else if(ch=='i' || ch=='I')
-    {
-      // This can be "1i128" in MS mode,
-      // and "10i" (imaginary) for GCC.
-      // If it's followed by a number, we do MS mode.
-      if((i+1)<src.size() && isdigit(src[i+1]))
-        width_suffix=atoi(src.c_str()+i+1);
-      else 
-        is_imaginary=true;
-    }
-    else if(ch=='j' || ch=='J')
-      is_imaginary=true;
+      width_suffix=atoi(src.c_str()+i+1);
   }
 
   mp_integer value;
-
-  if(src.size()>=2 && src[0]=='0' && tolower(src[1])=='x')
+  
+  if(base==10)
   {
-    // hex; strip "0x"
-    base=16;
+    value=string2integer(src, 10);
+  }
+  else if(base==8)
+  {
+    value=string2integer(src, 8);
+  }
+  else if(base==16)
+  {
     std::string without_prefix(src, 2, std::string::npos);
     value=string2integer(without_prefix, 16);
   }
-  else if(src.size()>=2 && src[0]=='0' && tolower(src[1])=='b')
-  {
-    // binary; strip "0x"
-    // see http://gcc.gnu.org/onlinedocs/gcc/Binary-constants.html
-    base=2;
-    std::string without_prefix(src, 2, std::string::npos);
-    value=string2integer(without_prefix, 2);
-  }
-  else if(src.size()>=2 && src[0]=='0')
-  {
-    // octal
-    base=8;
-    value=string2integer(src, 8);
-  }
   else
-  {
-    // The default is base 10.
-    value=string2integer(src, 10);
-  }
+    assert(false);
 
   if(width_suffix!=0)
   {
@@ -115,10 +91,10 @@ exprt convert_integer_literal(const std::string &src)
   if(value<0)
     value_abs.negate();
 
-  bool is_hex_or_oct_or_bin=(base==8) || (base==16) || (base==2);
+  bool is_hex_or_oct=(base==8) || (base==16);
   
   #define FITS(width, signed) \
-    ((signed?!is_unsigned:(is_unsigned || is_hex_or_oct_or_bin)) && \
+    ((signed?!is_unsigned:(is_unsigned || is_hex_or_oct)) && \
     (power(2, signed?width-1:width)>value_abs))
 
   unsigned width;
@@ -180,22 +156,8 @@ exprt convert_integer_literal(const std::string &src)
   type.set(ID_width, width);  
   type.set(ID_C_c_type, c_type);
 
-  exprt result;
-
-  if(is_imaginary)
-  {
-    complex_typet complex_type;
-    complex_type.subtype()=type;
-    result=exprt(ID_complex, complex_type);
-    result.operands().resize(2);
-    result.op0()=gen_zero(type);
-    result.op1()=from_integer(value, type);
-  }
-  else
-  {
-    result=from_integer(value, type);
-    result.set(ID_C_cformat, src);
-  }
+  exprt result=from_integer(value, type);
+  result.set(ID_C_cformat, src);
 
   return result;
 }

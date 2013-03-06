@@ -154,7 +154,6 @@ Function: symex_target_equationt::function_call
 
 void symex_target_equationt::function_call(
   const guardt &guard,
-  const irep_idt &identifier,
   const sourcet &source)
 {
   SSA_steps.push_back(SSA_stept());
@@ -163,7 +162,6 @@ void symex_target_equationt::function_call(
   SSA_step.guard_expr=guard.as_expr();
   SSA_step.type=goto_trace_stept::FUNCTION_CALL;
   SSA_step.source=source;
-  SSA_step.identifier=identifier;
 }
 
 /*******************************************************************\
@@ -180,7 +178,6 @@ Function: symex_target_equationt::function_return
 
 void symex_target_equationt::function_return(
   const guardt &guard,
-  const irep_idt &identifier,
   const sourcet &source)
 {
   SSA_steps.push_back(SSA_stept());
@@ -189,7 +186,6 @@ void symex_target_equationt::function_return(
   SSA_step.guard_expr=guard.as_expr();
   SSA_step.type=goto_trace_stept::FUNCTION_RETURN;
   SSA_step.source=source;
-  SSA_step.identifier=identifier;
 }
 
 /*******************************************************************\
@@ -321,6 +317,7 @@ void symex_target_equationt::assertion(
   const guardt &guard,
   const exprt &cond,
   const std::string &msg,
+  const unsigned priority,
   const sourcet &source)
 {
   SSA_steps.push_back(SSA_stept());
@@ -331,6 +328,7 @@ void symex_target_equationt::assertion(
   SSA_step.type=goto_trace_stept::ASSERT;
   SSA_step.source=source;
   SSA_step.comment=msg;
+  SSA_step.priority=priority;
 }
 
 /*******************************************************************\
@@ -481,7 +479,7 @@ void symex_target_equationt::convert_assertions(
 
   if(number_of_assertions==0)
     return;
-    
+  
   if(number_of_assertions==1)
   {
     for(SSA_stepst::iterator it=SSA_steps.begin();
@@ -489,7 +487,7 @@ void symex_target_equationt::convert_assertions(
       if(it->is_assert())
       {
         prop_conv.set_to_false(it->cond_expr);
-        it->cond_literal=const_literal(false);
+        it->cond_literal=prop_conv.convert(it->cond_expr);
         return; // prevent further assumptions!
       }
       else if(it->is_assume())
@@ -621,13 +619,8 @@ void symex_target_equationt::SSA_stept::output(
   case goto_trace_stept::ASSERT: out << "ASSERT" << std::endl; break;
   case goto_trace_stept::ASSUME: out << "ASSUME" << std::endl; break;
   case goto_trace_stept::LOCATION: out << "LOCATION" << std::endl; break;
-  case goto_trace_stept::INPUT: out << "INPUT" << std::endl; break;
   case goto_trace_stept::OUTPUT: out << "OUTPUT" << std::endl; break;
-
-  case goto_trace_stept::DECL:
-    out << "DECL" << std::endl;
-    out << from_expr(ns, "", ssa_lhs) << std::endl;
-    break;
+  case goto_trace_stept::DECL: out << "DECL" << std::endl; break;
 
   case goto_trace_stept::ASSIGNMENT:
     out << "ASSIGNMENT (";
@@ -640,10 +633,6 @@ void symex_target_equationt::SSA_stept::output(
 
     out << ")" << std::endl;
     break;
-    
-  case goto_trace_stept::DEAD: out << "DEAD" << std::endl; break;
-  case goto_trace_stept::FUNCTION_CALL: out << "FUNCTION_CALL" << std::endl; break;
-  case goto_trace_stept::FUNCTION_RETURN: out << "FUNCTION_RETURN" << std::endl; break;
 
   default: assert(false);
   }
@@ -676,27 +665,3 @@ std::ostream &operator<<(
   equation.output(out);
   return out;
 }
-
-/*******************************************************************\
-
-Function: operator <<
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-std::ostream &operator<<(
-  std::ostream &out,
-  const symex_target_equationt::SSA_stept &step)
-{
-  // may cause lookup failures, since it's blank
-  symbol_tablet symbol_table;
-  namespacet ns(symbol_table);
-  step.output(ns, out);
-  return out;
-}
-

@@ -11,6 +11,7 @@ Author: CM Wintersteiger
 #include <fstream>
 
 #include <util/i2string.h>
+#include <util/str_getline.h>
 #include <util/arith_tools.h>
 #include <util/std_expr.h>
 

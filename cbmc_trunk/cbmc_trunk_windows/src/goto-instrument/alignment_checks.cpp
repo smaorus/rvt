@@ -8,7 +8,7 @@ Author:
 
 #include <pointer_offset_size.h>
 #include <config.h>
-#include <symbol_table.h>
+#include <context.h>
 
 #include "alignment_checks.h"
 
@@ -25,10 +25,10 @@ Function: print_struct_alignment_problems
 \*******************************************************************/
 
 void print_struct_alignment_problems(
-  const symbol_tablet &symbol_table,
+  const contextt &context,
   std::ostream &out)
 {
-  forall_symbols(it, symbol_table.symbols)
+  forall_symbols(it, context.symbols)
     if(it->second.is_type && it->second.type.id()==ID_struct)
     {
       const struct_typet &str=to_struct_type(it->second.type);
@@ -57,7 +57,7 @@ void print_struct_alignment_problems(
             it_next++)
         {
           const typet &it_type=it_next->type();
-          const namespacet ns(symbol_table);
+          const namespacet ns(context);
           mp_integer size=pointer_offset_size(ns, it_type);
 
           cumulated_length+=size;
@@ -96,7 +96,7 @@ void print_struct_alignment_problems(
     {
       // is this structure likely to introduce dataraces?
       #if 0
-      const namespacet ns(symbol_table);
+      const namespacet ns(context);
       const array_typet array=to_array_type(it->second.type);
       const mp_integer size=
         pointer_offset_size(ns, array.subtype());       

@@ -12,6 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <fstream>
 
 #include <i2string.h>
+#include <str_getline.h>
 
 #include "qbf_quantor.h"
 
@@ -133,7 +134,7 @@ propt::resultt qbf_quantort::prop_solve()
     {
       std::string line;
 
-      std::getline(in, line);
+      str_getline(in, line);
       
       if(line!="" && line[line.size()-1]=='\r')
         line.resize(line.size()-1);

@@ -1,6 +1,6 @@
 /*******************************************************************\
 
-Module: Abstract interface to support a programming language
+Module:
 
 Author: Daniel Kroening, kroening@kroening.com
 
@@ -8,62 +8,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "language.h"
 #include "expr.h"
-
-/*******************************************************************\
-
-Function: languaget::final
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-bool languaget::final(
-  symbol_tablet &symbol_table,
-  message_handlert &message_handler)
-{
-  return false;
-}
-
-/*******************************************************************\
-
-Function: languaget::interfaces
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-bool languaget::interfaces(
-  symbol_tablet &symbol_table,
-  message_handlert &message_handler)
-{
-  return false;
-}
-
-/*******************************************************************\
-
-Function: languaget::dependencies
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void languaget::dependencies(
-  const std::string &module,
-  std::set<std::string> &modules)
-{
-}
 
 /*******************************************************************\
 

@@ -17,10 +17,6 @@ class symbol_exprt;
 class symex_targett
 {
 public:
-  symex_targett()
-  {
-  }
-
   virtual ~symex_targett() { }
   
   struct sourcet
@@ -29,25 +25,14 @@ public:
     goto_programt::const_targett pc;
     bool is_set;
   
-    sourcet():
-      thread_nr(0),
-      is_set(false)
+    sourcet():thread_nr(0), is_set(false)
     {
     }
 
-    explicit sourcet(
-      goto_programt::const_targett _pc):
-      thread_nr(0),
-      pc(_pc),
-      is_set(true)
+    sourcet(goto_programt::const_targett _pc):
+      thread_nr(0), pc(_pc), is_set(true)
     {
-    }
-
-    explicit sourcet(const goto_programt &_goto_program):
-      thread_nr(0),
-      pc(_goto_program.instructions.begin()),
-      is_set(true)
-    {
+      is_set=true;
     }
   };
   
@@ -81,13 +66,11 @@ public:
   // record a function call
   virtual void function_call(
     const guardt &guard,
-    const irep_idt &identifier,
     const sourcet &source)=0;
 
   // record return from a function
   virtual void function_return(
     const guardt &guard,
-    const irep_idt &identifier,
     const sourcet &source)=0;
 
   // just record a location
@@ -128,6 +111,7 @@ public:
     const guardt &guard,
     const exprt &cond,
     const std::string &msg,
+    const unsigned priority,
     const sourcet &source)=0;
 };
 

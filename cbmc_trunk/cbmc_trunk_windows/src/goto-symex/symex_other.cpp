@@ -122,7 +122,7 @@ void goto_symext::symex_other(
     code_assignt assignment;
     assignment.lhs()=clean_code.op0();
     assignment.rhs()=clean_code.op1();
-    symex_assign(state, assignment);    
+    basic_symext::symex_assign(state, assignment);    
   }
   else if(statement==ID_array_set)
   {
@@ -153,17 +153,11 @@ void goto_symext::symex_other(
     code_assignt assignment;
     assignment.lhs()=clean_code.op0();
     assignment.rhs()=array_of_exprt(clean_code.op1(), clean_code.op0().type());
-    symex_assign(state, assignment);    
+    basic_symext::symex_assign(state, assignment);    
   }
-  else if(statement==ID_user_specified_predicate ||
-          statement==ID_user_specified_parameter_predicates ||
-          statement==ID_user_specified_return_predicates)
+  else if(statement==ID_user_specified_predicate || statement==ID_user_specified_parameter_predicates || statement == ID_user_specified_return_predicates)
   {
-    // like skip
-  }
-  else if(statement==ID_fence)
-  {
-    // like skip
+	  // like skip
   }
   else
     throw "unexpected statement: "+id2string(statement);

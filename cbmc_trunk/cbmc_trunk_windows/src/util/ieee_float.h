@@ -55,20 +55,12 @@ public:
   // the well-know standard formats  
   inline static ieee_float_spect single_precision()
   {
-    // 32 bits in total
     return ieee_float_spect(23, 8);
   }
 
   inline static ieee_float_spect double_precision()
   {
-    // 64 bits in total
     return ieee_float_spect(52, 11);
-  }  
-  
-  inline static ieee_float_spect quadruple_precision()
-  {
-    // IEEE 754 binary128
-    return ieee_float_spect(112, 15);
   }  
   
   inline friend bool operator == (const ieee_float_spect &a, const ieee_float_spect &b)
@@ -89,11 +81,9 @@ class ieee_floatt
 {
 public:
   // ROUND_TO_EVEN is also known as "round to nearest, ties to even", and
-  // is the IEEE default.
-  // The numbering below is what x86 uses in the control word.
+  // is the IEEE default
   typedef enum {
-    ROUND_TO_EVEN=0, ROUND_TO_MINUS_INF=1,
-    ROUND_TO_PLUS_INF=2,  ROUND_TO_ZERO=3,
+    ROUND_TO_EVEN, ROUND_TO_ZERO, ROUND_TO_PLUS_INF, ROUND_TO_MINUS_INF,
     UNKNOWN, NONDETERMINISTIC }
     rounding_modet;
 

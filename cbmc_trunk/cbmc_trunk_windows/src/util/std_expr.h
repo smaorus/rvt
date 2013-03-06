@@ -566,46 +566,6 @@ extern inline equal_exprt &to_equal_expr(exprt &expr)
   return static_cast<equal_exprt &>(expr);
 }
 
-/*! \brief inequality
-*/
-class notequal_exprt:public binary_relation_exprt
-{
-public:
-  inline notequal_exprt():binary_relation_exprt(ID_notequal)
-  {
-  }
-
-  inline notequal_exprt(const exprt &_lhs, const exprt &_rhs):
-    binary_relation_exprt(_lhs, ID_notequal, _rhs)
-  {
-  }
-};
-
-/*! \brief Cast a generic exprt to an \ref notequal_exprt
- *
- * This is an unchecked conversion. \a expr must be known to be \ref
- * notequal_exprt.
- *
- * \param expr Source expression
- * \return Object of type \ref notequal_exprt
- *
- * \ingroup gr_std_expr
-*/
-extern inline const notequal_exprt &to_notequal_expr(const exprt &expr)
-{
-  assert(expr.id()==ID_notequal && expr.operands().size()==2);
-  return static_cast<const notequal_exprt &>(expr);
-}
-
-/*! \copydoc to_notequal_expr(const exprt &)
- * \ingroup gr_std_expr
-*/
-extern inline notequal_exprt &to_notequal_expr(exprt &expr)
-{
-  assert(expr.id()==ID_notequal && expr.operands().size()==2);
-  return static_cast<notequal_exprt &>(expr);
-}
-
 /*! \brief array index operator
 */
 class index_exprt:public exprt
@@ -1153,21 +1113,6 @@ public:
     copy_to_operands(op0, op1);
   }
 
-  inline and_exprt(const exprt &op0, const exprt &op1, const exprt &op2):exprt(ID_and, typet(ID_bool))
-  {
-    copy_to_operands(op0, op1, op2);
-  }
-
-  inline and_exprt(const exprt &op0, const exprt &op1, const exprt &op2, const exprt &op3):exprt(ID_and, typet(ID_bool))
-  {
-    exprt::operandst &op=operands();
-    op.resize(4);
-    op[0]=op0;
-    op[1]=op1;
-    op[2]=op2;
-    op[3]=op3;
-  }
-
   and_exprt(const exprt::operandst &op):exprt(ID_and, bool_typet())
   {
     if(op.empty())
@@ -1178,31 +1123,6 @@ public:
       operands()=op;
   }
 };
-
-/*! \brief Cast a generic exprt to a \ref typecast_exprt
- *
- * This is an unchecked conversion. \a expr must be known to be \ref
- * and_exprt.
- *
- * \param expr Source expression
- * \return Object of type \ref and_exprt
- *
- * \ingroup gr_std_expr
-*/
-extern inline const and_exprt &to_and_expr(const exprt &expr)
-{
-  assert(expr.id()==ID_and);
-  return static_cast<const and_exprt &>(expr);
-}
-
-/*! \copydoc to_and_expr(const exprt &)
- * \ingroup gr_std_expr
-*/
-extern inline and_exprt &to_and_expr(exprt &expr)
-{
-  assert(expr.id()==ID_and);
-  return static_cast<and_exprt &>(expr);
-}
 
 /*! \brief boolean implication
 */
@@ -1219,31 +1139,6 @@ public:
   }
 };
 
-/*! \brief Cast a generic exprt to a \ref implies_exprt
- *
- * This is an unchecked conversion. \a expr must be known to be \ref
- * implies_exprt.
- *
- * \param expr Source expression
- * \return Object of type \ref implies_exprt
- *
- * \ingroup gr_std_expr
-*/
-extern inline const implies_exprt &to_implies_expr(const exprt &expr)
-{
-  assert(expr.id()==ID_implies && expr.operands().size()==2);
-  return static_cast<const implies_exprt &>(expr);
-}
-
-/*! \copydoc to_implies_expr(const exprt &)
- * \ingroup gr_std_expr
-*/
-extern inline implies_exprt &to_implies_expr(exprt &expr)
-{
-  assert(expr.id()==ID_implies && expr.operands().size()==2);
-  return static_cast<implies_exprt &>(expr);
-}
-
 /*! \brief boolean OR
 */
 class or_exprt:public exprt
@@ -1258,21 +1153,6 @@ public:
     copy_to_operands(op0, op1);
   }
 
-  inline or_exprt(const exprt &op0, const exprt &op1, const exprt &op2):exprt(ID_or, typet(ID_bool))
-  {
-    copy_to_operands(op0, op1, op2);
-  }
-
-  inline or_exprt(const exprt &op0, const exprt &op1, const exprt &op2, const exprt &op3):exprt(ID_or, typet(ID_bool))
-  {
-    exprt::operandst &op=operands();
-    op.resize(4);
-    op[0]=op0;
-    op[1]=op1;
-    op[2]=op2;
-    op[3]=op3;
-  }
-
   or_exprt(const exprt::operandst &op):exprt(ID_or, bool_typet())
   {
     if(op.empty())
@@ -1283,31 +1163,6 @@ public:
       operands()=op;
   }
 };
-
-/*! \brief Cast a generic exprt to a \ref or_exprt
- *
- * This is an unchecked conversion. \a expr must be known to be \ref
- * or_exprt.
- *
- * \param expr Source expression
- * \return Object of type \ref or_exprt
- *
- * \ingroup gr_std_expr
-*/
-extern inline const or_exprt &to_or_expr(const exprt &expr)
-{
-  assert(expr.id()==ID_or);
-  return static_cast<const or_exprt &>(expr);
-}
-
-/*! \copydoc to_or_expr(const exprt &)
- * \ingroup gr_std_expr
-*/
-extern inline or_exprt &to_or_expr(exprt &expr)
-{
-  assert(expr.id()==ID_or);
-  return static_cast<or_exprt &>(expr);
-}
 
 /*! \brief Bit-wise negation of bit-vectors
 */
@@ -1340,31 +1195,6 @@ public:
   }
 };
 
-/*! \brief Cast a generic exprt to a \ref bitor_exprt
- *
- * This is an unchecked conversion. \a expr must be known to be \ref
- * bitor_exprt.
- *
- * \param expr Source expression
- * \return Object of type \ref bitor_exprt
- *
- * \ingroup gr_std_expr
-*/
-extern inline const bitor_exprt &to_bitor_expr(const exprt &expr)
-{
-  assert(expr.id()==ID_bitor);
-  return static_cast<const bitor_exprt &>(expr);
-}
-
-/*! \copydoc to_bitor_expr(const exprt &)
- * \ingroup gr_std_expr
-*/
-extern inline bitor_exprt &to_bitor_expr(exprt &expr)
-{
-  assert(expr.id()==ID_bitor);
-  return static_cast<bitor_exprt &>(expr);
-}
-
 /*! \brief Bit-wise XOR
 */
 class bitxor_exprt:public exprt
@@ -1381,31 +1211,6 @@ public:
   }
 };
 
-/*! \brief Cast a generic exprt to a \ref bitxor_exprt
- *
- * This is an unchecked conversion. \a expr must be known to be \ref
- * bitxor_exprt.
- *
- * \param expr Source expression
- * \return Object of type \ref bitxor_exprt
- *
- * \ingroup gr_std_expr
-*/
-extern inline const bitxor_exprt &to_bitxor_expr(const exprt &expr)
-{
-  assert(expr.id()==ID_bitxor);
-  return static_cast<const bitxor_exprt &>(expr);
-}
-
-/*! \copydoc to_bitxor_expr(const exprt &)
- * \ingroup gr_std_expr
-*/
-extern inline bitxor_exprt &to_bitxor_expr(exprt &expr)
-{
-  assert(expr.id()==ID_bitxor);
-  return static_cast<bitxor_exprt &>(expr);
-}
-
 /*! \brief Bit-wise AND
 */
 class bitand_exprt:public exprt
@@ -1421,31 +1226,6 @@ public:
     copy_to_operands(_op0, _op1);
   }
 };
-
-/*! \brief Cast a generic exprt to a \ref bitand_exprt
- *
- * This is an unchecked conversion. \a expr must be known to be \ref
- * bitand_exprt.
- *
- * \param expr Source expression
- * \return Object of type \ref bitand_exprt
- *
- * \ingroup gr_std_expr
-*/
-extern inline const bitand_exprt &to_bitand_expr(const exprt &expr)
-{
-  assert(expr.id()==ID_bitand);
-  return static_cast<const bitand_exprt &>(expr);
-}
-
-/*! \copydoc to_bitand_expr(const exprt &)
- * \ingroup gr_std_expr
-*/
-extern inline bitand_exprt &to_bitand_expr(exprt &expr)
-{
-  assert(expr.id()==ID_bitand);
-  return static_cast<bitand_exprt &>(expr);
-}
 
 /*! \brief A base class for shift operators
 */
@@ -1485,31 +1265,6 @@ public:
     return op1();
   }
 };
-
-/*! \brief Cast a generic exprt to a \ref shift_exprt
- *
- * This is an unchecked conversion. \a expr must be known to be \ref
- * shift_exprt.
- *
- * \param expr Source expression
- * \return Object of type \ref shift_exprt
- *
- * \ingroup gr_std_expr
-*/
-extern inline const shift_exprt &to_shift_expr(const exprt &expr)
-{
-  assert(expr.operands().size()==2);
-  return static_cast<const shift_exprt &>(expr);
-}
-
-/*! \copydoc to_shift_expr(const exprt &)
- * \ingroup gr_std_expr
-*/
-extern inline shift_exprt &to_shift_expr(exprt &expr)
-{
-  assert(expr.operands().size()==2);
-  return static_cast<shift_exprt &>(expr);
-}
 
 /*! \brief Left shift
 */
@@ -1828,14 +1583,8 @@ extern inline dereference_exprt &to_dereference_expr(exprt &expr)
 class if_exprt:public exprt
 {
 public:
-  inline if_exprt(const exprt &cond, const exprt &t, const exprt &f):
+  if_exprt(const exprt &cond, const exprt &t, const exprt &f):
     exprt(ID_if, t.type())
-  {
-    copy_to_operands(cond, t, f);
-  }
-
-  inline if_exprt(const exprt &cond, const exprt &t, const exprt &f, const typet &type):
-    exprt(ID_if, type)
   {
     copy_to_operands(cond, t, f);
   }
@@ -1978,7 +1727,7 @@ extern inline with_exprt &to_with_expr(exprt &expr)
   return static_cast<with_exprt &>(expr);
 }
 
-/*! \brief update of one element of an array
+/*! \brief TO_BE_DOCUMENTED
 */
 class array_update_exprt:public exprt
 {
@@ -2278,7 +2027,7 @@ public:
   }
 };
 
-/*! \brief application of (mathematical) function
+/*! \brief TO_BE_DOCUMENTED
 */
 class function_application_exprt:public exprt
 {
@@ -2438,17 +2187,6 @@ class nondet_exprt:public sideeffect_exprt
 public:
   inline explicit nondet_exprt(const typet &_type):
     sideeffect_exprt(ID_nondet, _type)
-  {
-  }
-};
-
-/*! \brief An expression denoting infinity
-*/
-class infinity_exprt:public exprt
-{
-public:
-  inline explicit infinity_exprt(const typet &_type):
-    exprt(ID_infinity, _type)
   {
   }
 };

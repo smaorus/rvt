@@ -1,4 +1,4 @@
- /*******************************************************************\
+/*******************************************************************\
 
 Module: GOTO Programs
 
@@ -6,19 +6,18 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <algorithm>
-
-#include <simplify_expr.h>
-#include <array_name.h>
-#include <ieee_float.h>
-#include <arith_tools.h>
+#include <location.h>
+#include <i2string.h>
 #include <expr_util.h>
-#include <find_symbols.h>
-#include <std_expr.h>
 #include <std_types.h>
 #include <guard.h>
+#include <simplify_expr.h>
+#include <array_name.h>
+#include <arith_tools.h>
 #include <base_type.h>
-#include <pointer_predicates.h>
+#include <ieee_float.h>
+#include <std_expr.h>
+#include <find_symbols.h>
 
 #include "goto_check.h"
 
@@ -34,16 +33,12 @@ public:
     enable_pointer_check=_options.get_bool_option("pointer-check");
     enable_div_by_zero_check=_options.get_bool_option("div-by-zero-check");
     enable_signed_overflow_check=_options.get_bool_option("signed-overflow-check");
-    enable_unsigned_overflow_check=_options.get_bool_option("unsigned-overflow-check");
-    enable_undefined_shift_check=_options.get_bool_option("undefined-shift-check");
+    enable_unsigned_overflow_check=_options.get_bool_option("signed_overflow_check");
     enable_float_overflow_check=_options.get_bool_option("float-overflow-check");
     enable_simplify=_options.get_bool_option("simplify");
     enable_nan_check=_options.get_bool_option("nan-check");
     generate_all_claims=_options.get_bool_option("all-claims");
     enable_assert_to_assume=_options.get_bool_option("assert-to-assume");
-    enable_assertions=_options.get_bool_option("assertions");
-    enable_assumptions=_options.get_bool_option("assumptions");    
-    error_label=_options.get_option("error-label");
   }
 
   void goto_check(goto_programt &goto_program);
@@ -57,7 +52,6 @@ protected:
   void bounds_check(const index_exprt &expr, const guardt &guard);
   void div_by_zero_check(const div_exprt &expr, const guardt &guard);
   void mod_by_zero_check(const mod_exprt &expr, const guardt &guard);
-  void undefined_shift_check(const shift_exprt &expr, const guardt &guard);
   void pointer_rel_check(const exprt &expr, const guardt &guard);
   void pointer_validity_check(const dereference_exprt &expr, const guardt &guard);
   void integer_overflow_check(const exprt &expr, const guardt &guard);
@@ -71,7 +65,6 @@ protected:
     const std::string &comment,
     const std::string &property,
     const locationt &location,
-    const exprt &src_expr,
     const guardt &guard);
   
   goto_programt new_code;
@@ -98,15 +91,11 @@ protected:
   bool enable_div_by_zero_check;
   bool enable_signed_overflow_check;
   bool enable_unsigned_overflow_check;
-  bool enable_undefined_shift_check;
   bool enable_float_overflow_check;
   bool enable_simplify;
   bool enable_nan_check;
   bool generate_all_claims;
   bool enable_assert_to_assume;
-  bool enable_assertions;
-  bool enable_assumptions;
-  irep_idt error_label;
 };
 
 /*******************************************************************\
@@ -189,71 +178,7 @@ void goto_checkt::div_by_zero_check(
     "division by zero",
     "division-by-zero",
     expr.find_location(),
-    expr,
     guard);
-}
-
-/*******************************************************************\
-
-Function: goto_checkt::undefined_shift_check
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void goto_checkt::undefined_shift_check(
-  const shift_exprt &expr,
-  const guardt &guard)
-{
-  if(!enable_undefined_shift_check)
-    return;
-
-  // Undefined for all types and shifts if distance exceeds width,
-  // and also undefined for negative distances.
-  
-  const typet &distance_type=
-    ns.follow(expr.distance().type());
-  
-  if(distance_type.id()==ID_signedbv)
-  {
-    binary_relation_exprt inequality(
-      expr.distance(), ID_ge, gen_zero(distance_type));
-
-    add_guarded_claim(
-      inequality,
-      "shift distance is negative",
-      "undefined-shift",
-      expr.find_location(),
-      expr,
-      guard);
-  }
-
-  const typet &op_type=
-    ns.follow(expr.op().type());
-  
-  if(op_type.id()==ID_unsignedbv || op_type.id()==ID_signedbv)
-  {  
-    exprt width_expr=
-      from_integer(to_bitvector_type(op_type).get_width(), distance_type);
-
-    if(width_expr.is_nil())
-      throw "no number for width for operator "+expr.id_string();
-      
-    binary_relation_exprt inequality(
-      expr.distance(), ID_lt, width_expr);
-
-    add_guarded_claim(
-      inequality,
-      "shift distance too large",
-      "undefined-shift",
-      expr.find_location(),
-      expr,
-      guard);
-  }
 }
 
 /*******************************************************************\
@@ -290,7 +215,6 @@ void goto_checkt::mod_by_zero_check(
     "division by zero",
     "division-by-zero",
     expr.find_location(),
-    expr,
     guard);
 }
 
@@ -355,7 +279,6 @@ void goto_checkt::integer_overflow_check(
           "arithmetic overflow on signed type conversion",
           "overflow",
           expr.find_location(),
-          expr,
           guard);
       }
       else if(old_type.id()==ID_unsignedbv)
@@ -373,7 +296,6 @@ void goto_checkt::integer_overflow_check(
           "arithmetic overflow on unsigned to signed type conversion",
           "overflow",
           expr.find_location(),
-          expr,
           guard);
       }
       else if(old_type.id()==ID_floatbv)
@@ -398,7 +320,6 @@ void goto_checkt::integer_overflow_check(
           "arithmetic overflow on float to signed integer type conversion",
           "overflow",
           expr.find_location(),
-          expr,
           guard);
       }
     }
@@ -427,7 +348,6 @@ void goto_checkt::integer_overflow_check(
         "arithmetic overflow on signed division",
         "overflow",
         expr.find_location(),
-        expr,
         guard);
     }
     
@@ -453,7 +373,6 @@ void goto_checkt::integer_overflow_check(
         "arithmetic overflow on signed unary minus",
         "overflow",
         expr.find_location(),
-        expr,
         guard);
     }
   
@@ -489,7 +408,6 @@ void goto_checkt::integer_overflow_check(
         "arithmetic overflow on "+expr.id_string(),
         "overflow",
         expr.find_location(),
-        expr,
         guard);
     }
   }
@@ -500,7 +418,6 @@ void goto_checkt::integer_overflow_check(
       "arithmetic overflow on "+expr.id_string(),
       "overflow",
       expr.find_location(),
-      expr,
       guard);
   }
 }
@@ -563,7 +480,6 @@ void goto_checkt::float_overflow_check(
           "arithmetic overflow on signed type conversion",
           "overflow",
           expr.find_location(),
-          expr,
           guard);
       }
       else if(old_type.id()==ID_unsignedbv)
@@ -581,7 +497,6 @@ void goto_checkt::float_overflow_check(
           "arithmetic overflow on unsigned to signed type conversion",
           "overflow",
           expr.find_location(),
-          expr,
           guard);
       }
       else if(old_type.id()==ID_floatbv)
@@ -606,7 +521,6 @@ void goto_checkt::float_overflow_check(
           "arithmetic overflow on float to signed integer type conversion",
           "overflow",
           expr.find_location(),
-          expr,
           guard);
       }
     }
@@ -635,7 +549,6 @@ void goto_checkt::float_overflow_check(
         "arithmetic overflow on signed division",
         "overflow",
         expr.find_location(),
-        expr,
         guard);
     }
     
@@ -661,7 +574,6 @@ void goto_checkt::float_overflow_check(
         "arithmetic overflow on signed unary minus",
         "overflow",
         expr.find_location(),
-        expr,
         guard);
     }
   
@@ -697,7 +609,6 @@ void goto_checkt::float_overflow_check(
         "arithmetic overflow on "+expr.id_string(),
         "overflow",
         expr.find_location(),
-        expr,
         guard);
     }
   }
@@ -708,7 +619,6 @@ void goto_checkt::float_overflow_check(
       "arithmetic overflow on "+expr.id_string(),
       "overflow",
       expr.find_location(),
-      expr,
       guard);
   }
   #endif
@@ -743,76 +653,10 @@ void goto_checkt::nan_check(
      expr.id()!=ID_minus)
     return;
 
-  // add NaN subgoal
-  
-  exprt isnan;
-  
-  if(expr.id()==ID_div)
-  {
-    assert(expr.operands().size()==2);
+  // add nan subgoal
 
-    // there a two ways to get a new NaN on division:
-    // 0/0 = NaN and x/inf = NaN
-    // (note that x/0 = +-inf for x!=0 and x!=inf)
-    exprt zero_div_zero=and_exprt(
-      ieee_float_equal_exprt(expr.op0(), gen_zero(expr.op0().type())),
-      ieee_float_equal_exprt(expr.op1(), gen_zero(expr.op1().type())));
-
-    exprt div_inf=unary_exprt(ID_isinf, expr.op1(), bool_typet());
-    
-    isnan=or_exprt(zero_div_zero, div_inf);
-  }
-  else if(expr.id()==ID_mult)
-  {
-    if(expr.operands().size()>=3)
-      return nan_check(make_binary(expr), guard);
-
-    assert(expr.operands().size()==2);
-
-    // Inf * 0 is NaN
-    exprt inf_times_zero=and_exprt(
-      unary_exprt(ID_isinf, expr.op0(), bool_typet()),
-      ieee_float_equal_exprt(expr.op1(), gen_zero(expr.op1().type())));
-
-    exprt zero_times_inf=and_exprt(
-      ieee_float_equal_exprt(expr.op1(), gen_zero(expr.op1().type())),
-      unary_exprt(ID_isinf, expr.op0(), bool_typet()));
-
-    isnan=or_exprt(inf_times_zero, zero_times_inf);
-  }
-  else if(expr.id()==ID_plus)
-  {
-    if(expr.operands().size()>=3)
-      return nan_check(make_binary(expr), guard);
-
-    assert(expr.operands().size()==2);
-
-    // -inf + +inf = NaN and +inf + -inf = NaN,
-    // i.e., signs differ
-    ieee_float_spect spec=ieee_float_spect(to_floatbv_type(expr.type()));
-    exprt plus_inf=ieee_floatt::plus_infinity(spec).to_expr();
-    exprt minus_inf=ieee_floatt::minus_infinity(spec).to_expr();
-
-    isnan=or_exprt(
-      and_exprt(equal_exprt(expr.op0(), minus_inf), equal_exprt(expr.op1(), plus_inf)),
-      and_exprt(equal_exprt(expr.op0(), plus_inf), equal_exprt(expr.op1(), minus_inf)));
-  }
-  else if(expr.id()==ID_minus)
-  {
-    assert(expr.operands().size()==2);
-    // +inf - +inf = NaN and -inf - -inf = NaN,
-    // i.e., signs match
-
-    ieee_float_spect spec=ieee_float_spect(to_floatbv_type(expr.type()));
-    exprt plus_inf=ieee_floatt::plus_infinity(spec).to_expr();
-    exprt minus_inf=ieee_floatt::minus_infinity(spec).to_expr();
-
-    isnan=or_exprt(
-      and_exprt(equal_exprt(expr.op0(), plus_inf), equal_exprt(expr.op1(), plus_inf)),
-      and_exprt(equal_exprt(expr.op0(), minus_inf), equal_exprt(expr.op1(), minus_inf)));
-  }
-  else
-    assert(false);
+  exprt isnan(ID_isnan, bool_typet());
+  isnan.copy_to_operands(expr);
 
   isnan.make_not();
 
@@ -821,7 +665,6 @@ void goto_checkt::nan_check(
     "NaN on "+expr.id_string(),
     "NaN",
     expr.find_location(),
-    expr,
     guard);
 }
 
@@ -859,7 +702,6 @@ void goto_checkt::pointer_rel_check(
         "same object violation",
         "pointer",
         expr.find_location(),
-        expr,
         guard);
     }
   }
@@ -881,76 +723,62 @@ void goto_checkt::pointer_validity_check(
   const dereference_exprt &expr,
   const guardt &guard)
 {
+  #if 0
   if(!enable_pointer_check)
     return;
 
-  const exprt &pointer=expr.op0();
-  const typet &pointer_type=to_pointer_type(ns.follow(pointer.type()));
+  const exprt &pointer_expr=expr.op0();
+  const typet &pointer_expr_type=ns.follow(pointer_expr.type());
 
-  assert(base_type_eq(pointer_type.subtype(), expr.type(), ns));
+  assert(pointer_expr_type.id()==ID_pointer);
 
-  #if 0
-  add_guarded_claim(
-    good_pointer(expr.pointer()),
-    "dereference failure: pointer not valid",
-    "pointer dereference",
-    expr.find_location(),
-    expr,
-    guard);    
-  #else
+  const pointer_typet &pointer_type=to_pointer_type(pointer_expr_type);
 
-  const typet &dereference_type=pointer_type.subtype();
+  // NULL?
+  {
+    null_pointer_exprt null_pointer(pointer_type);
 
-  exprt dynamic_bounds=
-    or_exprt(dynamic_object_lower_bound(pointer),
-             dynamic_object_upper_bound(pointer, dereference_type, ns));
+    predicate_exprt same_object(ID_same_object);
+    same_object.copy_to_operands(pointer_expr, null_pointer);
 
-  exprt object_bounds=
-    or_exprt(object_lower_bound(pointer),
-             object_upper_bound(pointer, dereference_type, ns));
-
-  add_guarded_claim(
-    not_exprt(null_object(pointer)),
-    "dereference failure: pointer NULL",
-    "pointer dereference",
-    expr.find_location(),
-    expr,
-    guard);
-
-  add_guarded_claim(
-    not_exprt(invalid_pointer(pointer)),
-    "dereference failure: pointer invalid",
-    "pointer dereference",
-    expr.find_location(),
-    expr,
-    guard);
-
-  add_guarded_claim(
-    or_exprt(not_exprt(dynamic_object(pointer)), not_exprt(deallocated(pointer, ns))),
-    "dereference failure: deallocated dynamic object",
-    "pointer dereference",
-    expr.find_location(),
-    expr,
-    guard);
-
-  if(enable_bounds_check)
     add_guarded_claim(
-      or_exprt(not_exprt(dynamic_object(pointer)), not_exprt(malloc_object(pointer, ns)), not_exprt(dynamic_bounds)),
-      "dereference failure: dynamic object bounds",
+      same_object,
+      "NULL pointer",
       "pointer dereference",
       expr.find_location(),
-      expr,
       guard);
+  }
+  
+  // Invalid?
+  {
+    predicate_exprt invalid_pointer("invalid-pointer");
+    invalid_pointer.copy_to_operands(pointer_expr);
 
-  if(enable_bounds_check)
     add_guarded_claim(
-      or_exprt(dynamic_object(pointer), not_exprt(object_bounds)),
-      "dereference failure: object bounds",
+      invalid_pointer,
+      "invalid pointer",
       "pointer dereference",
       expr.find_location(),
-      expr,
       guard);
+  }
+  
+  exprt offset=unary_exprt(
+    ID_pointer_offset, pointer_expr,
+    pointer_type.difference_type());
 
+  // lower bound is easy
+  {
+    binary_relation_exprt
+      offset_lower_bound(offset, ID_lt,
+                         gen_zero(offset.type()));
+
+    add_guarded_claim(
+      offset_lower_bound,
+      "object lower bound",
+      "pointer dereference",
+      expr.find_location(),
+      guard);
+  }
   #endif
 }
 
@@ -1043,7 +871,6 @@ void goto_checkt::bounds_check(
           name+" lower bound",
           "array bounds",
           expr.find_location(),
-          expr,
           guard);
       }
     }
@@ -1076,7 +903,6 @@ void goto_checkt::bounds_check(
         name+" upper bound",
         "array bounds",
         expr.find_location(),
-        expr,
         guard);
     }
   }
@@ -1144,7 +970,6 @@ void goto_checkt::add_guarded_claim(
   const std::string &comment,
   const std::string &property,
   const locationt &location,
-  const exprt &src_expr,
   const guardt &guard)
 {
   exprt expr(_expr);
@@ -1175,14 +1000,12 @@ void goto_checkt::add_guarded_claim(
       enable_assert_to_assume?ASSUME:ASSERT;
 
     goto_programt::targett t=new_code.add_instruction(type);
-    
-    std::string source_string=from_expr(ns, "", src_expr);
 
     t->guard.swap(new_expr);
     t->location=location;
     t->location.set_comment(comment);
     t->location.set_property(property);
-    t->location.set_source(source_string);
+    t->location.set_priority(2); // relatively low
   }
 }
 
@@ -1203,10 +1026,6 @@ void goto_checkt::check_rec(
   guardt &guard,
   bool address)
 {
-  // we don't look into quantifiers
-  if(expr.id()==ID_exists || expr.id()==ID_forall)
-    return;
-
   if(address)
   {
     if(expr.id()==ID_dereference)
@@ -1313,10 +1132,6 @@ void goto_checkt::check_rec(
       float_overflow_check(expr, guard);
     }
   }
-  else if(expr.id()==ID_shl || expr.id()==ID_ashr || expr.id()==ID_lshr)
-  {
-    undefined_shift_check(to_shift_expr(expr), guard);
-  }
   else if(expr.id()==ID_mod)
   {
     mod_by_zero_check(to_mod_expr(expr), guard);
@@ -1368,7 +1183,7 @@ Function: goto_checkt::goto_check
 
  Outputs:
 
- Purpose:[B
+ Purpose:
 
 \*******************************************************************/
 
@@ -1394,22 +1209,6 @@ void goto_checkt::goto_check(goto_programt &goto_program)
     
     check(i.guard);
 
-    // magic ERROR label?
-    if(error_label!=irep_idt() &&
-       std::find(i.labels.begin(), i.labels.end(), error_label)!=i.labels.end())
-    {
-      goto_program_instruction_typet type=
-        enable_assert_to_assume?ASSUME:ASSERT;
-
-      goto_programt::targett t=new_code.add_instruction(type);
-
-      t->guard=false_exprt();
-      t->location=i.location;
-      t->location.set(ID_property, "error label");
-      t->location.set(ID_comment, "error label");
-      t->location.set("user-provided", true);
-    }
-    
     if(i.is_other())
     {
       const irep_idt &statement=i.code.get(ID_statement);
@@ -1458,18 +1257,7 @@ void goto_checkt::goto_check(goto_programt &goto_program)
       // this has no successor
       assertions.clear();
     }
-    else if(i.is_assert())
-    {
-      if(i.location.get_bool("user-provided") &&
-         !enable_assertions)
-        i.type=SKIP;
-    }
-    else if(i.is_assume())
-    {
-      if(!enable_assumptions)
-        i.type=SKIP;
-    }
-
+    
     for(goto_programt::instructionst::iterator
         i_it=new_code.instructions.begin();
         i_it!=new_code.instructions.end();

@@ -1,17 +1,23 @@
-SRC = main.cpp goto_cc_mode.cpp gcc_mode.cpp \
-      get_base_name.cpp \
-      gcc_cmdline.cpp ms_cl_cmdline.cpp ld_cmdline.cpp \
-      compile.cpp armcc_cmdline.cpp run.cpp \
+SRC = goto-cc.cpp \
+      cmdline_options.cpp get_base_name.cpp \
+      gcc_cmdline.cpp ms_cl_cmdline.cpp \
+      compile.cpp armcc_cmdline.cpp \
       languages.cpp goto_cc_cmdline.cpp \
-      ms_cl_mode.cpp armcc_mode.cpp cw_mode.cpp ld_mode.cpp
+      xml_binaries/xml_irep_hashing.cpp \
+      xml_binaries/xml_symbol_hashing.cpp \
+      xml_binaries/xml_symbol.cpp \
+      xml_binaries/xml_goto_function.cpp \
+      xml_binaries/xml_goto_function_hashing.cpp \
+      xml_binaries/xml_goto_program.cpp \
+      xml_binaries/xml_goto_program_hashing.cpp \
+      xml_binaries/read_goto_object.cpp
 
 OBJ += ../big-int/bigint$(OBJEXT) \
       ../goto-programs/goto-programs$(LIBEXT) \
+      ../pointer-analysis/pointer-analysis$(LIBEXT) \
       ../util/util$(LIBEXT) \
-      ../linking/linking$(LIBEXT) \
       ../ansi-c/ansi-c$(LIBEXT) \
       ../xmllang/xmllang$(LIBEXT) \
-      ../assembler/assembler$(LIBEXT) \
       ../langapi/langapi$(LIBEXT)
 
 INCLUDES= -I .. -I ../util
@@ -34,9 +40,4 @@ endif
 
 goto-cc$(EXEEXT): $(OBJ)
 	$(LINKBIN)
-
-.PHONY: goto-cc-mac-signed
-
-goto-cc-mac-signed: goto-cc$(EXEEXT)
-	codesign -v -s $(OSX_IDENTITY) goto-cc$(EXEEXT)
 

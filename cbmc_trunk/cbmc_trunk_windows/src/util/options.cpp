@@ -6,8 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include <stdlib.h>
 #include <i2string.h>
-#include <string2int.h>
 
 #include "options.h"
 
@@ -100,8 +100,7 @@ Function: optionst::get_bool_option
 
 bool optionst::get_bool_option(const std::string &option) const
 {
-  const std::string value=get_option(option);
-  return value.empty()?false:safe_str2int(value.c_str());
+  return atoi(get_option(option).c_str());
 }
 
 /*******************************************************************\
@@ -118,8 +117,7 @@ Function: optionst::get_int_option
 
 int optionst::get_int_option(const std::string &option) const
 {
-  const std::string value=get_option(option);
-  return value.empty()?0:safe_str2int(value.c_str());
+  return atoi(get_option(option).c_str());
 }
 
 /*******************************************************************\

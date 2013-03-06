@@ -47,7 +47,7 @@ protected:
   std::string id_shorthand(const exprt &expr) const;
 
   std::string convert_typecast(
-    const typecast_exprt &src, unsigned &precedence);
+    const exprt &src, unsigned &precedence);
 
   std::string convert_pointer_arithmetic(const exprt &src,
     unsigned &precedence);
@@ -124,10 +124,6 @@ protected:
     const exprt &src, const std::string &symbol,
     unsigned precedence);
 
-  std::string convert_complex(
-    const exprt &src, 
-    unsigned precedence);
-
   std::string convert_Hoare(const exprt &src);
 
   std::string convert_code(const codet &src);
@@ -155,7 +151,6 @@ protected:
   std::string convert_code_lock(const codet &src, unsigned indent);
   std::string convert_code_unlock(const codet &src, unsigned indent);
   std::string convert_code_printf(const codet &src, unsigned indent);
-  std::string convert_code_fence(const codet &src, unsigned indent);
   std::string convert_code_input(const codet &src, unsigned indent);
   std::string convert_code_array_set(const codet &src, unsigned indent);
   std::string convert_code_array_copy(const codet &src, unsigned indent);

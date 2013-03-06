@@ -29,11 +29,8 @@ void ansi_c_typecheckt::typecheck()
   {
     if(it->id()==ID_declaration)
     {
-      ansi_c_declarationt &declaration=
-        to_ansi_c_declaration(*it);
-
       symbolt symbol;
-      declaration.to_symbol(symbol);
+      to_ansi_c_declaration(*it).to_symbol(symbol);
       typecheck_symbol(symbol);
     }
     else if(it->id()==ID_initializer)
@@ -58,12 +55,12 @@ Function: ansi_c_typecheck
 
 bool ansi_c_typecheck(
   ansi_c_parse_treet &ansi_c_parse_tree,
-  symbol_tablet &symbol_table,
+  contextt &context,
   const std::string &module,
   message_handlert &message_handler)
 {
   ansi_c_typecheckt ansi_c_typecheck(
-    ansi_c_parse_tree, symbol_table, module, message_handler);
+    ansi_c_parse_tree, context, module, message_handler);
   return ansi_c_typecheck.typecheck_main();
 }
 
@@ -84,12 +81,12 @@ bool ansi_c_typecheck(
   message_handlert &message_handler,
   const namespacet &ns)
 {
-  symbol_tablet symbol_table;
+  contextt context;
   ansi_c_parse_treet ansi_c_parse_tree;
 
   ansi_c_typecheckt ansi_c_typecheck(
-    ansi_c_parse_tree, symbol_table,
-    ns.get_symbol_table(), "", message_handler);
+    ansi_c_parse_tree, context,
+    ns.get_context(), "", message_handler);
 
   try
   {

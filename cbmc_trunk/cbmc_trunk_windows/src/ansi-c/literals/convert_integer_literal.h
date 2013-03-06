@@ -12,6 +12,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <string>
 #include <expr.h>
 
-exprt convert_integer_literal(const std::string &src);
+exprt convert_integer_literal(
+  const std::string &src,
+  unsigned base);
 
 #endif

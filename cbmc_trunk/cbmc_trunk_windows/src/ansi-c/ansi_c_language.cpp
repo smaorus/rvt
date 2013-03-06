@@ -15,18 +15,17 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <replace_symbol.h>
 #include <config.h>
 
-#include <linking/linking.h>
-#include <linking/remove_internal_symbols.h>
-#include <linking/entry_point.h>
-
 #include "ansi_c_language.h"
 #include "ansi_c_convert.h"
 #include "ansi_c_typecheck.h"
 #include "ansi_c_parser.h"
 #include "expr2c.h"
 #include "trans_unit.h"
+#include "c_link.h"
 #include "c_preprocess.h"
+#include "c_main.h"
 #include "internal_additions.h"
+#include "remove_internal_symbols.h"
 
 /*******************************************************************\
 
@@ -85,9 +84,9 @@ bool ansi_c_languaget::preprocess(
 {
   // stdin?
   if(path=="")
-    return c_preprocess(PREPROCESS_C, instream, outstream, message_handler);
+    return c_preprocess(instream, outstream, message_handler);
 
-  return c_preprocess(PREPROCESS_C, path, outstream, message_handler);  
+  return c_preprocess(path, outstream, message_handler);  
 }
              
 /*******************************************************************\
@@ -131,7 +130,6 @@ bool ansi_c_languaget::parse(
   ansi_c_parser.in=&codestr;
   ansi_c_parser.set_message_handler(message_handler);
   ansi_c_parser.grammar=ansi_c_parsert::LANGUAGE;
-  ansi_c_parser.for_has_scope=config.ansi_c.for_has_scope;
 
   switch(config.ansi_c.mode)
   {
@@ -194,21 +192,21 @@ Function: ansi_c_languaget::typecheck
 \*******************************************************************/
 
 bool ansi_c_languaget::typecheck(
-  symbol_tablet &symbol_table,
+  contextt &context,
   const std::string &module,
   message_handlert &message_handler)
 {
   if(ansi_c_convert(parse_tree, module, message_handler))
     return true;
 
-  symbol_tablet new_symbol_table;
+  contextt new_context;
 
-  if(ansi_c_typecheck(parse_tree, new_symbol_table, module, message_handler))
+  if(ansi_c_typecheck(parse_tree, new_context, module, message_handler))
     return true;
 
-  remove_internal_symbols(new_symbol_table);
+  remove_internal_symbols(new_context);
   
-  if(linking(symbol_table, new_symbol_table, message_handler))
+  if(c_link(context, new_context, message_handler))
     return true;
     
   return false;
@@ -227,10 +225,10 @@ Function: ansi_c_languaget::final
 \*******************************************************************/
 
 bool ansi_c_languaget::final(
-  symbol_tablet &symbol_table,
+  contextt &context,
   message_handlert &message_handler)
 {
-  if(entry_point(symbol_table, "c::main", message_handler)) return true;
+  if(c_main(context, "c::main", message_handler)) return true;
   
   return false;
 }

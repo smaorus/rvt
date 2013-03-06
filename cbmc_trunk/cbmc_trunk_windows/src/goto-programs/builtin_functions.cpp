@@ -20,11 +20,11 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <std_code.h>
 #include <std_expr.h>
 #include <symbol.h>
-#include <pointer_predicates.h>
 
 #include <ansi-c/c_types.h>
 
 #include "goto_convert_class.h"
+#include "dynamic_memory.h"
 
 /*******************************************************************\
 
@@ -228,8 +228,6 @@ void goto_convertt::do_printf(
       copy(to_code(printf_code), OTHER, dest);
     }
   }
-  else
-    assert(false);
 }
 
 /*******************************************************************\
@@ -735,59 +733,6 @@ void goto_convertt::do_array_equal(
 
 /*******************************************************************\
 
-Function: is_lvalue
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-bool is_lvalue(const exprt &expr)
-{
-  if(expr.id()==ID_index)
-    return is_lvalue(to_index_expr(expr).op0());
-  else if(expr.id()==ID_member)
-    return is_lvalue(to_member_expr(expr).op0());
-  else if(expr.id()==ID_dereference)
-    return true;
-  else if(expr.id()==ID_symbol)
-    return true;
-  else
-    return false;
-}
-
-/*******************************************************************\
-
-Function: make_va_list
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-exprt make_va_list(const exprt &expr)
-{
-  // we first strip any typecast
-  if(expr.id()==ID_typecast)
-    return make_va_list(to_typecast_expr(expr).op());
-
-  // if it's an address of an lvalue, we take that
-  if(expr.id()==ID_address_of &&
-     expr.operands().size()==1 &&
-     is_lvalue(expr.op0()))
-    return expr.op0();
-
-  return expr;
-}
-
-/*******************************************************************\
-
 Function: goto_convertt::do_function_call_symbol
 
   Inputs:
@@ -824,30 +769,28 @@ void goto_convertt::do_function_call_symbol(
     throw "error: function `"+id2string(identifier)+"' type mismatch: expected code";
   }
   
-  if(identifier==CPROVER_PREFIX "parameter_predicates" || 
-     identifier==CPROVER_PREFIX "return_predicates")
+  if(identifier==CPROVER_PREFIX "parameter_predicates" || identifier==CPROVER_PREFIX "return_predicates")
   {
-    if(arguments.size() != 0)
-    {
-      err_location(function);
-      throw "`"+id2string(identifier)+"' expected to have no arguments";
-    }
-
-    goto_programt::targett t = dest.add_instruction(OTHER);
-    t->location = function.location();
-    t->location.set("user-provided", true);
-    if(identifier==CPROVER_PREFIX "parameter_predicates")
-    {
-      t->code = codet(ID_user_specified_parameter_predicates);
-      t->code.set_statement(ID_user_specified_parameter_predicates);
-    }
-    else
-    {
-      t->code = codet(ID_user_specified_return_predicates);
-      t->code.set_statement(ID_user_specified_return_predicates);
-    }
+        if(arguments.size() != 0)
+        {
+            err_location(function);
+            throw "`"+id2string(identifier)+"' expected to have no arguments";
+        }
+        goto_programt::targett t = dest.add_instruction(OTHER);
+        t->location = function.location();
+        t->location.set("user-provided", true);
+        if(identifier==CPROVER_PREFIX "parameter_predicates")
+        {
+                t->code = codet(ID_user_specified_parameter_predicates);
+                t->code.set_statement(ID_user_specified_parameter_predicates);
+        } else {
+                t->code = codet(ID_user_specified_return_predicates);
+                t->code.set_statement(ID_user_specified_return_predicates);
+        }
+        return;
   }
-  else if(identifier==CPROVER_PREFIX "predicate")
+
+  if(identifier==CPROVER_PREFIX "predicate")
   {
     if(arguments.size()!=1)
     {
@@ -869,6 +812,9 @@ void goto_convertt::do_function_call_symbol(
       err_location(function);
       throw "`"+id2string(identifier)+"' expected to have one argument";
     }
+
+    if(!options.get_bool_option("assumptions"))
+      return;
 
     goto_programt::targett t=dest.add_instruction(ASSUME);
     t->guard=arguments.front();
@@ -893,10 +839,14 @@ void goto_convertt::do_function_call_symbol(
       throw "`"+id2string(identifier)+"' expected to have one argument";
     }
 
+    if(!options.get_bool_option("assertions"))
+      return;
+
     goto_programt::targett t=dest.add_instruction(ASSERT);
     t->guard=arguments.front();
     t->location=function.location();
     t->location.set("user-provided", true);
+    t->location.set_priority(10); // high
     t->location.set_property(ID_assertion);
     
     // let's double-check the type of the argument
@@ -920,11 +870,15 @@ void goto_convertt::do_function_call_symbol(
     const irep_idt description=
       get_string_constant(arguments[1]);
 
+    if(!options.get_bool_option("assertions"))
+      return;
+
     goto_programt::targett t=dest.add_instruction(ASSERT);
     t->guard=arguments[0];
     t->location=function.location();
     t->location.set("user-provided", true);
     t->location.set_property(ID_assertion);
+    t->location.set_priority(10); // high
     t->location.set_comment(description);
     
     // let's double-check the type of the argument
@@ -941,28 +895,23 @@ void goto_convertt::do_function_call_symbol(
   {
     do_printf(lhs, function, arguments, dest);
   }
-  else if(identifier==CPROVER_PREFIX "input" ||
-          identifier=="c::__CPROVER::input")
+  else if(identifier==CPROVER_PREFIX "input")
   {
     do_input(lhs, function, arguments, dest);
   }
-  else if(identifier==CPROVER_PREFIX "cover" ||
-          identifier=="c::__CPROVER::cover")
+  else if(identifier==CPROVER_PREFIX "cover")
   {
     do_cover(lhs, function, arguments, dest);
   }
-  else if(identifier==CPROVER_PREFIX "output" ||
-          identifier=="c::__CPROVER::output")
+  else if(identifier==CPROVER_PREFIX "output")
   {
     do_output(lhs, function, arguments, dest);
   }
-  else if(identifier==CPROVER_PREFIX "atomic_begin" ||
-          identifier=="c::__CPROVER::atomic_begin")
+  else if(identifier==CPROVER_PREFIX "atomic_begin")
   {
     do_atomic_begin(lhs, function, arguments, dest);
   }
-  else if(identifier==CPROVER_PREFIX "atomic_end" ||
-          identifier=="c::__CPROVER::atomic_end")
+  else if(identifier==CPROVER_PREFIX "atomic_end")
   {
     do_atomic_end(lhs, function, arguments, dest);
   }
@@ -982,7 +931,6 @@ void goto_convertt::do_function_call_symbol(
 
     exprt rhs=side_effect_expr_nondett(lhs.type());
     rhs.location()=function.location();
-    rhs.set(ID_C_identifier, identifier);
 
     code_assignt assignment(lhs, rhs);
     assignment.location()=function.location();
@@ -1007,22 +955,18 @@ void goto_convertt::do_function_call_symbol(
   {
     do_array_set(lhs, function, arguments, dest);
   }
-  else if(identifier==CPROVER_PREFIX "array_equal" ||
-          identifier=="c::__CPROVER::array_equal")
+  else if(identifier==CPROVER_PREFIX "array_equal")
   {
     do_array_equal(lhs, function, arguments, dest);
   }
-  else if(identifier==CPROVER_PREFIX "array_copy" ||
-          identifier=="c::__CPROVER::array_equal")
+  else if(identifier==CPROVER_PREFIX "array_copy")
   {
     do_array_copy(lhs, function, arguments, dest);
   }
-  else if(identifier=="c::printf")
-  /*
+  else if(identifier=="c::printf" ||
           identifier=="c::fprintf" ||
           identifier=="c::sprintf" ||
           identifier=="c::snprintf")
-  */
   {
     do_printf(lhs, function, arguments, dest);
   }
@@ -1041,11 +985,15 @@ void goto_convertt::do_function_call_symbol(
     const irep_idt description=
       "assertion "+id2string(get_string_constant(arguments[0]));
 
+    if(!options.get_bool_option("assertions"))
+      return;
+
     goto_programt::targett t=dest.add_instruction(ASSERT);
     t->guard=false_exprt();
     t->location=function.location();
     t->location.set("user-provided", true);
     t->location.set_property(ID_assertion);
+    t->location.set_priority(10); // high
     t->location.set_comment(description);
     // we ignore any LHS
   }
@@ -1064,11 +1012,15 @@ void goto_convertt::do_function_call_symbol(
     const irep_idt description=
       "assertion "+id2string(get_string_constant(arguments[3]));
 
+    if(!options.get_bool_option("assertions"))
+      return;
+
     goto_programt::targett t=dest.add_instruction(ASSERT);
     t->guard=false_exprt();
     t->location=function.location();
     t->location.set("user-provided", true);
     t->location.set_property(ID_assertion);
+    t->location.set_priority(10); // high
     t->location.set_comment(description);
     // we ignore any LHS
   }
@@ -1086,39 +1038,21 @@ void goto_convertt::do_function_call_symbol(
     const irep_idt description=
       "assertion "+id2string(get_string_constant(arguments[0]));
 
+    if(!options.get_bool_option("assertions"))
+      return;
+
     goto_programt::targett t=dest.add_instruction(ASSERT);
     t->guard=false_exprt();
     t->location=function.location();
     t->location.set("user-provided", true);
     t->location.set_property(ID_assertion);
+    t->location.set_priority(10); // high
     t->location.set_comment(description);
     // we ignore any LHS
-  }
-  else if(identifier==CPROVER_PREFIX "fence")
-  {
-    if(arguments.size()<1)
-    {
-      err_location(function);
-      throw "`"+id2string(identifier)+"' expected to have at least one argument";
-    }
-
-    goto_programt::targett t=dest.add_instruction(OTHER);
-    t->location=function.location();
-    t->code.set(ID_statement, ID_fence);
-
-    forall_expr(it, arguments)
-    {
-      const irep_idt kind=get_string_constant(*it);
-      t->code.set(kind, true);
-    }
   }
   else if(identifier=="c::__builtin_prefetch")
   {
     // does nothing
-  }
-  else if(identifier=="c::__builtin_unreachable")
-  {
-    // says something like assert(false);
   }
   else if(identifier==ID_gcc_builtin_va_arg)
   {
@@ -1134,14 +1068,12 @@ void goto_convertt::do_function_call_symbol(
       throw "`"+id2string(identifier)+"' expected to have one argument";
     }
     
-    exprt list_arg=make_va_list(arguments[0]);
-    
     {
-      sideeffect_exprt rhs(ID_gcc_builtin_va_arg_next, list_arg.type());
-      rhs.copy_to_operands(list_arg);
+      sideeffect_exprt rhs(ID_gcc_builtin_va_arg_next, arguments[0].type());
+      rhs.copy_to_operands(arguments[0]);
       goto_programt::targett t1=dest.add_instruction(ASSIGN);
       t1->location=function.location();
-      t1->code=code_assignt(list_arg, rhs);
+      t1->code=code_assignt(arguments[0], rhs);
     }
 
     if(lhs.is_not_nil())
@@ -1149,7 +1081,7 @@ void goto_convertt::do_function_call_symbol(
       typet t=pointer_typet();
       t.subtype()=lhs.type();
       dereference_exprt rhs(lhs.type());
-      rhs.op0()=typecast_exprt(list_arg, t);
+      rhs.op0()=typecast_exprt(arguments[0], t);
       rhs.location()=function.location();
       goto_programt::targett t2=dest.add_instruction(ASSIGN);
       t2->location=function.location();
@@ -1164,18 +1096,18 @@ void goto_convertt::do_function_call_symbol(
       throw "`"+id2string(identifier)+"' expected to have two arguments";
     }
     
-    exprt dest_expr=make_va_list(arguments[0]);
-    exprt src_expr=typecast_exprt(arguments[1], dest_expr.type());
-
-    if(!is_lvalue(dest_expr))
+    exprt lhs=arguments[0];
+    exprt rhs=typecast_exprt(arguments[1], lhs.type());
+    
+    if(lhs.id()!=ID_symbol)
     {
-      err_location(dest_expr);
-      throw "va_copy argument expected to be lvalue";
+      err_location(lhs);
+      throw "vs_copy argument expected to be symbol";
     }    
     
     goto_programt::targett t=dest.add_instruction(ASSIGN);
     t->location=function.location();
-    t->code=code_assignt(dest_expr, src_expr);
+    t->code=code_assignt(lhs, rhs);
   }
   else if(identifier=="c::__builtin_va_start")
   {
@@ -1187,20 +1119,19 @@ void goto_convertt::do_function_call_symbol(
       throw "`"+id2string(identifier)+"' expected to have two arguments";
     }
     
-    exprt dest_expr=make_va_list(arguments[0]);
-    exprt src_expr=typecast_exprt(
-      address_of_exprt(arguments[1]), dest_expr.type());
-
-    if(!is_lvalue(dest_expr))
+    exprt lhs=arguments[0];
+    exprt rhs=typecast_exprt(
+      address_of_exprt(arguments[1]), lhs.type());
+    
+    if(lhs.id()!=ID_symbol)
     {
-      err_location(dest_expr);
-      std::cout << "X: " << dest_expr.pretty() << std::endl;
-      throw "va_start argument expected to be lvalue";
+      err_location(lhs);
+      throw "vs_start argument expected to be symbol";
     }    
     
     goto_programt::targett t=dest.add_instruction(ASSIGN);
     t->location=function.location();
-    t->code=code_assignt(dest_expr, src_expr);
+    t->code=code_assignt(lhs, rhs);
   }
   else if(identifier=="c::__builtin_va_end")
   {
@@ -1211,288 +1142,9 @@ void goto_convertt::do_function_call_symbol(
       throw "`"+id2string(identifier)+"' expected to have one argument";
     }
     
-    exprt dest_expr=make_va_list(arguments[0]);
-    
-    if(!is_lvalue(dest_expr))
-    {
-      err_location(dest_expr);
-      throw "va_end argument expected to be lvalue";
-    }    
-    
     goto_programt::targett t=dest.add_instruction(ASSIGN);
     t->location=function.location();
-    t->code=code_assignt(dest_expr, gen_zero(dest_expr.type()));
-  }
-  else if(identifier=="c::__sync_fetch_and_add" ||
-          identifier=="c::__sync_fetch_and_sub" ||
-          identifier=="c::__sync_fetch_and_or" ||
-          identifier=="c::__sync_fetch_and_and" ||
-          identifier=="c::__sync_fetch_and_xor" ||
-          identifier=="c::__sync_fetch_and_nand")
-  {
-    // type __sync_fetch_and_OP(type *ptr, type value, ...)
-    // { tmp = *ptr; *ptr OP= value; return tmp; }
-
-    if(arguments.size()<2)
-    {
-      err_location(function);
-      throw "`"+id2string(identifier)+"' expected to have at least two arguments";
-    }
-
-    if(arguments[0].type().id()!=ID_pointer)
-    {
-      err_location(function);
-      throw "`"+id2string(identifier)+"' expected to have pointer argument";
-    }
-    
-    // build *ptr
-    dereference_exprt deref_ptr(arguments[0], arguments[0].type().subtype());
-
-    goto_programt::targett t1=dest.add_instruction(ATOMIC_BEGIN);
-    t1->location=function.location();
-
-    if(lhs.is_not_nil())
-    {
-      // return *ptr
-      goto_programt::targett t2=dest.add_instruction(ASSIGN);
-      t2->location=function.location();
-      t2->code=code_assignt(lhs, deref_ptr);
-      if(t2->code.op0().type()!=t2->code.op1().type())
-        t2->code.op1().make_typecast(t2->code.op0().type());
-    }
-    
-    irep_idt op_id=
-      identifier=="c::__sync_fetch_and_add"?ID_plus:
-      identifier=="c::__sync_fetch_and_sub"?ID_minus:
-      identifier=="c::__sync_fetch_and_or"?ID_bitor:
-      identifier=="c::__sync_fetch_and_and"?ID_bitand:
-      identifier=="c::__sync_fetch_and_xor"?ID_bitxor:
-      identifier=="c::__sync_fetch_and_nand"?ID_bitnand:
-      ID_nil;
-    
-    // build *ptr=*ptr OP arguments[1];
-    binary_exprt op_expr(deref_ptr, op_id, arguments[1], deref_ptr.type());
-    if(op_expr.op1().type()!=op_expr.type())
-      op_expr.op1().make_typecast(op_expr.type());
-
-    goto_programt::targett t3=dest.add_instruction(ASSIGN);
-    t3->location=function.location();
-    t3->code=code_assignt(deref_ptr, op_expr);
-    
-    // this instruction implies an mfence, i.e., WRfence
-    goto_programt::targett t4=dest.add_instruction(OTHER);
-    t4->location=function.location();
-    t4->code=codet(ID_fence);
-    t4->code.set(ID_WRfence, true);
-
-    goto_programt::targett t5=dest.add_instruction(ATOMIC_END);
-    t5->location=function.location();
-  }
-  else if(identifier=="c::__sync_add_and_fetch" ||
-          identifier=="c::__sync_sub_and_fetch" ||
-          identifier=="c::__sync_or_and_fetch" ||
-          identifier=="c::__sync_and_and_fetch" ||
-          identifier=="c::__sync_xor_and_fetch" ||
-          identifier=="c::__sync_nand_and_fetch")
-  {
-    // type __sync_OP_and_fetch (type *ptr, type value, ...)
-    // { *ptr OP= value; return *ptr; }
-
-    if(arguments.size()<2)
-    {
-      err_location(function);
-      throw "`"+id2string(identifier)+"' expected to have at least two arguments";
-    }
-
-    if(arguments[0].type().id()!=ID_pointer)
-    {
-      err_location(function);
-      throw "`"+id2string(identifier)+"' expected to have pointer argument";
-    }
-    
-    // build *ptr
-    dereference_exprt deref_ptr(arguments[0], arguments[0].type().subtype());
-
-    goto_programt::targett t1=dest.add_instruction(ATOMIC_BEGIN);
-    t1->location=function.location();
-
-    irep_idt op_id=
-      identifier=="c::__sync_add_and_fetch"?ID_plus:
-      identifier=="c::__sync_sub_and_fetch"?ID_minus:
-      identifier=="c::__sync_or_and_fetch"?ID_bitor:
-      identifier=="c::__sync_and_and_fetch"?ID_bitand:
-      identifier=="c::__sync_xor_and_fetch"?ID_bitxor:
-      identifier=="c::__sync_nand_and_fetch"?ID_bitnand:
-      ID_nil;
-    
-    // build *ptr=*ptr OP arguments[1];
-    binary_exprt op_expr(deref_ptr, op_id, arguments[1], deref_ptr.type());
-    if(op_expr.op1().type()!=op_expr.type())
-      op_expr.op1().make_typecast(op_expr.type());
-
-    goto_programt::targett t3=dest.add_instruction(ASSIGN);
-    t3->location=function.location();
-    t3->code=code_assignt(deref_ptr, op_expr);
-    
-    if(lhs.is_not_nil())
-    {
-      // return *ptr
-      goto_programt::targett t2=dest.add_instruction(ASSIGN);
-      t2->location=function.location();
-      t2->code=code_assignt(lhs, deref_ptr);
-      if(t2->code.op0().type()!=t2->code.op1().type())
-        t2->code.op1().make_typecast(t2->code.op0().type());
-    }
-
-    // this instruction implies an mfence, i.e., WRfence
-    goto_programt::targett t4=dest.add_instruction(OTHER);
-    t4->location=function.location();
-    t4->code=codet(ID_fence);
-    t4->code.set(ID_WRfence, true);
-    
-    goto_programt::targett t5=dest.add_instruction(ATOMIC_END);
-    t5->location=function.location();
-  }
-  else if(identifier=="c::__sync_bool_compare_and_swap")
-  {
-    // These builtins perform an atomic compare and swap. That is, if the
-    // current value of *ptr is oldval, then write newval into *ptr.  The
-    // "bool" version returns true if the comparison is successful and
-    // newval was written.  The "val" version returns the contents of *ptr
-    // before the operation.
-
-    // These are type-polymorphic, which makes it hard to put
-    // them into ansi-c/library.
-
-    // bool __sync_bool_compare_and_swap (type *ptr, type oldval, type newval, ...)
-    
-    if(arguments.size()<3)
-    {
-      err_location(function);
-      throw "`"+id2string(identifier)+"' expected to have at least three arguments";
-    }
-
-    if(arguments[0].type().id()!=ID_pointer)
-    {
-      err_location(function);
-      throw "`"+id2string(identifier)+"' expected to have pointer argument";
-    }
-
-    // build *ptr
-    dereference_exprt deref_ptr(arguments[0], arguments[0].type().subtype());
-
-    goto_programt::targett t1=dest.add_instruction(ATOMIC_BEGIN);
-    t1->location=function.location();
-
-    // build *ptr==oldval    
-    equal_exprt equal(deref_ptr, arguments[1]);
-    if(equal.op1().type()!=equal.op0().type())
-      equal.op1().make_typecast(equal.op0().type());
-      
-    if(lhs.is_not_nil())
-    {
-      // return *ptr==oldval
-      goto_programt::targett t2=dest.add_instruction(ASSIGN);
-      t2->location=function.location();
-      t2->code=code_assignt(lhs, equal);
-      if(t2->code.op0().type()!=t2->code.op1().type())
-        t2->code.op1().make_typecast(t2->code.op0().type());
-    }
-    
-    // build (*ptr==oldval)?newval:*ptr    
-    if_exprt if_expr(equal, arguments[2], deref_ptr, deref_ptr.type());
-    if(if_expr.op1().type()!=if_expr.type())
-      if_expr.op1().make_typecast(if_expr.type());
-
-    goto_programt::targett t3=dest.add_instruction(ASSIGN);
-    t3->location=function.location();
-    t3->code=code_assignt(deref_ptr, if_expr);
-    
-    // this instruction implies an mfence, i.e., WRfence
-    goto_programt::targett t4=dest.add_instruction(OTHER);
-    t4->location=function.location();
-    t4->code=codet(ID_fence);
-    t4->code.set(ID_WRfence, true);
-    
-    goto_programt::targett t5=dest.add_instruction(ATOMIC_END);
-    t5->location=function.location();
-  }
-  else if(identifier=="c::__sync_val_compare_and_swap")
-  {
-    // type __sync_val_compare_and_swap (type *ptr, type oldval, type newval, ...)
-    if(arguments.size()<3)
-    {
-      err_location(function);
-      throw "`"+id2string(identifier)+"' expected to have at least three arguments";
-    }
-
-    if(arguments[0].type().id()!=ID_pointer)
-    {
-      err_location(function);
-      throw "`"+id2string(identifier)+"' expected to have pointer argument";
-    }
-
-    // build *ptr
-    dereference_exprt deref_ptr(arguments[0], arguments[0].type().subtype());
-
-    goto_programt::targett t1=dest.add_instruction(ATOMIC_BEGIN);
-    t1->location=function.location();
-
-    if(lhs.is_not_nil())
-    {
-      // return *ptr
-      goto_programt::targett t2=dest.add_instruction(ASSIGN);
-      t2->location=function.location();
-      t2->code=code_assignt(lhs, deref_ptr);
-      if(t2->code.op0().type()!=t2->code.op1().type())
-        t2->code.op1().make_typecast(t2->code.op0().type());
-    }
-    
-    // build *ptr==oldval    
-    equal_exprt equal(deref_ptr, arguments[1]);
-    if(equal.op1().type()!=equal.op0().type())
-      equal.op1().make_typecast(equal.op0().type());
-      
-    // build (*ptr==oldval)?newval:*ptr    
-    if_exprt if_expr(equal, arguments[2], deref_ptr, deref_ptr.type());
-    if(if_expr.op1().type()!=if_expr.type())
-      if_expr.op1().make_typecast(if_expr.type());
-
-    goto_programt::targett t3=dest.add_instruction(ASSIGN);
-    t3->location=function.location();
-    t3->code=code_assignt(deref_ptr, if_expr);
-    
-    // this instruction implies an mfence, i.e., WRfence
-    goto_programt::targett t4=dest.add_instruction(OTHER);
-    t4->location=function.location();
-    t4->code=codet(ID_fence);
-    t4->code.set(ID_WRfence, true);
-    
-    goto_programt::targett t5=dest.add_instruction(ATOMIC_END);
-    t5->location=function.location();
-  }
-  else if(identifier=="c::__sync_lock_test_and_set")
-  {
-    // type __sync_lock_test_and_set (type *ptr, type value, ...)
-    
-    // This builtin, as described by Intel, is not a traditional
-    // test-and-set operation, but rather an atomic exchange operation. 
-    // It writes value into *ptr, and returns the previous contents of
-    // *ptr.  Many targets have only minimal support for such locks, and
-    // do not support a full exchange operation.  In this case, a target
-    // may support reduced functionality here by which the only valid
-    // value to store is the immediate constant 1.  The exact value
-    // actually stored in *ptr is implementation defined.
-  }
-  else if(identifier=="c::__sync_lock_release")
-  {
-    // This builtin is not a full barrier, but rather an acquire barrier.
-    // This means that references after the builtin cannot move to (or be
-    // speculated to) before the builtin, but previous memory stores may
-    // not be globally visible yet, and previous memory loads may not yet
-    // be satisfied.
-
-    // void __sync_lock_release (type *ptr, ...)
+    t->code=code_assignt(arguments[0], gen_zero(arguments[0].type()));
   }
   else
   {

@@ -27,7 +27,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "boolbv.h"
 #include "boolbv_type.h"
 
+#ifdef HAVE_FLOATBV
 #include "../floatbv/float_utils.h"
+#endif
 
 //#define DEBUG
 
@@ -274,9 +276,6 @@ void boolbvt::convert_bitvector(const exprt &expr, bvt &bv)
     return convert_mod(expr, bv);
   else if(expr.id()==ID_shl || expr.id()==ID_ashr || expr.id()==ID_lshr)
     return convert_shift(expr, bv);
-  else if(expr.id()==ID_floatbv_plus || expr.id()==ID_floatbv_minus ||
-          expr.id()==ID_floatbv_mult || expr.id()==ID_floatbv_div)
-    return convert_floatbv_op(expr, bv);
   else if(expr.id()==ID_concatenation)
     return convert_concatenation(expr, bv);
   else if(expr.id()==ID_replication)
@@ -314,14 +313,6 @@ void boolbvt::convert_bitvector(const exprt &expr, bvt &bv)
       to_string_constant(expr).to_array_expr(), bv);
   else if(expr.id()==ID_array)
     return convert_array(expr, bv);
-  else if(expr.id()==ID_vector)
-    return convert_vector(expr, bv);
-  else if(expr.id()==ID_complex)
-    return convert_complex(expr, bv);
-  else if(expr.id()==ID_complex_real)
-    return convert_complex_real(expr, bv);
-  else if(expr.id()==ID_complex_imag)
-    return convert_complex_imag(expr, bv);
   else if(expr.id()==ID_lambda)
     return convert_lambda(expr, bv);
   else if(expr.id()==ID_array_of)
@@ -336,6 +327,7 @@ void boolbvt::convert_bitvector(const exprt &expr, bvt &bv)
     
     return;
   }
+  #ifdef HAVE_FLOATBV
   else if(expr.id()==ID_float_debug1 ||
           expr.id()==ID_float_debug2)
   {
@@ -350,8 +342,54 @@ void boolbvt::convert_bitvector(const exprt &expr, bvt &bv)
       float_utils.debug2(bv0, bv1);
     return;
   }
+  #endif
 
   return conversion_failed(expr, bv);
+}
+
+/*******************************************************************\
+
+Function: boolbvt::convert_array
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void boolbvt::convert_array(const exprt &expr, bvt &bv)
+{
+  unsigned width=boolbv_width(expr.type());
+
+  if(width==0)
+    return conversion_failed(expr, bv);
+    
+  bv.reserve(width);
+
+  if(expr.type().id()==ID_array)
+  {
+    assert(expr.has_operands());
+    const exprt::operandst &operands=expr.operands();
+    assert(!operands.empty());
+    unsigned op_width=width/operands.size();
+    
+    forall_expr(it, operands)
+    {
+      const bvt &tmp=convert_bv(*it);
+
+      if(tmp.size()!=op_width)
+        throw "convert_array: unexpected operand width";
+
+      forall_literals(it2, tmp)
+        bv.push_back(*it2);
+    }   
+
+    return;
+  }
+  
+  conversion_failed(expr, bv);
 }
 
 /*******************************************************************\
@@ -469,7 +507,8 @@ void boolbvt::convert_symbol(const exprt &expr, bvt &bv)
   }
   else
   {
-    map.get_literals(identifier, type, width, bv);
+    for(unsigned i=0; i<width; i++)
+      bv[i]=map.get_literal(identifier, i, expr.type());
 
     forall_literals(it, bv)
       if(it->var_no()>=prop.no_variables() &&
@@ -598,9 +637,11 @@ literalt boolbvt::convert_rest(const exprt &expr)
     
     if(expr.op0().type().id()==ID_floatbv)
     {
+      #ifdef HAVE_FLOATBV
       float_utilst float_utils(prop);
       float_utils.spec=to_floatbv_type(expr.op0().type());
       return float_utils.is_NaN(bv);
+      #endif
     }
     else if(expr.op0().type().id()==ID_fixedbv)
       return const_literal(false);
@@ -614,11 +655,13 @@ literalt boolbvt::convert_rest(const exprt &expr)
     
     if(expr.op0().type().id()==ID_floatbv)
     {
+      #ifdef HAVE_FLOATBV
       float_utilst float_utils(prop);
       float_utils.spec=to_floatbv_type(expr.op0().type());
       return prop.land(
         prop.lnot(float_utils.is_infinity(bv)),
         prop.lnot(float_utils.is_NaN(bv)));
+      #endif
     }
     else if(expr.op0().type().id()==ID_fixedbv)
       return const_literal(true);
@@ -632,9 +675,11 @@ literalt boolbvt::convert_rest(const exprt &expr)
     
     if(expr.op0().type().id()==ID_floatbv)
     {
+      #ifdef HAVE_FLOATBV
       float_utilst float_utils(prop);
       float_utils.spec=to_floatbv_type(expr.op0().type());
       return float_utils.is_infinity(bv);
+      #endif
     }
     else if(expr.op0().type().id()==ID_fixedbv)
       return const_literal(false);
@@ -648,9 +693,11 @@ literalt boolbvt::convert_rest(const exprt &expr)
     
     if(expr.op0().type().id()==ID_floatbv)
     {
+      #ifdef HAVE_FLOATBV
       float_utilst float_utils(prop);
       float_utils.spec=to_floatbv_type(expr.op0().type());
       return float_utils.is_normal(bv);
+      #endif
     }
     else if(expr.op0().type().id()==ID_fixedbv)
       return const_literal(true);
@@ -694,7 +741,8 @@ bool boolbvt::boolbv_set_equality_to_true(const exprt &expr)
       const irep_idt &identifier=
         to_symbol_expr(operands[0]).get_identifier();
 
-      map.set_literals(identifier, type, bv1);
+      for(unsigned i=0; i<bv1.size(); i++)
+        map.set_literal(identifier, i, type, bv1[i]);
 
       return false;
     }

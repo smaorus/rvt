@@ -26,7 +26,7 @@ protected:
   std::string temp_out_filename, temp_result_filename;
 };
 
-/*! \brief Decision procedure interface for various SMT 2.x solvers
+/*! \brief TO_BE_DOCUMENTED
     \ingroup gr_smt2
 */
 class smt2_dect:protected smt2_temp_filet, public smt2_convt
@@ -41,21 +41,7 @@ public:
     const std::string &_logic,
     solvert _solver):
     smt2_temp_filet(),
-    smt2_convt(_ns, _benchmark, _notes, _logic, false, temp_out),
-    logic(_logic),
-    solver(_solver)
-  {
-  }
-
-  smt2_dect(
-    const namespacet &_ns,
-    const std::string &_benchmark,
-    const std::string &_notes,
-    const std::string &_logic,
-    solvert _solver,
-    bool _core_enabled):
-    smt2_temp_filet(),
-    smt2_convt(_ns, _benchmark, _notes, _logic, _core_enabled, temp_out),
+    smt2_convt(_ns, _benchmark, _notes, _logic, temp_out),
     logic(_logic),
     solver(_solver)
   {

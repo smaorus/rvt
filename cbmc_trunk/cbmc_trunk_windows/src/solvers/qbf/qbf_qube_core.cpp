@@ -13,6 +13,7 @@ Author: CM Wintersteiger
 
 #include <util/i2string.h>
 #include <util/mp_arith.h>
+#include <util/str_getline.h>
 
 #include "qbf_qube_core.h"
 
@@ -119,7 +120,7 @@ propt::resultt qbf_qube_coret::prop_solve()
     {
       std::string line;
 
-      std::getline(in, line);
+      str_getline(in, line);
 
       if(line!="" && line[line.size()-1]=='\r')
         line.resize(line.size()-1);

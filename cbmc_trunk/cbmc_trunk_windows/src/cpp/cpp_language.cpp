@@ -14,10 +14,9 @@ Author: Daniel Kroening, kroening@cs.cmu.edu
 #include <config.h>
 #include <replace_symbol.h>
 
-#include <linking/linking.h>
-#include <linking/entry_point.h>
-
 #include <ansi-c/c_preprocess.h>
+#include <ansi-c/c_link.h>
+#include <ansi-c/c_main.h>
 #include <ansi-c/trans_unit.h>
 
 #include "internal_additions.h"
@@ -25,6 +24,7 @@ Author: Daniel Kroening, kroening@cs.cmu.edu
 #include "expr2cpp.h"
 #include "cpp_parser.h"
 #include "cpp_typecheck.h"
+#include "cpp_final.h"
 
 /*******************************************************************\
 
@@ -43,10 +43,8 @@ std::set<std::string> cpp_languaget::extensions() const
   std::set<std::string> s;
   
   s.insert("cpp");
-  s.insert("CPP");
   s.insert("cc");
-  s.insert("c++");
-  s.insert("ii");
+  s.insert("ipp");
   s.insert("cxx");
   
   #ifndef _WIN32
@@ -92,7 +90,7 @@ bool cpp_languaget::preprocess(
   message_handlert &message_handler)
 {
   if(path=="")
-    return c_preprocess(PREPROCESS_CPP, instream, outstream, message_handler);
+    return c_preprocess(instream, outstream, message_handler);
 
   // check extension
 
@@ -109,7 +107,7 @@ bool cpp_languaget::preprocess(
     return false;
   }
 
-  return c_preprocess(PREPROCESS_CPP, path, outstream, message_handler);
+  return c_preprocess(path, outstream, message_handler);
 }
 
 /*******************************************************************\
@@ -204,18 +202,18 @@ Function: cpp_languaget::typecheck
 \*******************************************************************/
 
 bool cpp_languaget::typecheck(
-  symbol_tablet &symbol_table,
+  contextt &context,
   const std::string &module,
   message_handlert &message_handler)
 {
   if(module=="") return false;
 
-  symbol_tablet new_symbol_table;
+  contextt new_context;
 
-  if(cpp_typecheck(cpp_parse_tree, new_symbol_table, module, message_handler))
+  if(cpp_typecheck(cpp_parse_tree, new_context, module, message_handler))
     return true;
 
-  return linking(symbol_table, new_symbol_table, message_handler);
+  return c_link(context, new_context, message_handler);
 }
 
 /*******************************************************************\
@@ -231,10 +229,11 @@ Function: cpp_languaget::final
 \*******************************************************************/
 
 bool cpp_languaget::final(
-  symbol_tablet &symbol_table,
+  contextt &context,
   message_handlert &message_handler)
 {
-  if(entry_point(symbol_table, "c::main", message_handler)) return true;
+  if(cpp_final(context, message_handler)) return true;
+  if(c_main(context, "c::main", message_handler)) return true;
 
   return false;
 }

@@ -27,7 +27,7 @@ Author: Daniel Kroening, kroening@kroening.com
     \ingroup gr_symbol_table
 
     This is a symbol in the symbol table, stored in an
-    object of type symbol_tablet.
+    object of type contextt.
 */
 class symbolt
 {
@@ -64,14 +64,18 @@ public:
   typedef std::list<irep_idt> hierarchyt;
   hierarchyt hierarchy;
   
+  unsigned ordering;
+  
   // global use
-  bool is_type, is_macro, is_exported,
-       is_input, is_output, is_state_var, is_property;
+  bool theorem, is_type, is_macro, is_exported,
+       is_input, is_output, is_statevar;
        
+  // PVS
+  bool is_actual, free_var, binding;
+  
   // ANSI-C
-  bool is_static_lifetime, is_thread_local;
-  bool is_lvalue, is_file_local, is_extern, is_volatile,
-       is_argument;
+  bool static_lifetime, thread_local;
+  bool lvalue, file_local, is_extern, is_volatile;
 
   symbolt()
   {
@@ -82,10 +86,12 @@ public:
   {
     value.make_nil();
     location.make_nil();
-    is_lvalue=is_thread_local=is_static_lifetime=is_file_local=is_extern=
-    is_type=is_macro=is_exported=is_argument=
-    is_volatile=is_input=is_output=is_state_var=is_property=false;
-    name=module=base_name=mode=pretty_name=irep_idt();
+    lvalue=thread_local=static_lifetime=file_local=is_extern=
+    free_var=theorem=
+    is_type=is_actual=is_macro=is_exported=binding=
+    is_volatile=is_input=is_output=is_statevar=false;
+    ordering=0;
+    name=module=base_name=mode=pretty_name="";
   }
      
   void swap(symbolt &b);
@@ -96,16 +102,6 @@ public:
   void from_irep(const irept &src);
   
   class symbol_exprt symbol_expr() const;
-  
-  bool is_shared() const
-  {
-    return is_static_lifetime && !is_thread_local;
-  }
-  
-  bool is_procedure_local() const
-  {
-    return !is_static_lifetime;
-  }
 };
 
 std::ostream &operator<<(std::ostream &out,
@@ -128,5 +124,12 @@ typedef std::list<const symbolt *> symbolptr_listt;
 #define Forall_symbolptr_list(it, list) \
   for(symbolptr_listt::iterator it=(list).begin(); \
       it!=(list).end(); ++it)
+
+// the following should move elsewhere
+bool is_global(const symbolt& symbol);
+
+bool is_thread_local(const symbolt& symbol);
+
+bool is_procedure_local(const symbolt& symbol);
 
 #endif

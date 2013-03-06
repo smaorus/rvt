@@ -8,7 +8,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <assert.h>
 
-#include <symbol_table.h>
+#include <context.h>
 #include <simplify_expr.h>
 #include <expr_util.h>
 #include <base_type.h>
@@ -101,23 +101,33 @@ bool value_sett::insert(
   unsigned n,
   const objectt &object) const
 {
-  object_map_dt::const_iterator entry=dest.read().find(n);
-
-  if(entry==dest.read().end())
+  if(dest.read().find(n)==dest.read().end())
   {
     // new
     dest.write()[n]=object;
     return true;
   }
-  else if(!entry->second.offset_is_set)
-    return false; // no change
-  else if(object.offset_is_set &&
-          entry->second.offset==object.offset)
-    return false; // no change
   else
   {
-    dest.write()[n].offset_is_set=false;
-    return true;
+    objectt &old=dest.write()[n];
+    
+    if(old.offset_is_set && object.offset_is_set)
+    {
+      if(old.offset==object.offset)
+        return false;
+      else
+      {
+        old.offset_is_set=false;
+        return true;
+      }
+    }
+    else if(!old.offset_is_set)
+      return false;
+    else
+    {
+      old.offset_is_set=false;
+      return true;
+    }
   }
 }
 
@@ -270,36 +280,25 @@ bool value_sett::make_union(const value_sett::valuest &new_values)
 {
   bool result=false;
   
-  valuest::iterator v_it=values.begin();
-
   for(valuest::const_iterator
       it=new_values.begin();
       it!=new_values.end();
-      ) // no it++
+      it++)
   {
-    if(v_it==values.end() || it->first<v_it->first)
+    valuest::iterator it2=values.find(it->first);
+
+    if(it2==values.end())
     {
-      values.insert(v_it, *it);
+      values.insert(*it);
       result=true;
-      it++;
       continue;
     }
-    else if(v_it->first<it->first)
-    {
-      v_it++;
-      continue;
-    }
-    
-    assert(v_it->first==it->first);
       
-    entryt &e=v_it->second;
+    entryt &e=it2->second;
     const entryt &new_e=it->second;
     
     if(make_union(e.object_map, new_e.object_map))
       result=true;
-
-    v_it++;
-    it++;
   }
   
   return result;
@@ -460,21 +459,6 @@ void value_sett::get_value_set_rec(
       valuest::const_iterator v_it=
         values.find(expr.get_string(ID_identifier)+suffix);
 
-      // try first component name as suffix if not yet found
-      if(v_it==values.end() &&
-          (expr_type.id()==ID_struct ||
-           expr_type.id()==ID_union))
-      {
-        const struct_union_typet &struct_union_type=
-          to_struct_union_type(expr_type);
-
-        const std::string first_component_name=
-          struct_union_type.components().front().get_string(ID_name);
-
-        v_it=values.find(
-            expr.get_string(ID_identifier)+"."+first_component_name+suffix);
-      }
-
       // not found? try without suffix
       if(v_it==values.end())
         v_it=values.find(expr.get_string(ID_identifier));
@@ -557,7 +541,7 @@ void value_sett::get_value_set_rec(
             expr_type.id()==ID_signedbv)
     {
       // an integer constant got turned into a pointer
-      insert(dest, exprt(ID_integer_address, unsigned_char_type()));
+      insert(dest, exprt(ID_integer_address, uchar_type()));
     }
     else
       insert(dest, exprt(ID_unknown, original_type));
@@ -590,22 +574,13 @@ void value_sett::get_value_set_rec(
                 
         get_value_set_rec(expr.op0(), tmp, suffix, original_type, ns);
 
-        if(tmp.read().size()==0)
+        // if not, throw in integer
+        if(tmp.read().size()!=0)
         {
-          // if not, throw in integer
-          insert(dest, exprt(ID_integer_address, unsigned_char_type()));        
-        }
-        else if(tmp.read().size()==1 &&
-                object_numbering[tmp.read().begin()->first].id()==ID_unknown)
-        {
-          // if not, throw in integer
-          insert(dest, exprt(ID_integer_address, unsigned_char_type()));        
-        }
-        else
-        {
-          // use as is
           dest.write().insert(tmp.read().begin(), tmp.read().end());
         }
+        else
+          insert(dest, exprt(ID_integer_address, uchar_type()));        
       }
     }
     else
@@ -1664,14 +1639,9 @@ void value_sett::apply_code(
   {
     guard(to_code_assume(code).op0(), ns);
   }
-  else if(statement==ID_user_specified_predicate ||
-          statement==ID_user_specified_parameter_predicates ||
-          statement==ID_user_specified_return_predicates)
+  else if(statement==ID_user_specified_predicate || statement==ID_user_specified_parameter_predicates || statement == ID_user_specified_return_predicates)
   {
     // doesn't do anything
-  }
-  else if(statement==ID_fence)
-  {
   }
   else
   {
@@ -1714,7 +1684,7 @@ void value_sett::guard(
   {
     assert(expr.operands().size()==1);
 
-    dynamic_object_exprt dynamic_object(unsigned_char_type());
+    dynamic_object_exprt dynamic_object(uchar_type());
     //dynamic_object.instance()=from_integer(location_number, typet(ID_natural));
     dynamic_object.valid()=true_exprt();
 
@@ -1742,13 +1712,13 @@ exprt value_sett::make_member(
   const irep_idt &component_name,
   const namespacet &ns)
 {
-  const struct_union_typet &struct_union_type=
-    to_struct_union_type(ns.follow(src.type()));
+  const struct_union_typet &struct_type=
+    to_struct_type(ns.follow(src.type()));
 
   if(src.id()==ID_struct ||
      src.id()==ID_constant)
   {
-    unsigned no=struct_union_type.component_number(component_name);
+    unsigned no=struct_type.component_number(component_name);
     assert(no<src.operands().size());
     return src.operands()[no];
   }
@@ -1774,7 +1744,7 @@ exprt value_sett::make_member(
   }
 
   // give up
-  typet subtype=struct_union_type.component_type(component_name);
+  typet subtype=struct_type.component_type(component_name);
   member_exprt member_expr(subtype);
   member_expr.op0()=src;
   member_expr.set_component_name(component_name);

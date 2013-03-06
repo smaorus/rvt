@@ -6,8 +6,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <xml.h>
-
 #include <solvers/sat/satcheck_minisat2.h>
 #include <solvers/prop/cover_goals.h>
 
@@ -97,7 +95,7 @@ void bmct::cover_assertions(const goto_functionst &goto_functions)
   {
     // the following is FALSE if the bv is empty
     literalt condition=prop_conv.prop.lor(it->second);
-    cover_goals.add(condition);
+    cover_goals.add(condition, it->first->location.as_string());
   }
 
   status("Total number of coverage goals: "+i2string(cover_goals.size()));
@@ -105,35 +103,16 @@ void bmct::cover_assertions(const goto_functionst &goto_functions)
   cover_goals();
 
   // report
-  std::list<cover_goalst::cover_goalt>::const_iterator g_it=
-    cover_goals.goals.begin();
-      
-  for(goal_mapt::const_iterator
-      it=goal_map.begin();
-      it!=goal_map.end();
-      it++, g_it++)
-  {
-    if(ui==ui_message_handlert::XML_UI)
+  for(std::list<cover_goalst::cover_goalt>::const_iterator
+      g_it=cover_goals.goals.begin();
+      g_it!=cover_goals.goals.end();
+      g_it++)
+    if(!g_it->covered)
     {
-      xmlt xml_result("result");
-      xml_result.set_attribute("claim", id2string(it->first->location.get_claim()));
-
-      xml_result.set_attribute("status",
-        g_it->covered?"COVERED":"NOT_COVERED");
-      
-      std::cout << xml_result << std::endl;
+      warning("!! failed to cover "+g_it->description);
     }
-    else
-    {
-      if(!g_it->covered)
-      {
-        warning("!! failed to cover "+it->first->location.as_string());
-      }
-    }
-  }
 
   status("");
-
   status("** Covered "+i2string(cover_goals.number_covered())+
          " of "+i2string(cover_goals.size())+" in "+
          i2string(cover_goals.iterations())+" iterations");

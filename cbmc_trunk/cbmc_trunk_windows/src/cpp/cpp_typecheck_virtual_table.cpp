@@ -15,15 +15,13 @@ Purpose:
 #include <expr_util.h>
 #include "cpp_typecheck.h"
 
-void cpp_typecheckt::do_virtual_table(const symbolt &symbol)
+void cpp_typecheckt::do_virtual_table(const symbolt& symbol)
 {
-  assert(symbol.type.id()==ID_struct);
 
   // builds virtual-table value maps: (class x virtual_name x value)
   std::map<irep_idt, std::map<irep_idt,exprt> > vt_value_maps; 
 
-  const struct_typet &struct_type = to_struct_type(symbol.type);
-
+  const struct_typet& struct_type = to_struct_type(symbol.type);
   for(unsigned i = 0; i < struct_type.components().size(); i++)
   {
     const struct_typet::componentt& compo = struct_type.components()[i];
@@ -64,24 +62,22 @@ void cpp_typecheckt::do_virtual_table(const symbolt &symbol)
   {
     const std::map<irep_idt,exprt>& value_map = cit->second;
 
-    const symbolt& late_cast_symb = namespacet(symbol_table).lookup(cit->first); 
-    const symbolt& vt_symb_type = namespacet(symbol_table).lookup("virtual_table::"+id2string(late_cast_symb.name));
+    const symbolt& late_cast_symb = namespacet(context).lookup(cit->first); 
+    const symbolt& vt_symb_type = namespacet(context).lookup("virtual_table::"+late_cast_symb.name.as_string());
 
     symbolt vt_symb_var;
-    vt_symb_var.name=  id2string(vt_symb_type.name) + "@"+ id2string(symbol.name);
-    vt_symb_var.base_name= id2string(vt_symb_type.base_name) + "@" + id2string(symbol.base_name);
+    vt_symb_var.name=  vt_symb_type.name.as_string() + "@"+ symbol.name.as_string();
+    vt_symb_var.base_name= vt_symb_type.base_name.as_string() + "@" + symbol.base_name.as_string();
     vt_symb_var.mode=ID_cpp;
     vt_symb_var.module=module;
     vt_symb_var.location=vt_symb_type.location;
     vt_symb_var.type = symbol_typet(vt_symb_type.name);
-    vt_symb_var.is_lvalue = true;
-    vt_symb_var.is_static_lifetime = true;
+    vt_symb_var.lvalue = true;
+    vt_symb_var.static_lifetime = true;
 
     // do the values
-    const struct_typet &vt_type = to_struct_type(vt_symb_type.type);
-
-    exprt values(ID_struct, symbol_typet(vt_symb_type.name));
-
+    const struct_typet& vt_type = to_struct_type(vt_symb_type.type);
+    exprt values("struct",symbol_typet(vt_symb_type.name));
     for(unsigned i=0; i < vt_type.components().size(); i++)
     {
       const struct_typet::componentt& compo = vt_type.components()[i];
@@ -94,7 +90,7 @@ void cpp_typecheckt::do_virtual_table(const symbolt &symbol)
     }
     vt_symb_var.value = values;
 
-    bool failed = symbol_table.move(vt_symb_var);
+    bool failed = context.move(vt_symb_var);
     assert(!failed);
   }
 }

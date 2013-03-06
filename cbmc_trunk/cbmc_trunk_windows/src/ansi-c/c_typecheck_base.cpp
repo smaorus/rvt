@@ -87,11 +87,11 @@ void c_typecheck_baset::move_symbol(symbolt &symbol, symbolt *&new_symbol)
   symbol.mode=mode;
   symbol.module=module;
 
-  if(symbol_table.move(symbol, new_symbol))
+  if(context.move(symbol, new_symbol))
   {
     err_location(symbol.location);
     throw "failed to move symbol `"+id2string(symbol.name)+
-          "' into symbol table";
+          "' into context";
   }
 }
 
@@ -109,8 +109,6 @@ Function: c_typecheck_baset::typecheck_symbol
 
 void c_typecheck_baset::typecheck_symbol(symbolt &symbol)
 {
-  current_symbol_id=symbol.name;
-
   // first of all, we typecheck the type
   typecheck_type(symbol.type);
 
@@ -119,7 +117,7 @@ void c_typecheck_baset::typecheck_symbol(symbolt &symbol)
   const typet &final_type=follow(symbol.type);
   
   // set a few flags
-  symbol.is_lvalue=!symbol.is_type && !symbol.is_macro;
+  symbol.lvalue=!symbol.is_type && !symbol.is_macro;
   
   std::string prefix="c::";
   std::string root_name=prefix+id2string(symbol.base_name);
@@ -130,19 +128,19 @@ void c_typecheck_baset::typecheck_symbol(symbolt &symbol)
      has_prefix(id2string(symbol.name), prefix+"tag-#anon"))
   {    
     // we rename them to make collisions unproblematic
-    std::string typestr=type2name(symbol.type);
+    std::string typestr = type2name(symbol.type);
     new_name=prefix+"tag-#anon#"+typestr;
     
     id_replace_map[symbol.name]=new_name;    
 
-    symbol_tablet::symbolst::const_iterator it=symbol_table.symbols.find(new_name);
-    if(it!=symbol_table.symbols.end())
+    contextt::symbolst::const_iterator it=context.symbols.find(new_name);
+    if(it!=context.symbols.end())
       return; // bail out, we have an appropriate symbol already.
 
     irep_idt newtag=std::string("#anon#")+typestr;
     symbol.type.set(ID_tag, newtag);
   }
-  else if(symbol.is_file_local)
+  else if(symbol.file_local)
   {
     // file-local stuff -- stays as is
     // collisions are resolved during linking
@@ -152,7 +150,7 @@ void c_typecheck_baset::typecheck_symbol(symbolt &symbol)
     // variables mared as "extern" go into the global namespace
     // and have static lifetime
     new_name=root_name;
-    symbol.is_static_lifetime=true;
+    symbol.static_lifetime=true;
   }
   else if(!is_function && symbol.value.id()==ID_code)
   {
@@ -208,11 +206,11 @@ void c_typecheck_baset::typecheck_symbol(symbolt &symbol)
   }
   
   // see if we have it already
-  symbol_tablet::symbolst::iterator old_it=symbol_table.symbols.find(symbol.name);
+  contextt::symbolst::iterator old_it=context.symbols.find(symbol.name);
   
-  if(old_it==symbol_table.symbols.end())
+  if(old_it==context.symbols.end())
   {
-    // just put into symbol_table
+    // just put into context
     symbolt *new_symbol;
     move_symbol(symbol, new_symbol);
     
@@ -249,7 +247,7 @@ Function: c_typecheck_baset::typecheck_new_symbol
 
 void c_typecheck_baset::typecheck_new_symbol(symbolt &symbol)
 {
-  if(symbol.is_argument)
+  if(symbol.is_actual)
     adjust_function_argument(symbol.type);
 
   // check initializer, if needed
@@ -271,9 +269,7 @@ void c_typecheck_baset::typecheck_new_symbol(symbolt &symbol)
   }
   else
   {
-    if(symbol.type.id()==ID_array &&
-       to_array_type(symbol.type).size().is_nil() &&
-       !symbol.is_type)
+    if(symbol.type.id()==ID_array)
     {
       // Insert a new type symbol for the array.
       // We do this because we want a convenient way
@@ -292,7 +288,7 @@ void c_typecheck_baset::typecheck_new_symbol(symbolt &symbol)
       symbol.type=symbol_typet(new_symbol.name);
     
       symbolt *new_sp;
-      symbol_table.move(new_symbol, new_sp);
+      context.move(new_symbol, new_sp);
     }
 
     // check the initializer
@@ -466,25 +462,14 @@ void c_typecheck_baset::typecheck_redefinition_non_type(
     // do body
     
     if(new_symbol.value.is_not_nil())
-    {  
+    {      
       if(old_symbol.value.is_not_nil())
       {
-        // gcc allows re-definition if the first
-        // definition is marked as "extern inline"
-        
-        if(old_symbol.type.get_bool(ID_C_inlined) &&
-           (config.ansi_c.mode==configt::ansi_ct::MODE_GCC ||
-            config.ansi_c.mode==configt::ansi_ct::MODE_ARM))
-        {
-        }
-        else
-        {
-          err_location(new_symbol.location);
-          str << "function body `" << new_symbol.display_name()
-              << "' defined twice";
-          error();
-          throw 0;
-        }
+        err_location(new_symbol.location);
+        str << "function `" << new_symbol.display_name()
+            << "' defined twice";
+        error();
+        throw 0;
       }
 
       typecheck_function_body(new_symbol);
@@ -526,9 +511,9 @@ void c_typecheck_baset::typecheck_redefinition_non_type(
         const irep_idt identifier=
           to_symbol_type(old_symbol.type).get_identifier();
 
-        symbol_tablet::symbolst::iterator s_it=symbol_table.symbols.find(identifier);
+        contextt::symbolst::iterator s_it=context.symbols.find(identifier);
   
-        if(s_it==symbol_table.symbols.end())
+        if(s_it==context.symbols.end())
         {
           err_location(old_symbol.location);
           str << "typecheck_redefinition_non_type: "
@@ -549,27 +534,6 @@ void c_typecheck_baset::typecheck_redefinition_non_type(
              final_new.id()==ID_c_enum))
     {
       // this is ok for now
-    }
-    else if(final_old.id()==ID_pointer &&
-            follow(final_old).subtype().id()==ID_code &&
-            to_code_type(follow(final_old).subtype()).has_ellipsis() &&
-            final_new.id()==ID_pointer &&
-            follow(final_new).subtype().id()==ID_code)
-    {
-      // to allow 
-      // int (*f) ();
-      // int (*f) (int)=0;
-      old_symbol.type=new_symbol.type;
-    }
-    else if(final_old.id()==ID_pointer &&
-            follow(final_old).subtype().id()==ID_code &&
-            final_new.id()==ID_pointer &&
-            follow(final_new).subtype().id()==ID_code &&
-            to_code_type(follow(final_new).subtype()).has_ellipsis())
-    {
-      // to allow 
-      // int (*f) (int)=0;
-      // int (*f) ();
     }
     else
     {

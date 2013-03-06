@@ -1,6 +1,6 @@
 /*******************************************************************\
 
-Module: Abstract interface to support a programming language
+Module:
 
 Author: Daniel Kroening, kroening@kroening.com
 
@@ -13,7 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <iostream>
 #include <string>
 
-class symbol_tablet;
+class contextt;
 class exprt;
 class message_handlert;
 class namespacet;
@@ -39,7 +39,8 @@ public:
   
   virtual void dependencies(
     const std::string &module,
-    std::set<std::string> &modules);
+    std::set<std::string> &modules)
+  { }
 
   // add modules provided by currently parsed file to set
 
@@ -49,19 +50,21 @@ public:
   // final adjustments, e.g., initialization and call to main()
 
   virtual bool final(
-    symbol_tablet &symbol_table,
-    message_handlert &message_handler);
+    contextt &context,
+    message_handlert &message_handler)
+  { return false; }
 
   // type check interfaces of currently parsed file
 
   virtual bool interfaces(
-    symbol_tablet &symbol_table,
-    message_handlert &message_handler);
+    contextt &context,
+    message_handlert &message_handler)
+  { return false; }
 
   // type check a module in the currently parsed file
 
   virtual bool typecheck(
-    symbol_tablet &symbol_table,
+    contextt &context,
     const std::string &module,
     message_handlert &message_handler)=0;
   

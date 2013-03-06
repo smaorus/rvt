@@ -64,11 +64,12 @@ protected:
 class message_clientt
 {
 public:
-  virtual ~message_clientt();
+  virtual ~message_clientt()
+  {
+  }
 
   virtual void set_message_handler(message_handlert &_message_handler);
 
-/*
   virtual void set_verbosity(int cmdline_val, unsigned default_v)
   {
     if(cmdline_val<0 || cmdline_val>10)
@@ -76,8 +77,10 @@ public:
     else
       set_verbosity(cmdline_val);
   }
-*/
 
+  virtual void set_verbosity(unsigned _verbosity)
+  { verbosity=_verbosity; }
+  
   // Levels:
   //
   //  0 none
@@ -89,8 +92,10 @@ public:
   //  9 + progress information
   // 10 + debug info
   
-  virtual void set_verbosity(unsigned _verbosity);
-  virtual unsigned get_verbosity() const;
+  virtual unsigned get_verbosity() const
+  {
+    return verbosity;
+  }
   
   message_clientt()
   {

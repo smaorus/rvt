@@ -11,10 +11,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <config.h>
 #include <replace_symbol.h>
 
-#include <linking/linking.h>
-
 #include "cprover_library.h"
 #include "ansi_c_language.h"
+#include "c_link.h"
 
 /*******************************************************************\
 
@@ -37,7 +36,7 @@ struct cprover_library_entryt
 
 void add_cprover_library(
   const std::set<irep_idt> &functions,
-  symbol_tablet &symbol_table,
+  contextt &context,
   message_handlert &message_handler)
 {
   if(config.ansi_c.lib==configt::ansi_ct::LIB_NONE)
@@ -62,10 +61,10 @@ void add_cprover_library(
     
     if(functions.find(id)!=functions.end())
     {
-      symbol_tablet::symbolst::const_iterator old=
-        symbol_table.symbols.find(id);
+      contextt::symbolst::const_iterator old=
+        context.symbols.find(id);
 
-      if(old!=symbol_table.symbols.end() &&
+      if(old!=context.symbols.end() &&
          old->second.value.is_nil())
       {
         count++;
@@ -80,11 +79,11 @@ void add_cprover_library(
     ansi_c_languaget ansi_c_language;
     ansi_c_language.parse(in, "", message_handler);
 
-    symbol_tablet new_symbol_table;
+    contextt new_context;
     ansi_c_language.typecheck(
-      new_symbol_table, "<built-in-library>", message_handler);
+      new_context, "<built-in-library>", message_handler);
 
-    linking(symbol_table, new_symbol_table, message_handler);
+    c_link(context, new_context, message_handler);
   }
 }
 

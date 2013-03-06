@@ -14,7 +14,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "ieee_float.h"
 
 class cmdlinet;
-class symbol_tablet;
+class contextt;
 class namespacet;
 
 /*! \brief Globally accessible architectural configuration
@@ -37,9 +37,8 @@ public:
     unsigned long_double_width;
     unsigned wchar_t_width;
     
-    bool char_is_unsigned, wchar_t_is_unsigned;
+    bool char_is_unsigned;
     bool use_fixed_for_float;
-    bool for_has_scope;
     
     ieee_floatt::rounding_modet rounding_mode;
 
@@ -54,7 +53,7 @@ public:
     void set_ILP32(); // int=32, long=32, pointer=32
     void set_LP32();  // int=16, long=32, pointer=32
 
-    void set_from_symbol_table(const symbol_tablet &symbol_table);
+    void set_from_context(const contextt &context);
     
     // minimum alignment (in structs) measured in bytes
     unsigned alignment;
@@ -69,9 +68,7 @@ public:
     typedef enum { NO_OS, OS_LINUX, OS_MACOS, OS_WIN } ost;
     ost os;
 
-    typedef enum { NO_ARCH, ARCH_I386, ARCH_X86_64, ARCH_POWER, ARCH_ARM,
-                   ARCH_ALPHA, ARCH_MIPS, ARCH_S390, ARCH_S390X, ARCH_SPARC,
-                   ARCH_IA64 } archt;
+    typedef enum { NO_ARCH, ARCH_I386, ARCH_PPC, ARCH_X86_64 } archt;
     archt arch;
     
     typedef enum { NO_MODE, MODE_ANSI, MODE_GCC, MODE_VISUAL_STUDIO,

@@ -463,7 +463,7 @@ exprt cpp_typecheck_resolvet::convert_identifier(
 
 /*******************************************************************\
 
-Function: cpp_typecheck_resolvet::filter
+Function: cpp_typecheck_resolvet::disambiguate
 
 Inputs:
 
@@ -507,42 +507,6 @@ void cpp_typecheck_resolvet::filter(
 
     if(match)
       identifiers.push_back(*it);
-  }
-}
-
-/*******************************************************************\
-
-Function: cpp_typecheck_resolvet::exact_match_functions
-
-Inputs:
-
-Outputs:
-
-Purpose:
-
-\*******************************************************************/
-
-void cpp_typecheck_resolvet::exact_match_functions(
-  resolve_identifierst &identifiers,
-  const cpp_typecheck_fargst &fargs)
-{
-  if(!fargs.in_use) return;
-
-  resolve_identifierst old_identifiers;
-  old_identifiers.swap(identifiers);
-  
-  identifiers.clear();
-
-  // put in the ones that match precisely
-  for(resolve_identifierst::const_iterator
-      it=old_identifiers.begin();
-      it!=old_identifiers.end();
-      it++)
-  {
-    unsigned distance;
-    if(disambiguate_functions(*it, distance, fargs))
-      if(distance<=0)
-        identifiers.push_back(*it);
   }
 }
 
@@ -606,14 +570,14 @@ void cpp_typecheck_resolvet::disambiguate_functions(
         it++)
       identifiers.push_back(it->second);
   }
-  
+
   if(identifiers.size()>1 && fargs.in_use)
   {
     // try to further disambiguate functions
 
     for(resolve_identifierst::iterator
-        it1=identifiers.begin();
-        it1!=identifiers.end();
+        it1 = identifiers.begin();
+        it1 != identifiers.end();
         it1++)
     {
       if(it1->type().id()!=ID_code) continue;
@@ -764,7 +728,7 @@ void cpp_typecheck_resolvet::make_constructors(
         code_typet t3;
         t3.return_type()=it->type();
         t3.arguments().resize(1);
-        t3.arguments()[0].type()=signed_int_type();
+        t3.arguments()[0].type()=int_type();
         exprt pod_constructor3("pod_constructor", t3);
         new_identifiers.push_back(pod_constructor3);
       }
@@ -1571,8 +1535,7 @@ exprt cpp_typecheck_resolvet::resolve(
       result.location()=location;
       return result;
     }
-    else if(base_name=="__nullptr" ||
-            base_name=="nullptr") // this is c++0x
+    else if(base_name=="__nullptr") // this is c++0x
     {
       constant_exprt result;
       result.set_value(ID_NULL);
@@ -1633,7 +1596,7 @@ exprt cpp_typecheck_resolvet::resolve(
     }
 
     //cpp_typecheck.cpp_scopes.get_root_scope().print(std::cout);
-    cpp_typecheck.cpp_scopes.current_scope().print(std::cout);
+    //cpp_typecheck.cpp_scopes.current_scope().print(std::cout);
     throw 0;
   }
   
@@ -1707,9 +1670,9 @@ exprt cpp_typecheck_resolvet::resolve(
   
   exprt result;
 
-  // We disambiguate functions
+  // We may need to disambiguate functions,
+  // but don't want templates yet
   resolve_identifierst new_identifiers=identifiers;
-
   remove_templates(new_identifiers);
 
   #if 0
@@ -1718,32 +1681,16 @@ exprt cpp_typecheck_resolvet::resolve(
   std::cout << "\n";
   #endif
 
-  // we only want _exact_ matches, without templates!
-  exact_match_functions(new_identifiers, fargs);
+  disambiguate_functions(new_identifiers, fargs);
   
-  #if 0
-  std::cout << "P2 " << base_name << " " << new_identifiers.size() << "\n";
-  show_identifiers(base_name, new_identifiers, std::cout);
-  std::cout << "\n";
-  #endif
-
-  // no exact matches? Try again with function template guessing.
-  if(new_identifiers.empty())
+  // no matches? Try again with function template guessing.
+  if(new_identifiers.empty() && template_args.is_nil())
   {
     new_identifiers=identifiers;
-    
-    if(template_args.is_nil())
-    {
-      guess_function_template_args(new_identifiers, fargs);
-      
-      if(new_identifiers.empty())
-        new_identifiers=identifiers;
-    }
-
-    disambiguate_functions(new_identifiers, fargs);
+    guess_function_template_args(new_identifiers, fargs);
 
     #if 0
-    std::cout << "P3 " << base_name << " " << new_identifiers.size() << "\n";
+    std::cout << "P2 " << base_name << " " << new_identifiers.size() << "\n";
     show_identifiers(base_name, new_identifiers, std::cout);
     std::cout << "\n";
     #endif
@@ -1752,7 +1699,7 @@ exprt cpp_typecheck_resolvet::resolve(
   remove_duplicates(new_identifiers);
 
   #if 0
-  std::cout << "P4 " << base_name << " " << new_identifiers.size() << "\n";
+  std::cout << "P3 " << base_name << " " << new_identifiers.size() << "\n";
   show_identifiers(base_name, new_identifiers, std::cout);
   std::cout << "\n";
   #endif
@@ -2368,7 +2315,7 @@ bool cpp_typecheck_resolvet::disambiguate_functions(
       const code_typet::argumentst &arguments=type.arguments();
       const code_typet::argumentt &argument = arguments.front();
 
-      assert(argument.get(ID_C_base_name)==ID_this);
+      assert(argument.get("#base_name")==ID_this);
 
       if(type.return_type().id() == ID_constructor)
       {
@@ -2379,7 +2326,7 @@ bool cpp_typecheck_resolvet::disambiguate_functions(
 
         cpp_typecheck_fargst new_fargs(fargs);
         new_fargs.add_object(object);
-        return new_fargs.match(type, args_distance, cpp_typecheck);
+        return new_fargs.match(type, args_distance, cpp_typecheck);          
       }
       else
       {
@@ -2424,8 +2371,6 @@ void cpp_typecheck_resolvet::filter_for_named_scopes(
   cpp_scopest::id_sett &id_set)
 {
   cpp_scopest::id_sett new_set;
-  
-  // std::cout << "FILTER\n";
 
   // We only want scopes!
   for(cpp_scopest::id_sett::const_iterator
@@ -2437,26 +2382,24 @@ void cpp_typecheck_resolvet::filter_for_named_scopes(
 
     if(id.is_class() || id.is_enum() || id.is_namespace())
     {
-      // std::cout << "X1\n";
       assert(id.is_scope);
       new_set.insert(&id);
     }
     else if(id.is_typedef())
     {
-      // std::cout << "X2\n";
       irep_idt identifier=id.identifier;
 
       if(id.is_member)
       {
         struct_typet struct_type =
-          static_cast<const struct_typet &>(cpp_typecheck.lookup(id.class_identifier).type);
+        static_cast<const struct_typet&>(cpp_typecheck.lookup(id.class_identifier).type);
         const exprt pcomp=struct_type.get_component(identifier);
         assert(pcomp.is_not_nil());
         assert(pcomp.get_bool(ID_is_type));
         const typet &type=pcomp.type();
         assert(type.id()!=ID_struct);
         if(type.id()==ID_symbol)
-          identifier=type.get(ID_identifier);
+          identifier = type.get(ID_identifier);
         else 
           continue;
       }
@@ -2485,7 +2428,6 @@ void cpp_typecheck_resolvet::filter_for_named_scopes(
     }
     else if(id.id_class==cpp_scopet::TEMPLATE)
     {
-      //std::cout << "X3\n";
       #if 0
       const symbolt &symbol=
         cpp_typecheck.lookup(id.identifier);
@@ -2501,18 +2443,9 @@ void cpp_typecheck_resolvet::filter_for_named_scopes(
     }
     else if(id.id_class==cpp_scopet::TEMPLATE_ARGUMENT)
     {
-      // std::cout << "X4\n";
       // a template argument may be a scope: it could
-      // be instantiated with a class/struct/union/enum
+      // be instantiated with a class/struct
       exprt e=cpp_typecheck.template_map.lookup(id.identifier);
-
-      #if 0
-      cpp_typecheck.template_map.print(std::cout);      
-      std::cout << "S: " << cpp_typecheck.cpp_scopes.current_scope().identifier << std::endl;
-      std::cout << "P: " << cpp_typecheck.cpp_scopes.current_scope().get_parent() << std::endl;
-      std::cout << "I: " << id.identifier << std::endl;
-      std::cout << "E: " << e.pretty() << std::endl;
-      #endif
       
       if(e.id()!=ID_type)
         continue; // expressions are definitively not a scope
@@ -2533,8 +2466,7 @@ void cpp_typecheck_resolvet::filter_for_named_scopes(
           else if(symbol.type.id()==ID_struct ||
                   symbol.type.id()==ID_incomplete_struct ||
                   symbol.type.id()==ID_union ||
-                  symbol.type.id()==ID_incomplete_union ||
-                  symbol.type.id()==ID_c_enum)
+                  symbol.type.id()==ID_incomplete_union)
           {
             // this is a scope, too!
             cpp_idt &class_id=

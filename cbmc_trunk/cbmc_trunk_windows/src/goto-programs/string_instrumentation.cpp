@@ -14,75 +14,12 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <message_stream.h>
 #include <arith_tools.h>
 #include <config.h>
-#include <symbol_table.h>
+#include <context.h>
 
 #include <goto-programs/format_strings.h>
 #include <ansi-c/c_types.h>
 
 #include "string_instrumentation.h"
-
-/*******************************************************************\
-
-Function: is_zero_string
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-exprt is_zero_string(
-  const exprt &what,
-  bool write)
-{
-  exprt result=predicate_exprt("is_zero_string");
-  result.copy_to_operands(what);
-  result.set("lhs", write);
-  return result;
-}
-
-/*******************************************************************\
-
-Function: zero_string_length
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-exprt zero_string_length(
-  const exprt &what,
-  bool write)
-{
-  exprt result("zero_string_length", size_type());
-  result.copy_to_operands(what);
-  result.set("lhs", write);
-  return result;
-}
-
-/*******************************************************************\
-
-Function: buffer_size
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-exprt buffer_size(const exprt &what)
-{
-  exprt result("buffer_size", size_type());
-  result.copy_to_operands(what);
-  return result;
-}
 
 /*******************************************************************\
 
@@ -100,19 +37,46 @@ class string_instrumentationt:public message_streamt
 {
 public:
   string_instrumentationt(
-    symbol_tablet &_symbol_table,
+    contextt &_context,
     message_handlert &_message_handler):
     message_streamt(_message_handler),
-    symbol_table(_symbol_table),
-    ns(_symbol_table)
+    context(_context),
+    ns(_context)
   {
   }
   
   void operator()(goto_programt &dest);
   void operator()(goto_functionst &dest);
 
+  exprt is_zero_string(
+    const exprt &what,
+    bool write=false)
+  {
+    exprt result=predicate_exprt("is_zero_string");
+    result.copy_to_operands(what);
+    result.set("lhs", write);
+    return result;
+  }
+
+  exprt zero_string_length(
+    const exprt &what,
+    bool write=false)
+  {
+    exprt result("zero_string_length", uint_type());
+    result.copy_to_operands(what);
+    result.set("lhs", write);
+    return result;
+  }
+
+  exprt buffer_size(const exprt &what)
+  {
+    exprt result("buffer_size", uint_type());
+    result.copy_to_operands(what);
+    return result;
+  }
+
 protected:
-  symbol_tablet &symbol_table;
+  contextt &context;
   namespacet ns;
 
   void make_type(exprt &dest, const typet &type)
@@ -180,11 +144,11 @@ Function: string_instrumentation
 \*******************************************************************/
 
 void string_instrumentation(
-  symbol_tablet &symbol_table,
+  contextt &context,
   message_handlert &message_handler,
   goto_programt &dest)
 {
-  string_instrumentationt string_instrumentation(symbol_table, message_handler);
+  string_instrumentationt string_instrumentation(context, message_handler);
   string_instrumentation(dest);
 }
 
@@ -201,11 +165,11 @@ Function: string_instrumentation
 \*******************************************************************/
 
 void string_instrumentation(
-  symbol_tablet &symbol_table,
+  contextt &context,
   message_handlert &message_handler,
   goto_functionst &dest)
 {
-  string_instrumentationt string_instrumentation(symbol_table, message_handler);
+  string_instrumentationt string_instrumentation(context, message_handler);
   string_instrumentation(dest);
 }
 
@@ -547,7 +511,7 @@ void string_instrumentationt::do_format_string_read(
           {
             index_exprt index;
             index.array()=temp;
-            index.index()=gen_zero(index_type());
+            index.index()=gen_zero(uint_type());
             index.type()=arg_type.subtype();            
             temp=address_of_exprt(index);            
           }
@@ -595,7 +559,7 @@ void string_instrumentationt::do_format_string_read(
         {
           index_exprt index;
           index.array()=temp;
-          index.index()=gen_zero(index_type());
+          index.index()=gen_zero(uint_type());
           index.type()=arg_type.subtype();            
           temp=address_of_exprt(index);            
         }
@@ -662,9 +626,9 @@ void string_instrumentationt::do_format_string_write(
           
           if(it->field_width!=0)
           {
-            exprt fwidth = from_integer(it->field_width, unsigned_int_type());
-            exprt fw_1(ID_plus, unsigned_int_type());
-            exprt one = gen_one(unsigned_int_type());
+            exprt fwidth = from_integer(it->field_width, uint_type());
+            exprt fw_1(ID_plus, uint_type());
+            exprt one = gen_one(uint_type());
             fw_1.move_to_operands(fwidth);
             fw_1.move_to_operands(one); // +1 for 0-char
             
@@ -676,7 +640,7 @@ void string_instrumentationt::do_format_string_write(
             {
               index_exprt index;
               index.array()=argument;
-              index.index()=gen_zero(unsigned_int_type());
+              index.index()=gen_zero(uint_type());
               address_of_exprt aof(index);
               fw_lt_bs=binary_relation_exprt(fw_1, ID_le, buffer_size(aof));
             }
@@ -971,17 +935,17 @@ void string_instrumentationt::do_strerror(
   irep_idt identifier_buf="c::__strerror_buffer";
   irep_idt identifier_size="c::__strerror_buffer_size";
 
-  if(symbol_table.symbols.find(identifier_buf)==symbol_table.symbols.end())
+  if(context.symbols.find(identifier_buf)==context.symbols.end())
   {
     symbolt new_symbol_size;
     new_symbol_size.base_name="__strerror_buffer_size";
     new_symbol_size.pretty_name=new_symbol_size.base_name;
     new_symbol_size.name=identifier_size;
     new_symbol_size.mode=ID_C;
-    new_symbol_size.type=size_type();
-    new_symbol_size.is_state_var=true;
-    new_symbol_size.is_lvalue=true;
-    new_symbol_size.is_static_lifetime=true;
+    new_symbol_size.type=uint_type();
+    new_symbol_size.is_statevar=true;
+    new_symbol_size.lvalue=true;
+    new_symbol_size.static_lifetime=true;
 
     array_typet type;
     type.subtype()=char_type();
@@ -989,15 +953,15 @@ void string_instrumentationt::do_strerror(
     symbolt new_symbol_buf;
     new_symbol_buf.mode=ID_C;
     new_symbol_buf.type=type;
-    new_symbol_buf.is_state_var=true;
-    new_symbol_buf.is_lvalue=true;
-    new_symbol_buf.is_static_lifetime=true;
+    new_symbol_buf.is_statevar=true;
+    new_symbol_buf.lvalue=true;
+    new_symbol_buf.static_lifetime=true;
     new_symbol_buf.base_name="__strerror_buffer";
     new_symbol_buf.pretty_name=new_symbol_buf.base_name;
     new_symbol_buf.name="c::"+id2string(new_symbol_buf.base_name);
 
-    symbol_table.move(new_symbol_buf);
-    symbol_table.move(new_symbol_size);
+    context.move(new_symbol_buf);
+    context.move(new_symbol_size);
   }
 
   const symbolt &symbol_size=ns.lookup(identifier_size);
@@ -1007,7 +971,7 @@ void string_instrumentationt::do_strerror(
 
   {  
     goto_programt::targett assignment1=tmp.add_instruction(ASSIGN);
-    exprt nondet_size=side_effect_expr_nondett(size_type());
+    exprt nondet_size=side_effect_expr_nondett(uint_type());
 
     assignment1->code=code_assignt(symbol_expr(symbol_size), nondet_size);
     assignment1->location=it->location;
@@ -1023,7 +987,7 @@ void string_instrumentationt::do_strerror(
 
   // return a pointer to some magic buffer
   exprt index=exprt(ID_index, char_type());
-  index.copy_to_operands(symbol_expr(symbol_buf), gen_zero(index_type()));
+  index.copy_to_operands(symbol_expr(symbol_buf), gen_zero(uint_type()));
 
   exprt ptr=exprt(ID_address_of, pointer_typet());
   ptr.type().subtype()=char_type();
@@ -1070,19 +1034,19 @@ void string_instrumentationt::invalidate_buffer(
 {
   irep_idt cntr_id="string_instrumentation::$counter";
   
-  if(symbol_table.symbols.find(cntr_id)==symbol_table.symbols.end())
+  if(context.symbols.find(cntr_id)==context.symbols.end())
   {
     symbolt new_symbol;
     new_symbol.base_name="$counter";
     new_symbol.pretty_name=new_symbol.base_name;
     new_symbol.name=cntr_id;
     new_symbol.mode=ID_C;
-    new_symbol.type=size_type();
-    new_symbol.is_state_var=true;
-    new_symbol.is_lvalue=true;
-    new_symbol.is_static_lifetime=true;
+    new_symbol.type=uint_type();
+    new_symbol.is_statevar=true;
+    new_symbol.lvalue=true;
+    new_symbol.static_lifetime=true;
     
-    symbol_table.move(new_symbol);
+    context.move(new_symbol);
   }
   
   const symbolt &cntr_sym=ns.lookup(cntr_id);
@@ -1103,9 +1067,9 @@ void string_instrumentationt::invalidate_buffer(
   goto_programt::targett increment=dest.add_instruction(ASSIGN);
   increment->location=target->location;  
   
-  exprt plus(ID_plus, unsigned_int_type());
+  exprt plus(ID_plus, uint_type());
   plus.copy_to_operands(symbol_expr(cntr_sym));
-  plus.copy_to_operands(gen_one(unsigned_int_type()));
+  plus.copy_to_operands(gen_one(uint_type()));
   
   increment->code=code_assignt(symbol_expr(cntr_sym), plus);
   
@@ -1126,7 +1090,7 @@ void string_instrumentationt::invalidate_buffer(
   {
     index_exprt index;
     index.array()=buffer;
-    index.index()=gen_zero(index_type());
+    index.index()=gen_zero(uint_type());
     index.type()=buf_type.subtype();
     bufp = address_of_exprt(index);
   }
@@ -1146,7 +1110,7 @@ void string_instrumentationt::invalidate_buffer(
   else
     check->guard=
           binary_relation_exprt(symbol_expr(cntr_sym), ID_gt, 
-                                from_integer(limit, unsigned_int_type()));
+                                from_integer(limit, uint_type()));
   
   exprt nondet=side_effect_expr_nondett(buf_type.subtype());
   invalidate->code=code_assignt(deref, nondet);

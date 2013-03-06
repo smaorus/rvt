@@ -11,7 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <iostream>
 
 #include <std_types.h>
-#include <symbol_table.h>
+#include <context.h>
 
 #include "interpreter.h"
 #include "interpreter_class.h"
@@ -522,9 +522,9 @@ void interpretert::build_memory_map()
   memory[0].identifier="NULL-OBJECT";
 
   // now do regular static symbols
-  for(symbol_tablet::symbolst::const_iterator
-      it=symbol_table.symbols.begin();
-      it!=symbol_table.symbols.end();
+  for(contextt::symbolst::const_iterator
+      it=context.symbols.begin();
+      it!=context.symbols.end();
       it++)
     build_memory_map(it->second);
     
@@ -552,7 +552,7 @@ void interpretert::build_memory_map(const symbolt &symbol)
   {
     size=1;
   }
-  else if(symbol.is_static_lifetime)
+  else if(symbol.static_lifetime)
   {
     size=get_size(symbol.type);
   }
@@ -654,9 +654,9 @@ Function: interpreter
 \*******************************************************************/
 
 void interpreter(
-  const symbol_tablet &symbol_table,
+  const contextt &context,
   const goto_functionst &goto_functions)
 {
-  interpretert interpreter(symbol_table, goto_functions);
+  interpretert interpreter(context, goto_functions);
   interpreter();
 }

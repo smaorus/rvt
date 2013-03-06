@@ -30,7 +30,7 @@ Author: Daniel Kroening, kroening@cs.cmu.edu
 
 bool cpp_typecheck(
   cpp_parse_treet &cpp_parse_tree,
-  symbol_tablet &symbol_table,
+  contextt &context,
   const std::string &module,
   message_handlert &message_handler);
 
@@ -44,10 +44,10 @@ class cpp_typecheckt:public c_typecheck_baset
 public:
   cpp_typecheckt(
     cpp_parse_treet &_cpp_parse_tree,
-    symbol_tablet &_symbol_table,
+    contextt &_context,
     const std::string &_module,
     message_handlert &message_handler):
-    c_typecheck_baset(_symbol_table, _module, message_handler),
+    c_typecheck_baset(_context, _module, message_handler),
     cpp_parse_tree(_cpp_parse_tree),
     template_counter(0),
     anon_counter(0),
@@ -57,11 +57,11 @@ public:
 
   cpp_typecheckt(
     cpp_parse_treet &_cpp_parse_tree,
-    symbol_tablet &_symbol_table1,
-    const symbol_tablet &_symbol_table2,
+    contextt &_context1,
+    const contextt &_context2,
     const std::string &_module,
     message_handlert &message_handler):
-    c_typecheck_baset(_symbol_table1, _symbol_table2,
+    c_typecheck_baset(_context1, _context2,
                       _module, message_handler),
     cpp_parse_tree(_cpp_parse_tree),
     template_counter(0),
@@ -114,7 +114,6 @@ protected:
   void convert(cpp_itemt &);
   void convert(cpp_declarationt &);
   void convert(cpp_declaratort &);
-  void convert(cpp_static_assertt &);
 
   void convert_initializer(symbolt &symbol);
   void convert_function(symbolt &symbol);
@@ -305,7 +304,7 @@ protected:
                      const exprt &op,
                      exprt &temporary);
 
-  void static_and_dynamic_initialization();
+  void static_initialization();
   void do_not_typechecked();
   void clean_up();
 
@@ -397,20 +396,17 @@ protected:
     const typet &type,
     exprt &value);
 
-  static bool has_const(const typet &type);
-  static bool has_volatile(const typet &type);
-
   void typecheck_member_function(
     const irep_idt &compound_symbol,
     struct_typet::componentt  &component,
     irept &initializers,
-    const typet &method_qualifier,
+    typet &method_qualifier,
     exprt &value);
 
   void adjust_method_type(
     const irep_idt &compound_symbol,
     typet &method_type,
-    const typet &method_qualifier);
+    typet &type);
 
   // for function overloading
   irep_idt function_identifier(const typet &type);
@@ -597,9 +593,8 @@ public:
     bool check_constantness=true);
 
 private:
-  typedef std::list<irep_idt> dynamic_initializationst;
-  dynamic_initializationst dynamic_initializations;
-  bool disable_access_control;           // Disable protect and private
+  std::list<irep_idt> dinis;        // Static Default-Initialization List
+  bool disable_access_control;      // Disable protect and private
 };
 
 #endif

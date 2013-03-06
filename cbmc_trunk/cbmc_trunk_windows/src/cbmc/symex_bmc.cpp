@@ -25,9 +25,9 @@ Function: symex_bmct::symex_bmct
 
 symex_bmct::symex_bmct(
   const namespacet &_ns,
-  symbol_tablet &_new_symbol_table,
+  contextt &_new_context,
   symex_targett &_target):
-  goto_symext(_ns, _new_symbol_table, _target)
+  goto_symext(_ns, _new_context, _target)
 {
 }
 
@@ -77,8 +77,7 @@ bool symex_bmct::get_unwind(
   const symex_targett::sourcet &source,
   unsigned unwind)
 {
-  irep_idt id=(source.thread_nr!=0?(i2string(source.thread_nr)+":"):"")+
-              id2string(source.pc->function)+"."+
+  irep_idt id=id2string(source.pc->function)+"."+
               i2string(source.pc->loop_number);
   unsigned long this_loop_max_unwind=max_unwind;
 
@@ -89,8 +88,7 @@ bool symex_bmct::get_unwind(
   {
     std::string msg=
       "Unwinding loop "+id2string(id)+" iteration "+i2string(unwind)+
-      " "+source.pc->location.as_string()+
-      " thread "+i2string(source.thread_nr);      
+      " "+source.pc->location.as_string();
     print(8, msg);
   }
   #endif

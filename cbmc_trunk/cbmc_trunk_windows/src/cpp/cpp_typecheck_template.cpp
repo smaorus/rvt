@@ -157,19 +157,18 @@ void cpp_typecheckt::typecheck_class_template(
 
   // check if we have it already
   
-  symbol_tablet::symbolst::iterator previous_symbol=
-    symbol_table.symbols.find(symbol_name);
+  contextt::symbolst::iterator previous_symbol=
+    context.symbols.find(symbol_name);
 
-  if(previous_symbol!=symbol_table.symbols.end())
+  if(previous_symbol!=context.symbols.end())
   {
     // there already
-    cpp_declarationt &previous_declaration=
+    const cpp_declarationt &previous_declaration=
       to_cpp_declaration(previous_symbol->second.type);
   
     bool previous_has_body=
       previous_declaration.type().find(ID_body).is_not_nil();
 
-    // check if we have 2 bodies
     if(has_body && previous_has_body)
     {
       err_location(cpp_name.location());
@@ -179,7 +178,7 @@ void cpp_typecheckt::typecheck_class_template(
           << previous_symbol->second.location;
       throw 0;
     }
-    
+
     if(has_body)
     {
       // We replace the template!
@@ -189,32 +188,15 @@ void cpp_typecheckt::typecheck_class_template(
         declaration.template_type());
       
       previous_symbol->second.type.swap(declaration);
-      
-      #if 1
-      std::cout << "*****\n";
-      std::cout << *cpp_scopes.id_map[symbol_name];
-      std::cout << "*****\n";
-      std::cout << "II: " << symbol_name << std::endl;
-      #endif
 
       // We also replace the template scope (the old one could be deleted).
       cpp_scopes.id_map[symbol_name]=&template_scope;
-      
-      // We also fix the parent scope in order to see the new
-      // template arguments
     }
-    else
-    {
-      // just update any default parameters
-      salvage_default_parameters(
-        declaration.template_type(),
-        previous_declaration.template_type());
-    }
-    
+
     assert(cpp_scopes.id_map[symbol_name]->id_class == cpp_idt::TEMPLATE_SCOPE);
     return;
   }
-
+  
   // it's not there yet
 
   symbolt symbol;
@@ -232,8 +214,8 @@ void cpp_typecheckt::typecheck_class_template(
     cpp_scopes.current_scope().prefix+id2string(symbol.base_name);
 
   symbolt *new_symbol;
-  if(symbol_table.move(symbol, new_symbol))
-    throw "cpp_typecheckt::typecheck_compound_type: symbol_table.move() failed";
+  if(context.move(symbol, new_symbol))
+    throw "cpp_typecheckt::typecheck_compound_type: context.move() failed";
 
   // put into current scope
   cpp_idt &id=cpp_scopes.put_into_scope(*new_symbol);
@@ -297,10 +279,10 @@ void cpp_typecheckt::typecheck_function_template(
 
   // check if we have it already
 
-  symbol_tablet::symbolst::iterator previous_symbol=
-    symbol_table.symbols.find(symbol_name);
+  contextt::symbolst::iterator previous_symbol=
+    context.symbols.find(symbol_name);
 
-  if(previous_symbol!=symbol_table.symbols.end())
+  if(previous_symbol!=context.symbols.end())
   {
     bool previous_has_value =
      to_cpp_declaration(previous_symbol->second.type).
@@ -340,8 +322,8 @@ void cpp_typecheckt::typecheck_function_template(
     cpp_scopes.current_scope().prefix+id2string(symbol.base_name);
 
   symbolt *new_symbol;
-  if(symbol_table.move(symbol, new_symbol))
-    throw "cpp_typecheckt::typecheck_compound_type: symbol_table.move() failed";
+  if(context.move(symbol, new_symbol))
+    throw "cpp_typecheckt::typecheck_compound_type: context.move() failed";
 
   // put into scope
   cpp_idt &id=cpp_scopes.put_into_scope(*new_symbol);
@@ -440,7 +422,7 @@ void cpp_typecheckt::typecheck_class_template_member(
 
   const cpp_idt &cpp_id=**(id_set.begin());
   symbolt &template_symbol=
-    symbol_table.symbols.find(cpp_id.identifier)->second;
+    context.symbols.find(cpp_id.identifier)->second;
 
   exprt &template_methods=static_cast<exprt &>(
     template_symbol.value.add("template_methods"));
@@ -662,10 +644,10 @@ void cpp_typecheckt::convert_class_template_specialization(
     throw 0;
   }
   
-  symbol_tablet::symbolst::iterator s_it=
-    symbol_table.symbols.find((*id_set.begin())->identifier);
+  contextt::symbolst::iterator s_it=
+    context.symbols.find((*id_set.begin())->identifier);
     
-  assert(s_it!=symbol_table.symbols.end());
+  assert(s_it!=context.symbols.end());
   
   symbolt &template_symbol=s_it->second;
     

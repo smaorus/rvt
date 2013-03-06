@@ -31,7 +31,6 @@ static int isatty(int) { return 0; }
 #include "tokens.h"
 
 void set_line_no();
-int yycpperror(const std::string &error);
 
 %}
 
@@ -54,26 +53,9 @@ void cpp_scanner_init()
 
 identifier [a-zA-Z_$][0-9a-zA-Z_$]*
 
-
-digit		[0-9]
-bindigit	[01]
-octdigit	[0-7]
-hexdigit	[0-9a-fA-F]
-integer		{digit}+
-exponent	[eE][+-]?{integer}
-fraction	{integer}
-
-float1		{integer}"."{fraction}?({exponent})?
-float2		"."{fraction}({exponent})?
-float3		{integer}{exponent}
-hexfloat1       "0"[xX]{hexdigit}+"."{hexdigit}+[pP][+-]?{integer}
-hexfloat2       "0"[xX]{hexdigit}+"."[pP][+-]?{integer}
-hexfloat3       "0"[xX]{hexdigit}+[pP][+-]?{integer}
-float		{float1}|{float2}|{float3}|{hexfloat1}|{hexfloat2}|{hexfloat3}
-float_f		{float}[fF]|{integer}[fF]
-float_l		{float}[lL]
-
-floating_constant {float}|{float_f}|{float_l}
+exponent_part [eE][-+]?[0-9]+
+fractional_constant ([0-9]*"."[0-9]+)|([0-9]+".")
+floating_constant (({fractional_constant}{exponent_part}?)|([0-9]+{exponent_part}))[FfLl]?
 
 integer_suffix [uUlL]
 iw_suffix       ("i8"|"i16"|"i32"|"i64"|"i128")
@@ -90,9 +72,6 @@ escape_sequence [\\]({simple_escape}|{octal_escape}|{hex_escape})
 c_char [^'\\\n]|{escape_sequence}
 s_char [^"\\\n]|{escape_sequence}
 
-char_lit    "L"?[']{c_char}+[']
-string_lit  "L"?["]{s_char}*["]
-
 h_tab [\011]
 form_feed [\014]
 v_tab [\013]
@@ -100,9 +79,8 @@ c_return [\015]
 
 horizontal_white [ ]|{h_tab}
 ws {horizontal_white}*
-newline         [\n\f\v]|"\\\n"
-ws_or_newline ({horizontal_white}|{newline})*
 
+integer         [0-9]+
 cppfile         "\""[ !#-~]*"\""
 cpplineno       "#"{horizontal_white}*"line"*{horizontal_white}*{integer}.*"\n"
 pragma          "#"{horizontal_white}*pragma{horizontal_white}.*"\n"
@@ -186,7 +164,7 @@ pragma          "#"{horizontal_white}*pragma{horizontal_white}.*"\n"
 ({v_tab}|{c_return}|{form_feed})+
 ({horizontal_white}|{v_tab}|{c_return}|{form_feed})*"\n"
 
-__alignof__         { loc(); return TOK_ALIGNOF; }
+__alignof__         { loc(); return TOK_SIZEOF; }
 
 "__asm"         { if(PARSER.mode==cpp_parsert::MSC)
                   {
@@ -255,7 +233,6 @@ __signed            { loc(); return TOK_SIGNED; }
 __signed__          { loc(); return TOK_SIGNED; }
 __vector            { /* ignore */ }
 __volatile__        { loc(); return TOK_VOLATILE; }
-alignof             { loc(); return TOK_ALIGNOF; }
 typeof              { loc(); return TOK_TYPEOF; }
 __typeof            { loc(); return TOK_TYPEOF; }
 __typeof__          { loc(); return TOK_TYPEOF; }
@@ -288,7 +265,6 @@ continue            { loc(); return TOK_CONTINUE; }
 default             { loc(); return TOK_DEFAULT; }
 delete              { loc(); return TOK_DELETE; }
 decltype            { loc(); return TOK_DECLTYPE; } // C++11
-__decltype          { loc(); return TOK_DECLTYPE; } // gcc
 do                  { loc(); return TOK_DO; }
 double              { loc(); return TOK_DOUBLE; }
 else                { loc(); return TOK_ELSE; }
@@ -307,6 +283,7 @@ mutable             { loc(); return TOK_MUTABLE; }
 namespace           { loc(); return TOK_NAMESPACE; }
 new                 { loc(); return TOK_NEW; }
 noreturn            { /* ignore */ }
+nullptr             { loc(); return TOK_NULLPTR; } // C++11
 operator            { loc(); return TOK_OPERATOR; }
 private             { loc(); return TOK_PRIVATE; }
 protected           { loc(); return TOK_PROTECTED; }
@@ -349,12 +326,6 @@ __float128	    { loc();
                       else
                         return TOK_IDENTIFIER;
                     }
-__int128	    { loc();
-                      if(PARSER.mode==cpp_parsert::GCC)
-                        return TOK_GCC_INT128;
-                      else
-                        return TOK_IDENTIFIER;
-                    }
 while               { loc(); return TOK_WHILE; }
 __CPROVER_thread_local { loc(); return TOK_THREAD_LOCAL; }
 __CPROVER_bool      { loc(); return TOK_CPROVER_BOOL; }
@@ -393,34 +364,22 @@ __CPROVER_bool      { loc(); return TOK_CPROVER_BOOL; }
 "__is_union"        { loc(); return MSC_Keyword(TOK_MSC_UNARY_TYPE_PREDICATE); }
 "__is_value_class"  { loc(); return MSC_Keyword(TOK_MSC_UNARY_TYPE_PREDICATE); }
 
-"and"               { loc(); return TOK_ANDAND; }
-"bitand"            { loc(); return '&'; }
-"and_eq"            { loc(); return TOK_ANDASSIGN; }
-"or"                { loc(); return TOK_OROR; }
-"bitor"             { loc(); return '|'; }
-"or_eq"             { loc(); return TOK_ORASSIGN; }
-"xor"               { loc(); return '^'; }
-"xor_eq"            { loc(); return TOK_XORASSIGN; }
-"not"               { loc(); return '!'; }
-"not_eq"            { loc(); return TOK_NE; }
-"compl"             { loc(); return '~'; }
-
 {identifier}        { loc();
                       return TOK_IDENTIFIER; // or TYPDEFname
                     }
 
 {decimal_constant}  { loc();
-                      PARSER.current_token().data=convert_integer_literal(yytext);
+                      PARSER.current_token().data=convert_integer_literal(yytext, 10);
                       return TOK_INTEGER;
                     }
 
 {octal_constant}    { loc();
-                      PARSER.current_token().data=convert_integer_literal(yytext);
+                      PARSER.current_token().data=convert_integer_literal(yytext, 8);
                       return TOK_INTEGER;
                     }
 
 {hex_constant}      { loc();
-                      PARSER.current_token().data=convert_integer_literal(yytext);
+                      PARSER.current_token().data=convert_integer_literal(yytext, 16);
                       return TOK_INTEGER;
                     }
 
@@ -430,13 +389,13 @@ __CPROVER_bool      { loc(); return TOK_CPROVER_BOOL; }
                       return TOK_FLOATING;
                     }
 
-{char_lit} { 
+"L"?[']{c_char}+['] { 
                       loc();
                       PARSER.current_token().data=convert_character_literal(yytext, false);
                       return TOK_CHARACTER;
                     }
 
-({string_lit}{ws_or_newline})+ {
+"L"?["]{s_char}*["] {
                       loc();
                       PARSER.current_token().data=convert_string_literal(yytext);
                       return TOK_STRING;
@@ -522,10 +481,4 @@ int yywrap() { return 1; }
 void set_line_no()
 {
   preprocessor_line(yytext, PARSER.line_no, PARSER.filename);
-}
-
-int yycpperror(const std::string &error)
-{
-  cpp_parser.parse_error(error, yycpptext);
-  return error.size()+1;
 }

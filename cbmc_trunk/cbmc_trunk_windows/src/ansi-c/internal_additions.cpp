@@ -21,26 +21,6 @@ const char gcc_builtin_headers_ia32[]=
 #include "gcc_builtin_headers_ia32.inc"
 ;
 
-const char gcc_builtin_headers_alpha[]=
-"# 1 \"gcc_builtin_headers_alpha.h\"\n"
-#include "gcc_builtin_headers_alpha.inc"
-;
-
-const char gcc_builtin_headers_arm[]=
-"# 1 \"gcc_builtin_headers_arm.h\"\n"
-#include "gcc_builtin_headers_arm.inc"
-;
-
-const char gcc_builtin_headers_mips[]=
-"# 1 \"gcc_builtin_headers_mips.h\"\n"
-#include "gcc_builtin_headers_mips.inc"
-;
-
-const char gcc_builtin_headers_power[]=
-"# 1 \"gcc_builtin_headers_power.h\"\n"
-#include "gcc_builtin_headers_power.inc"
-;
-
 const char arm_builtin_headers[]=
 "# 1 \"arm_builtin_headers.h\"\n"
 #include "arm_builtin_headers.inc"
@@ -104,13 +84,8 @@ void ansi_c_internal_additions(std::string &code)
     "void __CPROVER_input(const char *id, ...);\n"
     "void __CPROVER_output(const char *id, ...);\n"
     "void __CPROVER_cover(__CPROVER_bool condition);\n"
-    
-    // concurrency-related
     "void __CPROVER_atomic_begin();\n"
     "void __CPROVER_atomic_end();\n"
-    "void __CPROVER_fence(const char *kind, ...);\n"
-    "unsigned long long __CPROVER_threads_exited=0;\n"
-    "unsigned long __CPROVER_next_thread_id=0;\n"
 
     // traces
     "void CBMC_trace(int lvl, const char *event, ...);\n"
@@ -143,8 +118,7 @@ void ansi_c_internal_additions(std::string &code)
     "__CPROVER_bool __CPROVER_sign(double f);\n"
     "double __CPROVER_inf(void);\n"
     "float __CPROVER_inff(void);\n"
-    "long double __CPROVER_infl(void);\n"
-    "extern int __CPROVER_thread_local __CPROVER_rounding_mode;\n"
+    "extern int __CPROVER_rounding_mode;\n"
 
     // absolute value
     "int __CPROVER_abs(int x);\n"
@@ -154,9 +128,9 @@ void ansi_c_internal_additions(std::string &code)
     "float __CPROVER_fabsf(float x);\n"
     
     // arrays
-    "__CPROVER_bool __CPROVER_array_equal(const void *array1, const void *array2);\n"
-    "void __CPROVER_array_copy(const void *dest, const void *src);\n"
-    "void __CPROVER_array_set(const void *dest, ...);\n"
+    "__CPROVER_bool __CPROVER_array_equal(const void array1[], const void array2[]);\n"
+    "void __CPROVER_array_copy(const void dest[], const void src[]);\n"
+    "void __CPROVER_array_set(const void dest[], ...);\n"
 
     // k-induction
     "void __CPROVER_k_induction_hint(unsigned min, unsigned max, "
@@ -174,49 +148,13 @@ void ansi_c_internal_additions(std::string &code)
      config.ansi_c.mode==configt::ansi_ct::MODE_ARM)
   {
     code+=gcc_builtin_headers_generic;
-
-    // there are many more, e.g., look at
-    // https://developer.apple.com/library/mac/#documentation/developertools/gcc-4.0.1/gcc/Target-Builtins.html
-
-    switch(config.ansi_c.arch)
-    {
-    case configt::ansi_ct::ARCH_I386:
-    case configt::ansi_ct::ARCH_X86_64:
-      code+=gcc_builtin_headers_ia32;
-      break;
-      
-    case configt::ansi_ct::ARCH_ARM:
-      code+=gcc_builtin_headers_arm;
-      break;
-
-    case configt::ansi_ct::ARCH_ALPHA:
-      code+=gcc_builtin_headers_alpha;
-      break;
-     
-    case configt::ansi_ct::ARCH_MIPS:
-      code+=gcc_builtin_headers_mips;
-      break;
-     
-    case configt::ansi_ct::ARCH_POWER:
-      code+=gcc_builtin_headers_power;
-      break;
-     
-    default:;
-    }
-
-    // On 64-bit systems, gcc has typedefs
-    // __int128_t und __uint128_t -- but not on 32 bit!
-    if(config.ansi_c.long_int_width>=64)
-    {
-      code+="typedef signed __int128 __int128_t;\n"
-            "typedef signed __int128 __uint128_t;\n";
-    }
+    
+    // should likely not add these for non-Intel architectures
+    code+=gcc_builtin_headers_ia32;
   }
 
-  // this is Visual C/C++ only
   if(config.ansi_c.os==configt::ansi_ct::OS_WIN)
-    code+="int __noop();\n"
-          "int __assume(int);\n";
+    code+="int __noop();\n"; // this is Visual C/C++
     
   // ARM stuff
   if(config.ansi_c.mode==configt::ansi_ct::MODE_ARM)
@@ -244,12 +182,6 @@ Function: architecture_strings
 
 void ansi_c_architecture_strings(std::string &code)
 {
-  // The following are CPROVER-specific.
-  // They allow identifying the architectural settings used
-  // at compile time from a goto-binary.
-
-  code+="# 1 \"<builtin-architecture-strings>\"\n";
-
   code+=architecture_string(config.ansi_c.bool_width, "bool_width");
   code+=architecture_string(config.ansi_c.int_width, "int_width");
   code+=architecture_string(config.ansi_c.long_int_width, "long_int_width");
@@ -258,7 +190,6 @@ void ansi_c_architecture_strings(std::string &code)
   code+=architecture_string(config.ansi_c.long_long_int_width, "long_long_int_width");
   code+=architecture_string(config.ansi_c.pointer_width, "pointer_width");
   code+=architecture_string(config.ansi_c.char_is_unsigned, "char_is_unsigned");
-  code+=architecture_string(config.ansi_c.wchar_t_is_unsigned, "wchar_t_is_unsigned");
   code+=architecture_string(config.ansi_c.int_width, "word_size"); // old 
   code+=architecture_string(config.ansi_c.use_fixed_for_float, "fixed_for_float");
   code+=architecture_string(config.ansi_c.alignment, "alignment");

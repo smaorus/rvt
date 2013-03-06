@@ -116,10 +116,10 @@ symbolt &cpp_declarator_convertert::convert(
     }
 
     // try static first
-    symbol_tablet::symbolst::iterator c_it=
-      cpp_typecheck.symbol_table.symbols.find(final_identifier);
+    contextt::symbolst::iterator c_it=
+      cpp_typecheck.context.symbols.find(final_identifier);
 
-    if(c_it==cpp_typecheck.symbol_table.symbols.end())
+    if(c_it==cpp_typecheck.context.symbols.end())
     {
       // adjust type if it's a non-static member function
       if(final_type.id()==ID_code)
@@ -129,9 +129,9 @@ symbolt &cpp_declarator_convertert::convert(
       get_final_identifier();
 
       // try again
-      c_it=cpp_typecheck.symbol_table.symbols.find(final_identifier);
+      c_it=cpp_typecheck.context.symbols.find(final_identifier);
 
-      if(c_it==cpp_typecheck.symbol_table.symbols.end())
+      if(c_it==cpp_typecheck.context.symbols.end())
       {
         cpp_typecheck.err_location(declarator.name());
         cpp_typecheck.str << "member `" << base_name
@@ -141,7 +141,7 @@ symbolt &cpp_declarator_convertert::convert(
       }
     }
 
-    assert(c_it!=cpp_typecheck.symbol_table.symbols.end());
+    assert(c_it!=cpp_typecheck.context.symbols.end());
 
     symbolt &symbol=c_it->second;
 
@@ -208,10 +208,10 @@ symbolt &cpp_declarator_convertert::convert(
     }
 
     // already there?
-    symbol_tablet::symbolst::iterator c_it=
-      cpp_typecheck.symbol_table.symbols.find(final_identifier);
+    contextt::symbolst::iterator c_it=
+      cpp_typecheck.context.symbols.find(final_identifier);
 
-    if(c_it==cpp_typecheck.symbol_table.symbols.end())
+    if(c_it==cpp_typecheck.context.symbols.end())
       return convert_new_symbol(storage_spec, member_spec, declarator);
 
     symbolt &symbol=c_it->second;
@@ -445,29 +445,18 @@ void cpp_declarator_convertert::get_final_identifier()
 
   if(is_code)
   {
-    if(linkage_spec==ID_C)
+    // is there already an `extern "C"' function with the same name?
+    
+    if(linkage_spec==ID_auto &&
+       scope->prefix=="" &&
+       cpp_typecheck.context.symbols.find("c::"+identifier)!=
+       cpp_typecheck.context.symbols.end())
     {
-      // fine as is
     }
-    else if(linkage_spec==ID_auto ||
-            linkage_spec==ID_cpp)
+    else if(linkage_spec!=ID_C)
     {
-      // Is there already an `extern "C"' function with the same name
-      // and the same signature?
-      symbol_tablet::symbolst::const_iterator
-        c_it=cpp_typecheck.symbol_table.symbols.find("c::"+identifier);
-        
-      if(c_it!=cpp_typecheck.symbol_table.symbols.end() &&
-         cpp_typecheck.function_identifier(final_type)==
-         cpp_typecheck.function_identifier(c_it->second.type))
-      {
-        // leave as is, no decoration
-      }
-      else
-      {
-        // add C++ decoration
-        identifier+=id2string(cpp_typecheck.function_identifier(final_type));
-      }
+      // add C++ decoration
+      identifier+=id2string(cpp_typecheck.function_identifier(final_type));
     }
   }
 
@@ -522,15 +511,15 @@ symbolt &cpp_declarator_convertert::convert_new_symbol(
     if(!is_code)
     {
       // it is a variable
-      symbol.is_state_var=true;
-      symbol.is_lvalue = !is_reference(symbol.type) &&
-                         !(symbol.type.get_bool(ID_C_constant) &&
-                         is_number(symbol.type) &&
-                         symbol.value.id() == ID_constant);
+      symbol.is_statevar=true;
+      symbol.lvalue = !is_reference(symbol.type) &&
+                      !(symbol.type.get_bool(ID_C_constant) &&
+                        is_number(symbol.type) &&
+                        symbol.value.id() == ID_constant);
 
       if(cpp_typecheck.cpp_scopes.current_scope().is_global_scope())
       {
-        symbol.is_static_lifetime=true;
+        symbol.static_lifetime=true;
 
         if(storage_spec.is_extern())
           symbol.is_extern=true;
@@ -539,8 +528,8 @@ symbolt &cpp_declarator_convertert::convert_new_symbol(
       {
         if(storage_spec.is_static())
         {
-          symbol.is_static_lifetime=true;
-          symbol.is_file_local=true;
+          symbol.static_lifetime=true;
+          symbol.file_local=true;
         }
         else if(storage_spec.is_extern())
         {
@@ -549,16 +538,18 @@ symbolt &cpp_declarator_convertert::convert_new_symbol(
         }
       }
     }
+    else
+      symbol.theorem=true;
   }
 
-  if(symbol.is_static_lifetime)
-    cpp_typecheck.dynamic_initializations.push_back(symbol.name);
+  if(symbol.static_lifetime)
+    cpp_typecheck.dinis.push_back(symbol.name);
 
   // move early, it must be visible before doing any value
   symbolt *new_symbol;
 
-  if(cpp_typecheck.symbol_table.move(symbol, new_symbol))
-    throw "cpp_typecheckt::convert_declarator: symbol_table.move() failed";
+  if(cpp_typecheck.context.move(symbol, new_symbol))
+    throw "cpp_typecheckt::convert_declarator: context.move() failed";
 
   if(!is_code)
   {
@@ -694,14 +685,13 @@ void cpp_declarator_convertert::main_function_rules(
     }
 
     const typet &return_type=
-      to_code_type(symbol.type).return_type();
+      static_cast<const typet &>(
+        symbol.type.find(ID_return_type));
 
-    if(return_type!=signed_int_type())
+    if(return_type!=int_type())
     {
-      // Too many embedded compilers ignore this rule.
-      //
-      //cpp_typecheck.err_location(symbol.location);
-      //throw "main must return int";
+      cpp_typecheck.err_location(symbol.location);
+      throw "main must return int";
     }
   }
 }

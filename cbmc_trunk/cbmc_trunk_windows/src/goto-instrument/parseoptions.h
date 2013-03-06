@@ -18,22 +18,17 @@ Author: Daniel Kroening, kroening@kroening.com
 #define GOTO_INSTRUMENT_OPTIONS \
   "(all)" \
   "(document-claims-latex)(document-claims-html)" \
-  "(dump-c)(dump-cpp)(dot)" \
+  "(dump-c)" \
   "(bounds-check)(no-bounds-check)" \
   "(pointer-check)(no-pointer-check)" \
   "(remove-pointers)" \
   "(leak-check)" \
   "(assert-to-assume)" \
   "(div-by-zero-check)(no-div-by-zero-check)" \
-  "(undefined-shift-check)" \
   "(no-assertions)(no-assumptions)(uninitialized-check)" \
   "(nan-check)(no-nan-check)" \
-  "(race-check)(scc)(one-event-per-cycle)" \
-  "(minimum-interference)" \
-  "(wmm):(my-events)(unwind):" \
-  "(max-var):(max-po-trans):" \
-  "(cfg-kill)(no-dependencies)" \
-  "(no-po-rendering)(render-cluster-file)(render-cluster-function)" \
+  "(race-check)(one-partition)(one-event-per-cycle)" \
+  "(tso)(pso)(rmo)(power)(my-events)(unwind):" \
   "(nondet-volatile)(isr):" \
   "(stack-depth):(nondet-static)" \
   "(signed-overflow-check)(unsigned-overflow-check)" \
@@ -42,8 +37,7 @@ Author: Daniel Kroening, kroening@kroening.com
   "(show-uninitialized)(show-locations)" \
   "(full-slice)(reachability-slice)" \
   "(show-symbol-table)(show-claims)(show-points-to)" \
-  "(show-rw-set)(cav11)" \
-  "(show-natural-loops)" \
+  "(show-rw-set)" \
   "(error-label):(string-abstraction)" \
   "(verbosity):(version)(xml-ui)"
 

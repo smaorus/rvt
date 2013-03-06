@@ -21,12 +21,12 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/set_claims.h>
 #include <goto-programs/read_goto_binary.h>
 #include <goto-programs/write_goto_binary.h>
+#include <goto-programs/dump_c.h>
 #include <goto-programs/interpreter.h>
 #include <goto-programs/string_abstraction.h>
 #include <goto-programs/string_instrumentation.h>
-#include <goto-programs/loop_ids.h>
+#include <goto-programs/loop_numbers.h>
 #include <goto-programs/reachability_slicer.h>
-#include <goto-programs/link_to_library.h>
 
 #include <pointer-analysis/value_set_analysis.h>
 #include <pointer-analysis/goto_program_dereference.h>
@@ -41,6 +41,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "show_locations.h"
 #include "points_to.h"
 #include "alignment_checks.h"
+#include "weak_memory.h"
 #include "race_check.h"
 #include "nondet_volatile.h"
 #include "interrupt.h"
@@ -48,10 +49,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "stack_depth.h"
 #include "nondet_static.h"
 #include "rw_set.h"
-#include "concurrency.h"
-#include "dump_c.h"
-#include "dot.h"
-#include "wmm/weak_memory.h"
 
 /*******************************************************************\
 
@@ -120,10 +117,10 @@ int goto_instrument_parseoptionst::doit()
 
     if(cmdline.isset("show-value-sets"))
     {
-      namespacet ns(symbol_table);
+      namespacet ns(context);
 
       status("Function Pointer Removal");
-      remove_function_pointers(symbol_table, goto_functions, false);
+      remove_function_pointers(ns, goto_functions, false);
 
       status("Partial Inlining");
       goto_partial_inline(goto_functions, ns, ui_message_handler);
@@ -138,10 +135,10 @@ int goto_instrument_parseoptionst::doit()
 
     if(cmdline.isset("show-points-to"))
     {
-      namespacet ns(symbol_table);
+      namespacet ns(context);
 
       status("Function Pointer Removal");
-      remove_function_pointers(symbol_table, goto_functions, false);
+      remove_function_pointers(ns, goto_functions, false);
 
       status("Partial Inlining");
       goto_partial_inline(goto_functions, ns, ui_message_handler);
@@ -155,9 +152,9 @@ int goto_instrument_parseoptionst::doit()
 
     if(cmdline.isset("show-rw-set"))
     {
-      namespacet ns(symbol_table);
+      namespacet ns(context);
       status("Function Pointer Removal");
-      remove_function_pointers(symbol_table, goto_functions, false);
+      remove_function_pointers(ns, goto_functions, false);
 
       status("Partial Inlining");
       goto_partial_inline(goto_functions, ns, ui_message_handler);
@@ -181,56 +178,58 @@ int goto_instrument_parseoptionst::doit()
 
     if(cmdline.isset("show-uninitialized"))
     {
-      show_uninitialized(symbol_table, goto_functions, std::cout);
+      show_uninitialized(context, goto_functions, std::cout);
       return 0;
     }
 
     if(cmdline.isset("interpreter"))
     {
-      status("Starting interpreter");
-      interpreter(symbol_table, goto_functions);
+      status("Starting interpeter");
+      interpreter(context, goto_functions);
       return 0;
     }
 
     if(cmdline.isset("show-claims"))
     {
-      const namespacet ns(symbol_table);
+      const namespacet ns(context);
       show_claims(ns, get_ui(), goto_functions);
       return 0;
     }
 
     if(cmdline.isset("document-claims-html"))
     {
-      const namespacet ns(symbol_table);
+      const namespacet ns(context);
       document_claims_html(ns, goto_functions, std::cout);
       return 0;
     }
 
     if(cmdline.isset("document-claims-latex"))
     {
-      const namespacet ns(symbol_table);
+      const namespacet ns(context);
       document_claims_latex(ns, goto_functions, std::cout);
       return 0;
     }
 
     if(cmdline.isset("show-loops"))
     {
-      show_loop_ids(get_ui(), goto_functions);
+      show_loop_numbers(get_ui(), goto_functions);
       return 0;
     }
 
     if(cmdline.isset("show-goto-functions"))
     {
-      namespacet ns(symbol_table);
+      namespacet ns(context);
       goto_functions.output(ns, std::cout);
       return 0;
     }
 
+    // experimental: print structs
     if(cmdline.isset("show-struct-alignment"))
     {
-      print_struct_alignment_problems(symbol_table, std::cout);
+      print_struct_alignment_problems(context, std::cout);
       return 0;
     }
+    // end of experiment
 
     if(cmdline.isset("show-locations"))
     {
@@ -238,10 +237,9 @@ int goto_instrument_parseoptionst::doit()
       return 0;
     }
 
-    if(cmdline.isset("dump-c") || cmdline.isset("dump-cpp"))
+    if(cmdline.isset("dump-c"))
     {
-      const bool is_cpp=cmdline.isset("dump-cpp");
-      namespacet ns(symbol_table);
+      namespacet ns(context);
       
       if(cmdline.args.size()==2)
       {
@@ -251,31 +249,10 @@ int goto_instrument_parseoptionst::doit()
           error("failed to write to "+cmdline.args[1]);
           return 10;
         }
-        (is_cpp ? dump_cpp : dump_c)(goto_functions, ns, out);
+        dump_c(goto_functions, ns, out);
       }
       else
-        (is_cpp ? dump_cpp : dump_c)(goto_functions, ns, std::cout);
-        
-      return 0;
-    }
-    
-    if(cmdline.isset("dot"))
-    {
-      namespacet ns(symbol_table);
-      
-      if(cmdline.args.size()==2)
-      {
-        std::ofstream out(cmdline.args[1].c_str());
-        if(!out)
-        {
-          error("failed to write to "+cmdline.args[1]);
-          return 10;
-        }
-
-        dot(goto_functions, ns, out);
-      }
-      else
-        dot(goto_functions, ns, std::cout);
+        dump_c(goto_functions, ns, std::cout);
         
       return 0;
     }
@@ -286,7 +263,7 @@ int goto_instrument_parseoptionst::doit()
       status("Writing GOTO program to "+cmdline.args[1]);
       
       if(write_goto_binary(
-        cmdline.args[1], symbol_table, goto_functions, get_message_handler()))
+        cmdline.args[1], context, goto_functions, get_message_handler()))
         return 1;
       else
         return 0;
@@ -338,10 +315,10 @@ void goto_instrument_parseoptionst::get_goto_program(
   status("Reading GOTO program from "+cmdline.args[0]);
 
   if(read_goto_binary(cmdline.args[0],
-    symbol_table, goto_functions, get_message_handler()))
+    context, goto_functions, get_message_handler()))
     throw 0;
 
-  config.ansi_c.set_from_symbol_table(symbol_table);
+  config.ansi_c.set_from_context(context);
 }
 
 /*******************************************************************\
@@ -378,12 +355,6 @@ void goto_instrument_parseoptionst::instrument_goto_program(
     options.set_option("div-by-zero-check", true);
   else
     options.set_option("div-by-zero-check", false);
-
-  // check undefined shifts
-  if(cmdline.isset("undefined-shift-check"))
-    options.set_option("undefined-shift-check", true);
-  else
-    options.set_option("undefined-shift-check", false);
 
   // check overflow/underflow
   if(cmdline.isset("signed-overflow-check"))
@@ -425,24 +396,7 @@ void goto_instrument_parseoptionst::instrument_goto_program(
   if(cmdline.isset("error-label"))
     options.set_option("error-label", cmdline.getval("error-label"));
 
-  // unwind loops 
-  if(cmdline.isset("unwind"))
-  {
-    status("Unwinding loops");
-    options.set_option("unwind", cmdline.getval("unwind"));
-  }
-
-  // we add the library in some cases, for extra confusion
-  
-  if(cmdline.isset("wmm") ||
-     cmdline.isset("race-check") ||
-     cmdline.isset("concurrency"))
-  {
-    status("Adding CPROVER library");      
-    link_to_library(symbol_table, goto_functions, ui_message_handler);
-  }
-
-  namespacet ns(symbol_table);
+  namespacet ns(context);
 
   // add generic checks, if needed
   goto_check(ns, options, goto_functions);
@@ -451,14 +405,14 @@ void goto_instrument_parseoptionst::instrument_goto_program(
   if(cmdline.isset("uninitialized-check"))
   {
     status("Adding checks for uninitialized local variables");
-    add_uninitialized_locals_assertions(symbol_table, goto_functions);
+    add_uninitialized_locals_assertions(context, goto_functions);
   }
   
   // check for maximum call stack size
   if(cmdline.isset("stack-depth"))
   {
     status("Adding check for maximum call stack size");
-    stack_depth(symbol_table, goto_functions,
+    stack_depth(context, goto_functions,
         atoi(cmdline.getval("stack-depth")));
   }
 
@@ -473,18 +427,20 @@ void goto_instrument_parseoptionst::instrument_goto_program(
   if(cmdline.isset("string-abstraction"))
   {
     status("String Abstraction");
-    string_abstraction(symbol_table,
+    string_abstraction(context,
       get_message_handler(), goto_functions);
   }
 
-  if(cmdline.isset("remove-pointers") ||
+  if(cmdline.isset("pointer-check") ||
      cmdline.isset("race-check") ||
-     cmdline.isset("wmm") ||
-     cmdline.isset("isr") ||
-     cmdline.isset("concurrency"))
+     cmdline.isset("tso") ||
+     cmdline.isset("pso") ||
+     cmdline.isset("rso") ||
+     cmdline.isset("power") ||
+     cmdline.isset("isr"))
   {
     status("Function Pointer Removal");
-    remove_function_pointers(symbol_table, goto_functions, cmdline.isset("pointer-check"));
+    remove_function_pointers(ns, goto_functions, cmdline.isset("pointer-check"));
 
     // do partial inlining
     status("Partial Inlining");
@@ -494,12 +450,20 @@ void goto_instrument_parseoptionst::instrument_goto_program(
     value_set_analysist value_set_analysis(ns);
     value_set_analysis(goto_functions);
 
+    if(cmdline.isset("pointer-check"))
+    {
+      // add pointer checks
+      status("Adding Pointer Checks");
+      pointer_checks(
+        goto_functions, context, options, value_set_analysis);
+    }
+
     if(cmdline.isset("remove-pointers"))
     {
       // removing pointers
       status("Removing Pointers");
       remove_pointers(
-        goto_functions, symbol_table, value_set_analysis);
+        goto_functions, context, value_set_analysis);
     }
 
     if(cmdline.isset("race-check"))
@@ -507,82 +471,67 @@ void goto_instrument_parseoptionst::instrument_goto_program(
       status("Adding Race Checks");
       race_check(
         value_set_analysis,
-        symbol_table,
+        context,
         goto_functions);
     }
 
-    if(cmdline.isset("wmm"))
+    const unsigned unwind_loops=
+      cmdline.isset("unwind")?options.get_int_option("unwind"):0;
+
+    if(cmdline.isset("tso"))
     {
-      std::string wmm=cmdline.getval("wmm");
-      weak_memory_modelt model;
+      status("Adding weak memory (TSO) Instrumentation");
+      weak_memory(
+        TSO,
+        value_set_analysis,
+        context,
+        goto_functions,
+        cmdline.isset("one-partition"),
+        cmdline.isset("one-event-per-cycle"),
+        cmdline.isset("my-events"),
+        unwind_loops);
+    }
 
-      // strategy of instrumentation
-      instrumentation_strategyt inst_strategy;
-      if(cmdline.isset("one-event-per-cycle"))
-        inst_strategy=one_event_per_cycle;
-      else if(cmdline.isset("minimum-interference"))
-        inst_strategy=min_interference;
-      else if(cmdline.isset("read-first"))
-        inst_strategy=read_first;
-      else if(cmdline.isset("write-first"))
-        inst_strategy=write_first;
-      else if(cmdline.isset("my-events"))
-        inst_strategy=my_events;
-      else
-        /* default: instruments all unsafe pairs */
-        inst_strategy=all;
-      
-      const unsigned unwind_loops = 
-        ( cmdline.isset("unwind")?atoi(cmdline.getval("unwind")):0 );
-      const unsigned max_var =
-        ( cmdline.isset("max-var")?atoi(cmdline.getval("max-var")):0 );
-      const unsigned max_po_trans =
-        ( cmdline.isset("max-po-trans")?atoi(cmdline.getval("max-po-trans")):0 );
+    if(cmdline.isset("pso"))
+    {
+      status("Adding weak memory (PSO) Instrumentation");
+      weak_memory(
+        PSO,
+        value_set_analysis,
+        context,
+        goto_functions,
+        cmdline.isset("one-partition"),
+        cmdline.isset("one-event-per-cycle"),
+        cmdline.isset("my-events"),
+        unwind_loops);
+    }
 
-      if(wmm=="tso")
-      {
-        status("Adding weak memory (TSO) Instrumentation");
-        model=TSO;
-      }
-      else if(wmm=="pso")
-      {
-        status("Adding weak memory (PSO) Instrumentation");
-        model=PSO;
-      }
-      else if(wmm=="rmo")
-      {
-        status("Adding weak memory (RMO) Instrumentation");
-        model=RMO;
-      }
-      else if(wmm=="power")
-      {
-        status("Adding weak memory (Power) Instrumentation");
-        model=Power;
-      }
-      else
-      {
-        error("Unknown weak memory model");
-        model=Unknown;
-      }
+    if(cmdline.isset("rmo"))
+    {
+      status("Adding weak memory (RMO) Instrumentation");
+      weak_memory(
+        RMO,
+        value_set_analysis,
+        context,
+        goto_functions,
+        cmdline.isset("one-partition"),
+        cmdline.isset("one-event-per-cycle"),
+        cmdline.isset("my-events"),
+        unwind_loops);
+    }
 
-      if(model!=Unknown)
-        weak_memory(
-          model,
-          value_set_analysis,
-          symbol_table,
-          goto_functions,
-          cmdline.isset("scc"),
-          inst_strategy,
-          unwind_loops,
-          !cmdline.isset("cfg-kill"),
-          cmdline.isset("no-dependencies"),
-          max_var,
-          max_po_trans,
-          !cmdline.isset("no-po-rendering"),
-          cmdline.isset("render-cluster-file"),
-          cmdline.isset("render-cluster-function"),
-          cmdline.isset("cav11"),
-          cmdline.isset("hide-internals"));
+    if(cmdline.isset("power"))
+    {
+      status("Adding weak memory (Power) Instrumentation");
+      weak_memory(
+        POWER,
+        value_set_analysis,
+        context,
+        goto_functions,
+        cmdline.isset("one-partition"),
+        cmdline.isset("one-event-per-cycle"),
+        cmdline.isset("my-events"),
+        unwind_loops);
     }
 
     // Interrupt handler
@@ -591,7 +540,7 @@ void goto_instrument_parseoptionst::instrument_goto_program(
       status("Instrumenting interrupt handler");
       interrupt(
         value_set_analysis,
-        symbol_table,
+        context,
         goto_functions,
         cmdline.getval("isr"));
     }
@@ -602,22 +551,13 @@ void goto_instrument_parseoptionst::instrument_goto_program(
       status("Instrumenting memory-mapped I/O");
       mmio(
         value_set_analysis,
-        symbol_table,
-        goto_functions);
-    }
-
-    if(cmdline.isset("concurrency"))
-    {
-      status("Sequentializing concurrency");
-      concurrency(
-        value_set_analysis,
-        symbol_table,
+        context,
         goto_functions);
     }
   }  
 
   // add failed symbols
-  add_failed_symbols(symbol_table);
+  add_failed_symbols(context);
   
   // recalculate numbers, etc.
   goto_functions.update();
@@ -629,7 +569,7 @@ void goto_instrument_parseoptionst::instrument_goto_program(
   if(cmdline.isset("nondet-volatile"))
   {
     status("Making volatile variables non-deterministic");
-    nondet_volatile(symbol_table, goto_functions);
+    nondet_volatile(context, goto_functions);
   }
 
   // reachability slice?
@@ -645,9 +585,6 @@ void goto_instrument_parseoptionst::instrument_goto_program(
     status("Performing a full slice");
     full_slicer(goto_functions);
   }
-  
-  // label the assertions
-  label_claims(goto_functions);
 }
 
 /*******************************************************************\
@@ -666,8 +603,8 @@ void goto_instrument_parseoptionst::help()
 {
   std::cout <<
     "\n"
-    "* *     Goto-Instrument " GOTO_INSTRUMENT_VERSION " - Copyright (C) 2008-2013       * *\n"
-    "* *                    Daniel Kroening                      * *\n"
+    "* *       Goto-Instrument " GOTO_INSTRUMENT_VERSION " - Copyright (C) 2008-2009           * *\n"
+    "* *                     Daniel Kroening                     * *\n"
     "* *                 kroening@kroening.com                   * *\n"
     "\n"
     "Usage:                       Purpose:\n"
@@ -684,7 +621,6 @@ void goto_instrument_parseoptionst::help()
     " --show-goto-functions        show goto program\n"
     " --show-struct-alignment      show struct members that might be concurrently accessed\n"
     " --dump-c                     generate C source\n"
-    " --dot                        generate CFG graph in DOT format\n"
     " --interpreter                do concrete execution\n"
     "\n"
     "Safety checks:\n"
@@ -694,7 +630,6 @@ void goto_instrument_parseoptionst::help()
     " --pointer-check              add pointer checks\n"
     " --signed-overflow-check      add arithmetic over- and underflow checks\n"
     " --unsigned-overflow-check    add arithmetic over- and underflow checks\n"
-    " --undefined-shift-check      add range checks for shift distances\n"
     " --nan-check                  add floating-point NaN checks\n"
     " --uninitialized-check        add checks for uninitialized locals (experimental)\n"
     " --error-label label          check that label is unreachable\n"
@@ -702,26 +637,9 @@ void goto_instrument_parseoptionst::help()
     "\n"
     "Semantic transformations:\n"
     " --nondet-volatile            makes reads from volatile variables non-deterministic\n"
-    " --unwind <n>                 unwinds the loops <n> times\n"
     " --isr function               instruments an interrupt service routine\n"
     " --mmio                       instruments memory-mapped I/O\n"
     " --nondet-static              add nondeterministic initialization of variables with static lifetime\n"
-    " --check-invariant function   instruments invariant checking function\n"
-    "\n"
-    "Memory model instrumentations:\n"
-    " --wmm tso                    instruments weak memory models with buffers (TSO)\n"
-    " --wmm pso                    instruments weak memory models with buffers (PSO)\n"
-    " --wmm rmo                    instruments weak memory models with buffers (RMO)\n"
-    " --wmm power                  instruments weak memory models with buffers and queues (Power)\n"
-    " --scc                        detects critical cycles per SCC (one thread per SCC)\n"
-    " --one-event-per-cycle        only instruments one event per cycle\n"
-    " --minimum-interference       instruments an optimal number of events\n"
-    " --my-events                  only instruments events whose ids appear in inst.evt\n"
-    " --cfg-kill                   enables symbolic execution used to reduce spurious cycles\n"
-    " --no-dependencies            no dependency analysis\n"
-    " --no-po-rendering            no representation of the threads in the dot\n"
-    " --render-cluster-file        clusterises the dot by files\n"
-    " --render-cluster-function    clusterises the dot by functions\n"
     "\n"
     "Slicing:\n"
     " --reachability-slicer        slice away instructions that can't reach assertions\n"

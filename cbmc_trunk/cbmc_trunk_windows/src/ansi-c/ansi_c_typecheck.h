@@ -15,7 +15,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 bool ansi_c_typecheck(
   ansi_c_parse_treet &parse_tree,
-  symbol_tablet &symbol_table,
+  contextt &context,
   const std::string &module,
   message_handlert &message_handler);
 
@@ -29,21 +29,21 @@ class ansi_c_typecheckt:public c_typecheck_baset
 public:
   ansi_c_typecheckt(
     ansi_c_parse_treet &_parse_tree,
-    symbol_tablet &_symbol_table,
+    contextt &_context,
     const std::string &_module,
     message_handlert &_message_handler):
-    c_typecheck_baset(_symbol_table, _module, _message_handler),
+    c_typecheck_baset(_context, _module, _message_handler),
     parse_tree(_parse_tree)
   {
   }
 
   ansi_c_typecheckt(
     ansi_c_parse_treet &_parse_tree,
-    symbol_tablet &_symbol_table1,
-    const symbol_tablet &_symbol_table2,
+    contextt &_context1,
+    const contextt &_context2,
     const std::string &_module,
     message_handlert &_message_handler):
-    c_typecheck_baset(_symbol_table1, _symbol_table2,
+    c_typecheck_baset(_context1, _context2,
                       _module, _message_handler),
     parse_tree(_parse_tree)
   {

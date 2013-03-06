@@ -68,7 +68,7 @@ void ansi_c_convertt::convert_declaration(ansi_c_declarationt &declaration)
 
   if(declaration.value().is_not_nil())
   {
-    if(declaration.value().type().id()==ID_code)
+    if(declaration.type().id()==ID_code)
       convert_code(to_code(declaration.value()));
     else
       convert_expr(declaration.value());
@@ -123,7 +123,7 @@ void ansi_c_convertt::convert_expr(exprt &expr)
     exprt &designator=static_cast<exprt &>(expr.add(ID_designator));
     convert_expr(designator);
   }
-  else if(expr.id()==ID_alignof)
+  else if(expr.id()==ID_builtin_alignof)
   {
     if(expr.operands().size()==0)
     {
@@ -134,19 +134,6 @@ void ansi_c_convertt::convert_expr(exprt &expr)
   else if(expr.id()==ID_gcc_builtin_va_arg)
   {
     convert_type(expr.type());
-  }
-  else if(expr.id()==ID_generic_selection)
-  {
-    assert(expr.operands().size()==1);
-
-    irept::subt &generic_associations=
-      expr.add(ID_generic_associations).get_sub();
-
-    Forall_irep(it, generic_associations)
-    {
-      convert_expr(static_cast<exprt &>(it->add(ID_value)));
-      convert_type(static_cast<typet &>(it->add(ID_type_arg)));
-    }
   }
   else if(expr.id()==ID_gcc_builtin_types_compatible_p)
   {
@@ -229,12 +216,13 @@ void ansi_c_convertt::convert_code(codet &code)
   }
   else if(statement==ID_ifthenelse)
   {
-    assert(code.operands().size()==3);
+    assert(code.operands().size()==2 ||
+           code.operands().size()==3);
 
     convert_expr(code.op0());
     convert_code(to_code(code.op1()));
 
-    if(code.op2().is_not_nil())
+    if(code.operands().size()==3)
       convert_code(to_code(code.op2()));
   }
   else if(statement==ID_while ||
@@ -273,10 +261,6 @@ void ansi_c_convertt::convert_code(codet &code)
     convert_code(to_code(code.op0()));
     convert_code(to_code(code.op1()));
   }
-  else if(statement==ID_msc_leave)
-  {
-    assert(code.operands().size()==0);
-  }
   else if(statement==ID_switch)
   {
     assert(code.operands().size()==2);
@@ -303,12 +287,6 @@ void ansi_c_convertt::convert_code(codet &code)
   {
     if(code.operands().size()==1)
       convert_expr(code.op0());
-  }
-  else if(statement==ID_static_assert)
-  {
-    assert(code.operands().size()==2);
-    convert_expr(code.op0());
-    convert_expr(code.op1());
   }
   else if(statement==ID_decl)
   {
@@ -477,32 +455,20 @@ void ansi_c_convertt::convert_type(
 
     Forall_irep(it, components)
     {
-      // the arguments are declarations or static assertions
-      if(it->id()==ID_declaration)
-      {
-        ansi_c_declarationt &component=
-          to_ansi_c_declaration(static_cast<exprt &>(*it));
-  
-        exprt new_component(ID_component);
+      // the arguments are now declarations
+      ansi_c_declarationt &component=
+        to_ansi_c_declaration(static_cast<exprt &>(*it));
 
-        new_component.location()=component.location();
-        new_component.set(ID_name, component.get_base_name());
-        new_component.set(ID_pretty_name, component.get_base_name());
-        new_component.type().swap(component.type());
+      exprt new_component(ID_component);
 
-        convert_type(new_component.type());
+      new_component.location()=component.location();
+      new_component.set(ID_name, component.get_base_name());
+      new_component.set(ID_pretty_name, component.get_base_name());
+      new_component.type().swap(component.type());
 
-        it->swap(new_component);
-      }
-      else if(it->id()==ID_code && it->get(ID_statement)==ID_static_assert)
-      {
-        codet &assertion=static_cast<codet &>(*it);
-        assert(assertion.operands().size()==2);
-        convert_expr(assertion.op0());
-        convert_expr(assertion.op1());
-      }
-      else
-        assert(0);
+      convert_type(new_component.type());
+
+      component.swap(new_component);
     }
   }
   else if(type.id()==ID_typeof)

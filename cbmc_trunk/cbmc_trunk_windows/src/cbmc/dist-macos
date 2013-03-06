@@ -3,17 +3,18 @@ umask u=rwx,g=rx,o=rx
 
 # http://s.sudre.free.fr/Stuff/PackageMaker_Howto.html
 
-make cbmc-mac-signed
-
-(cd ../goto-cc; make goto-cc-mac-signed)
-(cd ../goto-instrument; make goto-instrument-mac-signed)
-(cd ~/progr/hw-cbmc/trunk/src/hw-cbmc; make hw-cbmc-mac-signed)
+make
+strip cbmc
 
 VERSION=`./cbmc --version`
 VERSION_FILE=`echo $VERSION | sed "y/./-/"`
 BITS=`getconf LONG_BIT`
 
 echo $VERSION_FILE
+
+(cd ../goto-cc; make; strip goto-cc)
+(cd ../hw-cbmc; make; strip hw-cbmc)
+(cd ../goto-instrument; make; strip goto-instrument)
 
 mkdir /tmp/cbmc-dist
 mkdir /tmp/cbmc-dist/package-root
@@ -22,13 +23,13 @@ mkdir /tmp/cbmc-dist/package-root/usr/bin
 mkdir /tmp/cbmc-dist/resources
 mkdir /tmp/cbmc-dist/resources/en.lproj
 
-cp ~/progr/hw-cbmc/trunk/src/hw-cbmc/hw-cbmc ../cbmc/cbmc ../goto-cc/goto-cc \
+cp ../hw-cbmc/hw-cbmc ../cbmc/cbmc ../goto-cc/goto-cc \
   ../goto-instrument/goto-instrument /tmp/cbmc-dist/package-root/usr/bin
 cp ../../LICENSE /tmp/cbmc-dist/resources/License.txt
 
 echo "Building cbmc-${VERSION_FILE}.pkg (${BITS} bits)"
 
-/Applications/PackageMaker.app/Contents/MacOS/PackageMaker \
+/Developer/Applications/Utilities/PackageMaker.app/Contents/MacOS/PackageMaker \
   --root /tmp/cbmc-dist/package-root/ \
   -o /tmp/cbmc-dist/cbmc-${VERSION_FILE}.pkg \
   --version $VERSION \

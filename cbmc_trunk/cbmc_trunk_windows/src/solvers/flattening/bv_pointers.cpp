@@ -74,15 +74,19 @@ literalt bv_pointerst::convert_rest(const exprt &expr)
     if(operands.size()==1 &&
        is_ptr(operands[0].type()))
     {
-      // we postpone
-      literalt l=prop.new_variable();
+      bvt bv=convert_bv(operands[0]);
       
-      postponed_list.push_back(postponedt());
-      postponed_list.back().op=convert_bv(operands[0]);
-      postponed_list.back().bv.push_back(l);
-      postponed_list.back().expr=expr;
-      
-      return l;
+      {
+        bv.erase(bv.begin(), bv.begin()+offset_bits);
+
+        // for now, allocate literal and then do later
+        is_dynamic_objectt is_dynamic_object;
+        is_dynamic_object.bv=bv;
+        is_dynamic_object.l=prop.new_variable();
+        
+        is_dynamic_object_list.push_back(is_dynamic_object);
+        return is_dynamic_object.l;
+      }
     }
   }
   else if(expr.id()==ID_same_object)
@@ -301,7 +305,8 @@ void bv_pointerst::convert_pointer_type(const exprt &expr, bvt &bv)
     const irep_idt &identifier=to_symbol_expr(expr).get_identifier();
     const typet &type=expr.type();
 
-    map.get_literals(identifier, type, bits, bv);
+    for(unsigned i=0; i<bits; i++)
+      bv[i]=map.get_literal(identifier, i, type);
 
     return;
   }
@@ -436,8 +441,6 @@ void bv_pointerst::convert_pointer_type(const exprt &expr, bvt &bv)
   }
   else if(expr.id()==ID_minus)
   {
-    // this is pointer-integer
-
     if(expr.operands().size()!=2)
       throw "operator "+expr.id_string()+" takes two operands";
 
@@ -493,8 +496,7 @@ void bv_pointerst::convert_bitvector(const exprt &expr, bvt &bv)
   if(is_ptr(expr.type()))
     return convert_pointer_type(expr, bv);
 
-  if(expr.id()==ID_minus &&
-     expr.operands().size()==2 &&
+  if(expr.id()==ID_minus && expr.operands().size()==2 &&
      expr.op0().type().id()==ID_pointer &&
      expr.op1().type().id()==ID_pointer)
   {
@@ -542,26 +544,6 @@ void bv_pointerst::convert_bitvector(const exprt &expr, bvt &bv)
     // we do a sign extension to permit negative offsets
     bv=bv_utils.sign_extension(op0, width);
 
-    return;
-  }
-  else if(expr.id()==ID_object_size &&
-          expr.operands().size()==1 &&
-          is_ptr(expr.op0().type()))
-  {
-    // we postpone until we know the objects
-    unsigned width=boolbv_width(expr.type());
-    
-    bv.resize(width);
-    
-    for(unsigned i=0; i<width; i++)
-      bv[i]=prop.new_variable();
-    
-    postponed_list.push_back(postponedt());
-    
-    postponed_list.back().op=convert_bv(expr.op0());
-    postponed_list.back().bv=bv;
-    postponed_list.back().expr=expr;
-    
     return;
   }
   else if(expr.id()==ID_pointer_object &&
@@ -809,7 +791,7 @@ void bv_pointerst::add_addr(const exprt &expr, bvt &bv)
 
 /*******************************************************************\
 
-Function: bv_pointerst::do_postponed
+Function: bv_pointerst::do_is_dynamic_object
 
   Inputs:
 
@@ -819,101 +801,36 @@ Function: bv_pointerst::do_postponed
 
 \*******************************************************************/
 
-#include <iostream>
-
-void bv_pointerst::do_postponed(
-  const postponedt &postponed)
+void bv_pointerst::do_is_dynamic_object(
+  const is_dynamic_objectt &is_dynamic_object)
 {
-  if(postponed.expr.id()==ID_dynamic_object)
+  const pointer_logict::objectst &objects=
+    pointer_logic.objects;
+    
+  unsigned number=0;
+    
+  for(pointer_logict::objectst::const_iterator
+      it=objects.begin();
+      it!=objects.end();
+      it++, number++)
   {
-    const pointer_logict::objectst &objects=
-      pointer_logic.objects;
-      
-    unsigned number=0;
-      
-    for(pointer_logict::objectst::const_iterator
-        it=objects.begin();
-        it!=objects.end();
-        it++, number++)
-    {
-      const exprt &expr=*it;
-      
-      bool is_dynamic=pointer_logic.is_dynamic_object(expr);
-      
-      // only compare object part
-      bvt bv;
-      encode(number, bv);
-      
-      bv.erase(bv.begin(), bv.begin()+offset_bits);
-
-      bvt saved_bv=postponed.op;
-      saved_bv.erase(saved_bv.begin(), saved_bv.begin()+offset_bits);
-      
-      assert(bv.size()==saved_bv.size());
-      assert(postponed.bv.size()==1);
-      
-      literalt l1=bv_utils.equal(bv, saved_bv);
-      literalt l2=postponed.bv.front();
-      
-      if(!is_dynamic) l2=prop.lnot(l2);
-      
-      prop.l_set_to(prop.limplies(l1, l2), true);
-    }
+    const exprt &expr=*it;
+    
+    bool is_dynamic=pointer_logic.is_dynamic_object(expr);
+    
+    // only compare object part
+    bvt bv;
+    encode(number, bv);
+    
+    bv.erase(bv.begin(), bv.begin()+offset_bits);
+    
+    literalt l1=bv_utils.equal(bv, is_dynamic_object.bv);
+    literalt l2=is_dynamic_object.l;
+    
+    if(!is_dynamic) l2=prop.lnot(l2);
+    
+    prop.l_set_to(prop.limplies(l1, l2), true);
   }
-  else if(postponed.expr.id()==ID_object_size)
-  {
-    const pointer_logict::objectst &objects=
-      pointer_logic.objects;
-      
-    unsigned number=0;
-      
-    for(pointer_logict::objectst::const_iterator
-        it=objects.begin();
-        it!=objects.end();
-        it++, number++)
-    {
-      const exprt &expr=*it;
-      
-      mp_integer object_size;
-
-      if(expr.id()==ID_symbol)
-      {
-        // just get the type
-        const typet &type=ns.follow(expr.type());
-
-        exprt size_expr=size_of_expr(type, ns);
- 
-        if(size_expr.is_nil())
-          continue;
-
-        if(to_integer(size_expr, object_size))
-          continue;
-      }
-      else
-        continue;
-      
-      // only compare object part
-      bvt bv;
-      encode(number, bv);
-      
-      bv.erase(bv.begin(), bv.begin()+offset_bits);
-
-      bvt saved_bv=postponed.op;
-      saved_bv.erase(saved_bv.begin(), saved_bv.begin()+offset_bits);
-      
-      assert(bv.size()==saved_bv.size());
-      assert(postponed.bv.size()>=1);
-      
-      literalt l1=bv_utils.equal(bv, saved_bv);
-
-      bvt size_bv=bv_utils.build_constant(object_size, postponed.bv.size());
-      literalt l2=bv_utils.equal(postponed.bv, size_bv);
-      
-      prop.l_set_to(prop.limplies(l1, l2), true);
-    }
-  }
-  else
-    assert(false);
 }
 
 /*******************************************************************\
@@ -930,13 +847,13 @@ Function: bv_pointerst::post_process
 
 void bv_pointerst::post_process()
 {
-  for(postponed_listt::const_iterator
-      it=postponed_list.begin();
-      it!=postponed_list.end();
+  for(is_dynamic_object_listt::const_iterator
+      it=is_dynamic_object_list.begin();
+      it!=is_dynamic_object_list.end();
       it++)
-    do_postponed(*it);
+    do_is_dynamic_object(*it);
   
-  postponed_list.clear();
+  is_dynamic_object_list.clear();
   
   SUB::post_process();
 }

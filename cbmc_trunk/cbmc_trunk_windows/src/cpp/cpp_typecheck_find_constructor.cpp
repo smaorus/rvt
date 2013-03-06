@@ -51,7 +51,7 @@ void cpp_typecheckt::find_constructor(
       const irept::subt &arguments=
         type.find(ID_arguments).get_sub();
 
-      namespacet ns(symbol_table);
+      namespacet ns(context);
 
       if(arguments.size()==1)
       {

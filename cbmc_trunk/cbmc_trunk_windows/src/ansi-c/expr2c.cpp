@@ -6,9 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <cassert>
-#include <cctype>
-#include <cstdio>
+#include <assert.h>
+#include <ctype.h>
 
 #include <map>
 #include <set>
@@ -29,17 +28,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "expr2c.h"
 #include "c_types.h"
 #include "expr2c_class.h"
-
-/*
-
-Precedences are as follows. Higher values mean higher precedence.
-
-16 function call ()
-   ++ -- [] . ->
-
-1  comma
-
-*/
 
 /*******************************************************************\
 
@@ -179,51 +167,6 @@ std::string expr2ct::convert_rec(
   {
     return q+"void";
   }
-  else if(src.id()==ID_complex)
-  {
-    // these take more or less arbitrary subtypes
-    return q+"_Complex "+convert(src.subtype());
-  }
-  else if(src.id()==ID_floatbv)
-  {
-    // annotated?
-    
-    irep_idt c_type=src.get(ID_C_c_type);
-
-    if(c_type==ID_double)
-      return q+"double";
-    else if(c_type==ID_long_double)
-      return q+"long double";
-    else if(c_type==ID_float)
-      return q+"float";
-
-    mp_integer width=string2integer(src.get_string(ID_width));
-
-    if(width==config.ansi_c.single_width)
-      return q+"float";
-    else if(width==config.ansi_c.double_width)
-      return q+"double";
-  }
-  else if(src.id()==ID_fixedbv)
-  {
-    // annotated?
-    
-    irep_idt c_type=src.get(ID_C_c_type);
-
-    if(c_type==ID_double)
-      return q+"double";
-    else if(c_type==ID_long_double)
-      return q+"long double";
-    else if(c_type==ID_float)
-      return q+"float";
-
-    mp_integer width=string2integer(src.get_string(ID_width));
-
-    if(width==config.ansi_c.single_width)
-      return q+"float";
-    else if(width==config.ansi_c.double_width)
-      return q+"double";
-  }
   else if(src.id()==ID_signedbv ||
           src.id()==ID_unsignedbv)
   {
@@ -232,35 +175,35 @@ std::string expr2ct::convert_rec(
     irep_idt c_type=src.get(ID_C_c_type);
 
     if(c_type==ID_unsigned_char)
-      return q+"unsigned char";
+      return "unsigned char";
     else if(c_type==ID_signed_char)
-      return q+"signed char";
+      return "signed char";
     else if(c_type==ID_unsigned_short_int)
-      return q+"unsigned short int";
+      return "unsigned short int";
     else if(c_type==ID_signed_short_int)
-      return q+"signed short int";
+      return "signed short int";
     else if(c_type==ID_unsigned_int)
-      return q+"unsigned int";
+      return "unsigned int";
     else if(c_type==ID_signed_int)
-      return q+"signed int";
+      return "signed int";
     else if(c_type==ID_unsigned_long_int)
-      return q+"unsigned long int";
+      return "unsigned long int";
     else if(c_type==ID_signed_long_int)
-      return q+"signed long int";
+      return "signed long int";
     else if(c_type==ID_unsigned_long_long_int)
-      return q+"unsigned long long int";
+      return "unsigned long long int";
     else if(c_type==ID_signed_long_long_int)
-      return q+"signed long long int";
+      return "signed long long int";
+    else if(c_type==ID_double)
+      return "double";
+    else if(c_type==ID_long_double)
+      return "long double";
+    else if(c_type==ID_float)
+      return "float";
     else if(c_type==ID_bool)
-      return q+"_Bool";
-    else if(c_type==ID_signed_int128)
-      return q+"signed __int128";
-    else if(c_type==ID_unsigned_int128)
-      return q+"unsigned __int128";
-    else if(c_type==ID_gcc_float128)
-      return q+"__float128";
+      return "_Bool";
       
-    // There is also wchar_t among the above, but this isn't a C type.
+    // There is also wchar_t in the above, but this isn't a C type.
 
     mp_integer width=string2integer(src.get_string(ID_width));
 
@@ -297,6 +240,16 @@ std::string expr2ct::convert_rec(
       return q+sign_str+"__CPROVER_bitvector["+integer2string(width)+"]";
     }
   }
+  else if(src.id()==ID_floatbv ||
+          src.id()==ID_fixedbv)
+  {
+    mp_integer width=string2integer(src.get_string(ID_width));
+
+    if(width==config.ansi_c.single_width)
+      return q+"float";
+    else if(width==config.ansi_c.double_width)
+      return q+"double";
+  }
   else if(src.id()==ID_struct ||
           src.id()==ID_incomplete_struct)
   {
@@ -304,6 +257,16 @@ std::string expr2ct::convert_rec(
 
     const std::string &tag=src.get_string(ID_tag);
     if(tag!="") dest+=" "+tag;
+    
+    /*
+    const irept &components=type.find(ID_components);
+
+    forall_irep(it, components.get_sub())
+    {
+      typet &subtype=(typet &)it->find(ID_type);
+      base_type(subtype, ns);
+    }
+    */
 
     return dest;
   }
@@ -336,11 +299,9 @@ std::string expr2ct::convert_rec(
   }
   else if(src.id()==ID_pointer)
   {
-    const typet &subtype=ns.follow(src.subtype());
-  
-    if(subtype.id()==ID_code)
+    if(src.subtype().id()==ID_code)
     {
-      const typet &return_type=to_code_type(subtype).return_type();
+      const typet &return_type=(typet &)src.subtype().find(ID_return_type);
 
       std::string dest=q+convert(return_type);
 
@@ -349,7 +310,7 @@ std::string expr2ct::convert_rec(
 
       // arguments
       dest+="(";
-      const irept &arguments=subtype.find(ID_arguments);
+      const irept &arguments=src.subtype().find(ID_arguments);
 
       forall_irep(it, arguments.get_sub())
       {
@@ -361,28 +322,18 @@ std::string expr2ct::convert_rec(
         dest+=convert(argument_type);
       }
 
-      if(to_code_type(subtype).has_ellipsis())
-      {
-        if(!arguments.get_sub().empty()) dest+=", ";
-        dest+="...";
-      }
-
       dest+=")";
 
       return dest;
     }
     else
     {
-      std::string tmp=convert(subtype);
-      tmp+=" *";
-      if(q!="")
-      {
-        tmp+=" "+q;
-        // strip training space off q
-        if(tmp[tmp.size()-1]==' ')
-          tmp.resize(tmp.size()-1);
-      }
-      return tmp;
+      std::string tmp=convert(src.subtype());
+
+      if(q=="")
+        return tmp+" *";
+      else
+        return q+" ("+tmp+" *)";
     }
   }
   else if(src.id()==ID_array)
@@ -407,10 +358,7 @@ std::string expr2ct::convert_rec(
   
     const typet &return_type=code_type.return_type();
 
-    // C doesn't really have syntax for function types,
-    // i.e., the following won't parse
-  
-    std::string dest=convert(return_type)+" ()";
+    std::string dest=convert(return_type)+" ";
 
     dest+="(";
     const code_typet::argumentst &arguments=code_type.arguments();
@@ -425,12 +373,6 @@ std::string expr2ct::convert_rec(
 
       dest+=convert(it->type());
     }
-    
-    if(code_type.has_ellipsis())
-    {
-      if(!arguments.empty()) dest+=", ";
-      dest+="...";
-    }
 
     dest+=")";
     return dest;
@@ -443,7 +385,7 @@ std::string expr2ct::convert_rec(
     dest+=", ";
     dest+=convert(vector_type.subtype());
     dest+=")";
-    return q+dest;
+    return dest;
   }
 
   {
@@ -470,7 +412,7 @@ Function: expr2ct::convert_typecast
 \*******************************************************************/
 
 std::string expr2ct::convert_typecast(
-  const typecast_exprt &src,
+  const exprt &src,
   unsigned &precedence)
 {
   precedence=14;
@@ -480,30 +422,19 @@ std::string expr2ct::convert_typecast(
 
   // some special cases
 
-  const typet &to_type=ns.follow(src.type());
-  const typet &from_type=ns.follow(src.op().type());
-  
-  if(to_type.id()==ID_unsignedbv &&
-     to_type.get(ID_C_c_type)==ID_bool &&
-     from_type.id()==ID_bool)
-    return convert(src.op(), precedence);
-     
-  if(to_type.id()==ID_bool &&
-     from_type.get(ID_C_c_type)==ID_bool &&
-     from_type.id()==ID_unsignedbv)
-    return convert(src.op(), precedence);
+  const typet &type=ns.follow(src.type());
 
-  if(to_type.id()==ID_pointer &&
-     ns.follow(to_type.subtype()).id()==ID_empty && // to (void *)?
+  if(type.id()==ID_pointer &&
+     ns.follow(type.subtype()).id()==ID_empty && // to (void *)?
      src.op0().is_zero())
     return "NULL";
 
-  std::string dest="("+convert(to_type)+")";
+  std::string dest="("+convert(type)+")";
 
-  std::string tmp=convert(src.op(), precedence);
+  std::string tmp=convert(src.op0(), precedence);
 
-  if(src.op().id()==ID_constant ||
-     src.op().id()==ID_symbol) // better fix precedence
+  if(src.op0().id()==ID_constant ||
+     src.op0().id()==ID_symbol) // better fix precedence
     dest+=tmp;
   else
     dest+='('+tmp+')';
@@ -668,11 +599,11 @@ std::string expr2ct::convert_with(
 
       const typet &full_type=ns.follow(src.op0().type());
 
-      const struct_union_typet &struct_union_type=
-        to_struct_union_type(full_type);
+      const struct_typet &struct_type=
+        to_struct_type(full_type);
 
       const exprt comp_expr=
-        struct_union_type.get_component(component_name);
+        struct_type.get_component(component_name);
         
       assert(comp_expr.is_not_nil());
         
@@ -776,22 +707,10 @@ std::string expr2ct::convert_binary(
 
     unsigned p;
     std::string op=convert(*it, p);
-    
-    // In pointer arithmetic, x+(y-z) is unfortunately
-    // not the same as (x+y)-z, even though + and -
-    // have the same precedence. We thus add parentheses
-    // for the case x+(y-z). Similarly, (x*y)/z is not
-    // the same as x*(y/z), but * and / have the same
-    // precedence.
-    
-    bool use_parentheses=
-      precedence>p || 
-      (precedence==p && full_parentheses) ||
-      (precedence==p && src.id()!=it->id());
-    
-    if(use_parentheses) dest+='(';
+
+    if(precedence>p || (precedence==p && full_parentheses)) dest+='(';
     dest+=op;
-    if(use_parentheses) dest+=')';
+    if(precedence>p || (precedence==p && full_parentheses)) dest+=')';
   }
 
   return dest;
@@ -1019,59 +938,6 @@ std::string expr2ct::convert_function(
   const std::string &name,
   unsigned precedence)
 {
-  std::string dest=name;
-  dest+='(';
-
-  forall_operands(it, src)
-  {
-    unsigned p;
-    std::string op=convert(*it, p);
-
-    if(it!=src.operands().begin()) dest+=", ";
-
-    dest+=op;
-  }
-
-  dest+=')';
-
-  return dest;
-}
-
-/*******************************************************************\
-
-Function: expr2ct::convert_complex
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-std::string expr2ct::convert_complex(
-  const exprt &src,
-  unsigned precedence)
-{
-  // ISO C11 offers:
-  // double complex CMPLX(double x, double y);
-  // float complex CMPLXF(float x, float y);
-  // long double complex CMPLXL(long double x, long double y);
-  
-  const typet &subtype=
-    ns.follow(ns.follow(src.type()).subtype());
-
-  std::string name;
-  
-  if(subtype==double_type())
-    name="CMPLX";
-  else if(subtype==float_type())
-    name="CMPLXF";
-  else if(subtype==long_double_type())
-    name="CMPLXL";
-  else
-    name="CMPLX"; // default, possibly wrong
-
   std::string dest=name;
   dest+='(';
 
@@ -1493,7 +1359,7 @@ std::string expr2ct::convert_norep(
   std::string dest="irep(\"";
   MetaString(dest, lisp.expr2string());
   dest+="\")";
-  precedence=16;
+  precedence=15;
   return dest;
 }
 
@@ -1520,7 +1386,7 @@ std::string expr2ct::convert_symbol(
     dest=id_shorthand(src);
   else if(src.operands().size()==1 &&
         src.op0().id()==ID_predicate_passive_symbol)
-    dest=src.op0().get_string(ID_identifier);
+    dest=src.op0().get(ID_identifier).as_string();
   else
     dest=id2string(id);
 
@@ -2061,28 +1927,13 @@ std::string expr2ct::convert_array(
     
     dest.reserve(dest.size()+1+src.operands().size());
     
-    bool last_was_hex=false;
-    
     forall_operands(it, src)
     {
-      // these have a trailing zero
-      if(it==--src.operands().end())
-        break;
-        
       assert(it->is_constant());
       mp_integer i;
       to_integer(*it, i);
-      unsigned int ch=integer2long(i);
+      int ch=integer2long(i);
 
-      if(last_was_hex)
-      {
-        // we use "string splicing" to avoid ambiguity
-        if(isxdigit(ch))
-          dest+="\" \"";
-        
-        last_was_hex=false;
-      }
-        
       switch(ch)
       {
       case '\n': dest+="\\n"; break; /* NL (0x0a) */
@@ -2096,14 +1947,11 @@ std::string expr2ct::convert_array(
       case '"': dest+="\\\""; break;
       
       default:
-        if(ch>=' ' && ch!=127 && ch<0xff)
+        if(isalnum(ch))
           dest+=(char)ch;
         else
         {
-          char hexbuf[10];
-          sprintf(hexbuf, "\\x%x", ch);
-          dest+=hexbuf;
-          last_was_hex=true;
+          // TODO, hexify
         }
       }
     }
@@ -2514,7 +2362,8 @@ std::string expr2ct::convert_code_ifthenelse(
   const code_ifthenelset &src,
   unsigned indent)
 {
-  if(src.operands().size()!=3)
+  if(src.operands().size()!=3 &&
+     src.operands().size()!=2)
   {
     unsigned precedence;
     return convert_norep(src, precedence);
@@ -2529,13 +2378,13 @@ std::string expr2ct::convert_code_ifthenelse(
     dest+=";\n";
   }
   else
-    dest+=convert_code(to_code(src.then_case()), indent+2);
+    dest+=convert_code(src.then_case(), indent+2);
 
-  if(!src.else_case().is_nil())
+  if(src.operands().size()==3 && !src.else_case().is_nil())
   {
     dest+=indent_str(indent);
     dest+="else\n";
-    dest+=convert_code(to_code(src.else_case()), indent+2);
+    dest+=convert_code(src.else_case(), indent+2);
   }
 
   return dest;
@@ -2905,9 +2754,6 @@ std::string expr2ct::convert_code(
   if(statement==ID_printf)
     return convert_code_printf(src, indent);
 
-  if(statement==ID_fence)
-    return convert_code_fence(src, indent);
-
   if(statement==ID_input)
     return convert_code_input(src, indent);
 
@@ -3169,48 +3015,6 @@ std::string expr2ct::convert_code_printf(
 
   dest+=");";
 
-  return dest;
-}
-
-/*******************************************************************\
-
-Function: expr2ct::convert_code_fence
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-std::string expr2ct::convert_code_fence(
-  const codet &src,
-  unsigned indent)
-{
-  std::string dest=indent_str(indent)+"FENCE(";
-  
-  irep_idt att[]=
-    { ID_WRfence, ID_RRfence, ID_RWfence, ID_WWfence,
-      ID_RRcumul, ID_RWcumul, ID_WWcumul, ID_WRcumul,
-      irep_idt() };
-
-  bool first=true;
-      
-  for(unsigned i=0; !att[i].empty(); i++)
-  {
-    if(src.get_bool(att[i]))
-    {
-      if(first)
-        first=false;
-      else
-        dest+="+";
-
-      dest+=id2string(att[i]);
-    }
-  }
-  
-  dest+=");";
   return dest;
 }
 
@@ -3596,49 +3400,19 @@ std::string expr2ct::convert(
       return convert_unary(src, "+", precedence=15);
   }
 
-  else if(src.id()==ID_floatbv_plus)
+  else if(src.id()=="invalid-pointer")
   {
-    return convert_function(src, "FLOAT+", precedence=16);
-  }  
-
-  else if(src.id()==ID_floatbv_minus)
-  {
-    return convert_function(src, "FLOAT-", precedence=16);
-  }  
-
-  else if(src.id()==ID_floatbv_mult)
-  {
-    return convert_function(src, "FLOAT*", precedence=16);
-  }  
-
-  else if(src.id()==ID_floatbv_div)
-  {
-    return convert_function(src, "FLOAT/", precedence=16);
-  }  
-
-  else if(src.id()==ID_invalid_pointer)
-  {
-    return convert_function(src, "INVALID-POINTER", precedence=16);
-  }
-
-  else if(src.id()==ID_good_pointer)
-  {
-    return convert_function(src, "GOOD_POINTER", precedence=16);
-  }
-
-  else if(src.id()==ID_object_size)
-  {
-    return convert_function(src, "OBJECT_SIZE", precedence=16);
+    return convert_function(src, "INVALID-POINTER", precedence=15);
   }
 
   else if(src.id()=="pointer_arithmetic")
   {
-    return convert_pointer_arithmetic(src, precedence=16);
+    return convert_pointer_arithmetic(src, precedence=15);
   }
 
   else if(src.id()=="pointer_difference")
   {
-    return convert_pointer_difference(src, precedence=16);
+    return convert_pointer_difference(src, precedence=15);
   }
 
   else if(src.id()=="NULL-object")
@@ -3655,7 +3429,7 @@ std::string expr2ct::convert(
   
   else if(src.id()==ID_infinity)
   {
-    return convert_function(src, "INFINITY", precedence=16);
+    return convert_function(src, "INFINITY", precedence=15);
   }
 
   else if(src.id()=="builtin-function")
@@ -3665,118 +3439,117 @@ std::string expr2ct::convert(
 
   else if(src.id()==ID_pointer_object)
   {
-    return convert_function(src, "POINTER_OBJECT", precedence=16);
+    return convert_function(src, "POINTER_OBJECT", precedence=15);
   }
 
   else if(src.id()=="object_value")
   {
-    return convert_function(src, "OBJECT_VALUE", precedence=16);
+    return convert_function(src, "OBJECT_VALUE", precedence=15);
   }
 
   else if(src.id()=="pointer_object_has_type")
   {
-    return convert_pointer_object_has_type(src, precedence=16);
+    return convert_pointer_object_has_type(src, precedence=15);
   }
 
   else if(src.id()==ID_array_of)
   {
-    return convert_array_of(src, precedence=16);
+    return convert_array_of(src, precedence=15);
   }
 
   else if(src.id()==ID_pointer_offset)
   {
-    return convert_function(src, "POINTER_OFFSET", precedence=16);
+    return convert_function(src, "POINTER_OFFSET", precedence=15);
   }
 
   else if(src.id()=="pointer_base")
   {
-    return convert_function(src, "POINTER_BASE", precedence=16);
+    return convert_function(src, "POINTER_BASE", precedence=15);
   }
 
   else if(src.id()=="pointer_cons")
   {
-    return convert_function(src, "POINTER_CONS", precedence=16);
+    return convert_function(src, "POINTER_CONS", precedence=15);
   }
 
   else if(src.id()==ID_same_object)
   {
-    return convert_function(src, "SAME-OBJECT", precedence=16);
+    return convert_function(src, "SAME-OBJECT", precedence=15);
   }
 
   else if(src.id()==ID_dynamic_object)
   {
-    return convert_function(src, "DYNAMIC_OBJECT", precedence=16);
+    return convert_function(src, "DYNAMIC_OBJECT", precedence=15);
   }
 
   else if(src.id()=="is_zero_string")
   {
-    return convert_function(src, "IS_ZERO_STRING", precedence=16);
+    return convert_function(src, "IS_ZERO_STRING", precedence=15);
   }
 
   else if(src.id()=="zero_string")
   {
-    return convert_function(src, "ZERO_STRING", precedence=16);
+    return convert_function(src, "ZERO_STRING", precedence=15);
   }
 
   else if(src.id()=="zero_string_length")
   {
-    return convert_function(src, "ZERO_STRING_LENGTH", precedence=16);
+    return convert_function(src, "ZERO_STRING_LENGTH", precedence=15);
   }
 
   else if(src.id()=="buffer_size")
   {
-    return convert_function(src, "BUFFER_SIZE", precedence=16);
+    return convert_function(src, "BUFFER_SIZE", precedence=15);
   }
 
   else if(src.id()==ID_pointer_offset)
   {
-    return convert_function(src, "POINTER_OFFSET", precedence=16);
+    return convert_function(src, "POINTER_OFFSET", precedence=15);
   }
 
   else if(src.id()==ID_isnan)
   {
-    return convert_function(src, "isnan", precedence=16);
+    return convert_function(src, "isnan", precedence=15);
   }
 
   else if(src.id()==ID_isfinite)
   {
-    return convert_function(src, "isfinite", precedence=16);
+    return convert_function(src, "isfinite", precedence=15);
   }
 
   else if(src.id()==ID_isinf)
   {
-    return convert_function(src, "isinf", precedence=16);
+    return convert_function(src, "isinf", precedence=15);
   }
 
   else if(src.id()==ID_isnormal)
   {
-    return convert_function(src, "isnormal", precedence=16);
+    return convert_function(src, "isnormal", precedence=15);
   }
 
   else if(src.id()==ID_builtin_offsetof)
   {
-    return convert_function(src, "builtin_offsetof", precedence=16);
+    return convert_function(src, "builtin_offsetof", precedence=15);
   }
 
   else if(src.id()==ID_gcc_builtin_va_arg)
   {
-    return convert_function(src, "gcc_builtin_va_arg", precedence=16);
+    return convert_function(src, "gcc_builtin_va_arg", precedence=15);
   }
 
-  else if(src.id()==ID_alignof)
+  else if(src.id()==ID_builtin_alignof)
   {
-    // C uses "_Alignof", C++ uses "alignof"
-    return convert_function(src, "alignof", precedence=16);
+    return convert_function(src, "builtin_alignof", precedence=15);
   }
 
   else if(has_prefix(src.id_string(), "byte_extract"))
   {
-    return convert_byte_extract(src, precedence=16);
+    return convert_byte_extract(src, precedence=15);
   }
 
   else if(has_prefix(src.id_string(), "byte_update"))
   {
-    return convert_byte_update(src, precedence=16);
+    return convert_byte_update(src, precedence=15);
   }
 
   else if(src.id()==ID_address_of)
@@ -3850,19 +3623,19 @@ std::string expr2ct::convert(
     else if(statement==ID_malloc)
       return convert_malloc(src, precedence=15);
     else if(statement==ID_printf)
-      return convert_function(src, "PRINTF", precedence=16);
+      return convert_function(src, "PRINTF", precedence=15);
     else if(statement==ID_nondet)
-      return convert_nondet(src, precedence=16);
+      return convert_nondet(src, precedence=15);
     else if(statement=="prob_coin")
-      return convert_prob_coin(src, precedence=16);
+      return convert_prob_coin(src, precedence=15);
     else if(statement=="prob_unif")
-      return convert_prob_uniform(src, precedence=16);
+      return convert_prob_uniform(src, precedence=15);
     else if(statement==ID_literal)
-      return convert_literal(src, precedence=16);
+      return convert_literal(src, precedence=15);
     else if(statement==ID_statement_expression)
       return convert_statement_expression(src, precedence=15);
     else if(statement==ID_gcc_builtin_va_arg_next)
-      return convert_function(src, "gcc_builtin_va_arg_next", precedence=16);
+      return convert_function(src, "gcc_builtin_va_arg_next", precedence=15);
     else
       return convert_norep(src, precedence);
   }
@@ -3899,28 +3672,19 @@ std::string expr2ct::convert(
     return convert_binary(src, "==", precedence=9, true);
 
   else if(src.id()==ID_ieee_float_equal)
-    return convert_function(src, "IEEE_FLOAT_EQUAL", precedence=16);
+    return convert_function(src, "IEEE_FLOAT_EQUAL", precedence=15);
 
   else if(src.id()==ID_width)
-    return convert_function(src, "WIDTH", precedence=16);
+    return convert_function(src, "WIDTH", precedence=15);
 
   else if(src.id()==ID_concatenation)
-    return convert_function(src, "CONCATENATION", precedence=16);
+    return convert_function(src, "CONCATENATION", precedence=15);
 
   else if(src.id()==ID_ieee_float_notequal)
-    return convert_function(src, "IEEE_FLOAT_NOTEQUAL", precedence=16);
+    return convert_function(src, "IEEE_FLOAT_NOTEQUAL", precedence=15);
 
   else if(src.id()==ID_abs)
-    return convert_function(src, "abs", precedence=16);
-
-  else if(src.id()==ID_complex_real)
-    return convert_function(src, "__real__", precedence=16);
-
-  else if(src.id()==ID_complex_imag)
-    return convert_function(src, "__imag__", precedence=16);
-
-  else if(src.id()==ID_complex)
-    return convert_complex(src, precedence=16);
+    return convert_function(src, "abs", precedence=15);
 
   else if(src.id()==ID_bitand)
     return convert_binary(src, "&", precedence=8, false);
@@ -3941,22 +3705,22 @@ std::string expr2ct::convert(
     return convert_binary(src, "^", precedence=7, false);
 
   else if(src.id()==ID_implies)
-    return convert_binary(src, "==>", precedence=3, true);
+    return convert_binary(src, "=>", precedence=3, true);
 
   else if(src.id()==ID_if)
     return convert_trinary(src, "?", ":", precedence=3);
 
   else if(src.id()==ID_forall)
-    return convert_quantifier(src, "forall", precedence=2);
+    return convert_quantifier(src, "FORALL", precedence=2);
 
   else if(src.id()==ID_exists)
-    return convert_quantifier(src, "exists", precedence=2);
+    return convert_quantifier(src, "EXISTS", precedence=2);
 
-  else if(src.id()==ID_lambda)
+  else if(src.id()=="lambda")
     return convert_quantifier(src, "LAMBDA", precedence=2);
 
   else if(src.id()==ID_with)
-    return convert_with(src, precedence=16);
+    return convert_with(src, precedence=15);
 
   else if(src.id()==ID_symbol)
     return convert_symbol(src, precedence);
@@ -4013,13 +3777,13 @@ std::string expr2ct::convert(
     return convert_array_list(src, precedence);
 
   else if(src.id()==ID_typecast)
-    return convert_typecast(to_typecast_expr(src), precedence);
+    return convert_typecast(src, precedence);
 
   else if(src.id()=="implicit_address_of")
     return convert_implicit_address_of(src, precedence);
 
   else if(src.id()=="implicit_dereference")
-    return convert_function(src, "IMPLICIT_DEREFERENCE", precedence=16);
+    return convert_function(src, "IMPLICIT_DEREFERENCE", precedence=15);
 
   else if(src.id()==ID_comma)
     return convert_binary(src, ", ", precedence=1, false);

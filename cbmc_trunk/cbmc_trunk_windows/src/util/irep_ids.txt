@@ -18,7 +18,6 @@ line
 column
 comment
 property
-source
 function
 subtype
 subtypes
@@ -36,7 +35,6 @@ member_name
 C_member_name #member_name
 equal =
 implies =>
-iff <=>
 and
 nand
 or
@@ -96,7 +94,6 @@ argument
 array
 size
 pointer
-block_pointer
 switch
 for
 while
@@ -111,11 +108,6 @@ signed
 unsigned
 asm
 incomplete_array
-incomplete_struct
-incomplete_union
-incomplete_class
-incomplete_c_enum
-C_incomplete #incomplete
 identifier
 name
 cpp_name
@@ -123,6 +115,10 @@ C_id_class #id_class
 declaration
 declaration_list
 struct
+incomplete_struct
+incomplete_union
+incomplete_class
+incomplete_c_enum
 c_bitfield
 union
 class
@@ -205,7 +201,6 @@ C_invalid_object #invalid_object
 pointer_offset
 pointer_object
 same_object same-object
-invalid_pointer invalid-pointer
 ieee_float_equal
 ieee_float_notequal
 isnan
@@ -254,8 +249,6 @@ signed_short_int
 unsigned_short_int
 signed_long_long_int
 unsigned_long_long_int
-signed_int128
-unsigned_int128
 case
 casex
 casez
@@ -295,15 +288,11 @@ X
 continuous_assign
 blocking_assign
 non_blocking_assign
-alignof
+builtin_alignof
 gcc_builtin_va_arg
 gcc_builtin_types_compatible_p
 gcc_builtin_va_arg_next
 gcc_float128
-gcc_int128
-gcc_decimal32
-gcc_decimal64
-gcc_decimal128
 builtin_offsetof
 0
 1
@@ -353,7 +342,6 @@ C_implicit #implicit
 C_qualifier #qualifier
 C_ptr32 #ptr32
 C_ptr64 #ptr64
-C_atomic #atomic
 restricted
 restrict
 byte_extract_big_endian
@@ -363,12 +351,12 @@ byte_update_little_endian
 replication
 dummy
 init
-cprover_atomic
 atomic
 atomic_begin
 atomic_end
 start_thread
 end_thread
+sync
 specc_notify
 specc_par
 specc_wait
@@ -382,7 +370,6 @@ instance
 cover
 initializer
 anonymous
-C_is_anonymous #is_anonymous
 is_macro
 is_inline
 is_extern
@@ -401,7 +388,6 @@ literal
 member_initializers
 member_initializer
 method_qualifier
-methods
 constructor
 destructor
 bases
@@ -440,7 +426,6 @@ always
 initial
 mode
 this
-C_this #this
 reduction_and
 reduction_or
 reduction_nand
@@ -457,8 +442,7 @@ overflow_unary_minus overflow-unary-
 object_descriptor
 dynamic_object
 dynamic_size
-object_size
-good_pointer
+valid_object
 integer_address
 integer_address_object
 static_object
@@ -477,7 +461,6 @@ gcc_attribute
 packed
 C_packed #packed
 transparent_union
-C_transparent_union #transparent_union
 aligned
 C_alignment #alignment
 vector
@@ -504,7 +487,6 @@ cpp_namespace_spec
 cpp_storage_spec
 cpp_using
 cpp_declaration
-cpp_static_assert
 cpp_member_spec
 C_c_type #c_type
 namespace
@@ -547,14 +529,12 @@ msc_leave
 msc_uuidof
 msc_if_exists
 msc_if_not_exists
-msc_based
 alias
 auto_object
 C_c_sizeof_type #c_sizeof_type
 array_update
 struct_update
 union_update
-update
 float_debug1
 float_debug2
 static_assert
@@ -567,23 +547,3 @@ predicate_passive_symbol
 all
 when
 cw_va_arg_typeof
-fence
-sync
-WRfence
-RRfence
-RWfence
-WWfence
-RRcumul
-RWcumul
-WWcumul
-WRcumul
-claim
-generic_selection
-generic_associations
-generic_association
-floatbv_plus
-floatbv_minus
-floatbv_mult
-floatbv_div
-floatbv_sin
-floatbv_cos

@@ -80,157 +80,6 @@ exprt smt2_convt::get(const exprt &expr) const
 
 /*******************************************************************\
 
-Function: smt2_convt::parse_constant
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-constant_exprt smt2_convt::parse_constant(
-  const std::string &s,
-  const typet &type)
-{
-  // See http://www.grammatech.com/resources/smt/SMTLIBTutorial.pdf for the
-  // syntax of SMTlib2 literals.
-  //
-  // A literal expression is one of the following forms:
-  //
-  // * Numeral -- this is a natural number in decimal and is of the form:
-  //                0|([1-9][0-9]*)
-  // * Decimal -- this is a decimal expansion of a real number and is of the form:
-  //                (0|[1-9][0-9]*)[.]([0-9]+)
-  // * Binary -- this is a natural number in binary and is of the form:
-  //                #x[01]+
-  // * Hex -- this is a natural number in hexadecimal and is of the form:
-  //                #x[0-9a-fA-F]+
-  //
-  // Right now I'm not parsing decimals.  It'd be nice if we had a real YACC
-  // parser here, but whatever.
-
-  if(s[0] == '#' && s[1] == 'b')
-  {
-    // Binary
-    unsigned int width=s.size()-2;
-    
-    if(type.id()==ID_signedbv)
-      assert(width==to_signedbv_type(type).get_width());
-    else if(type.id()==ID_unsignedbv)
-      assert(width==to_unsignedbv_type(type).get_width());
-    else if(type.id()==ID_fixedbv)
-      assert(width==to_fixedbv_type(type).get_width());
-    else if(type.id()==ID_pointer)
-      assert(width==to_pointer_type(type).get_width());
-    
-    constant_exprt constant(type);
-    constant.set_value(s.substr(2));
-
-    return constant;
-  }
-  else if (s[0] == '#' && s[1] == 'x')
-  {
-    // Hex
-    unsigned int width = (s.size() - 2) * 4;
-
-    if(type.id()==ID_signedbv)
-      assert(width==to_signedbv_type(type).get_width());
-    else if(type.id()==ID_unsignedbv)
-      assert(width==to_unsignedbv_type(type).get_width());
-    else if(type.id()==ID_fixedbv)
-      assert(width==to_fixedbv_type(type).get_width());
-    else if(type.id()==ID_pointer)
-      assert(width==to_pointer_type(type).get_width());
-
-    mp_integer value = string2integer(s.substr(2), 16);
-    constant_exprt constant(type);
-    constant.set_value(integer2binary(value, width));
-
-    return constant;
-  }
-  else
-  {
-    // Numeral
-    assert(type.id()==ID_integer);
-    
-    constant_exprt constant(type);
-    constant.set_value(s);
-
-    return constant;
-  }
-}
-
-/*******************************************************************\
-
-Function: smt2_convt::parse_struct
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-exprt smt2_convt::parse_struct(
-  const std::string &s,
-  const typet &type)
-{
-  const struct_typet::componentst &components =
-      to_struct_type(type).components();
-
-  struct_exprt ret(type);
-
-  size_t p = 0;
-  ret.operands().resize(components.size());
-
-  assert(type_map.find(type) != type_map.end());
-
-  const std::string smt_typename = type_map.find(type)->second;
-
-  // Structs look like:
-  //  (mk-struct.1 <component0> <component1> ... <componentN>)
-  std::string constructor = "(mk-" + smt_typename + " ";
-  assert(s.find(constructor) == 0);
-  p = constructor.length();
-
-  for(unsigned i = 0; i < components.size(); i++)
-  {
-    const struct_typet::componentt &c = components[i];
-    const typet &sub_type = ns.follow(c.type());
-
-    if (sub_type.id() == ID_signedbv ||
-        sub_type.id() == ID_unsignedbv ||
-        sub_type.id() == ID_fixedbv ||
-        sub_type.id() == ID_bv ||
-        sub_type.id() == ID_pointer)
-    {
-      // Find the terminating space or ')'.
-      size_t end = s.find(' ', p);
-
-      if (end == std::string::npos)
-      {
-        end = s.find(')', p);
-      }
-
-      std::string val = s.substr(p, (end-p));
-      ret.operands()[i]=parse_constant(val, sub_type);
-
-      p = end+1;
-    }
-    else
-    {
-      throw "Unsupported struct member type";
-    }
-  }
-
-  return ret;
-}
-
-/*******************************************************************\
-
 Function: smt2_convt::set_value
 
   Inputs:
@@ -254,23 +103,25 @@ void smt2_convt::set_value(
      type.id()==ID_bv ||
      type.id()==ID_fixedbv)
   {
-    constant_exprt c = parse_constant(v, type);
+    assert(v.size()==boolbv_width(type));
+    constant_exprt c(type);
+    c.set_value(v);
     identifier.value=c;
-
-    assert(boolbv_width(type) == boolbv_width(c.type()));
   }
   else if(type.id()==ID_bool)
   {
-    if(v=="1" || v=="true")
+    if(v=="1")
       identifier.value.make_true();
-    else if(v=="0" || v=="false")
+    else if(v=="0")
       identifier.value.make_false();
   }
   else if(type.id()==ID_pointer)
   {
     // TODO
-    constant_exprt result = parse_constant(v, type);
-    assert(boolbv_width(type) == boolbv_width(result.type()));
+    assert(v.size()==boolbv_width(type));
+    
+    constant_exprt result(type);
+    result.set_value(v);
 
     // add elaborated expression as operand
     pointer_logict::pointert p;
@@ -283,7 +134,7 @@ void smt2_convt::set_value(
   }
   else if(type.id()==ID_struct)
   {
-    identifier.value = parse_struct(v, type);
+    // TODO
   }
   else if(type.id()==ID_union)
   {
@@ -605,7 +456,6 @@ std::string smt2_convt::convert_identifier(const irep_idt &identifier)
     case '|':
     case '\\':
     case '&':
-    case '$':
       result+="&";
       result+=i2string(ch);
       result+=';';
@@ -764,7 +614,7 @@ void smt2_convt::convert_expr(const exprt &expr)
     assert(expr.type().id()==ID_bool);
     assert(expr.operands().size()==2);
 
-    smt2_prop.out << "(=> ";
+    smt2_prop.out << "(implies ";
     convert_expr(expr.op0());
     smt2_prop.out << " ";
     convert_expr(expr.op1());
@@ -1375,13 +1225,13 @@ void smt2_convt::convert_expr(const exprt &expr)
 
     if(op_type.id()==ID_signedbv)
     {
-      smt2_prop.out << "(let ( (prod (bvmul ((_ sign_extend " << width << ") ";
+      smt2_prop.out << "(let (prod (bvmul (sign_extend[" << width << "] ";
       convert_expr(expr.op0());
       smt2_prop.out << ") ((_ sign_extend " << width << ") ";
       convert_expr(expr.op1());
-      smt2_prop.out << ")) )) ";
-      smt2_prop.out << "(or (bvsge prod (_ bv" << power(2, width-1) << " " << width*2 << "))";
-      smt2_prop.out << " (bvslt prod (bvneg (_ bv" << power(2, width-1) << " " << width*2 << ")))))";
+      smt2_prop.out << ")) ";
+      smt2_prop.out << "(or (bvsge prod (_ bv " << power(2, width-1) << " " << width*2 << ")))";
+      smt2_prop.out << " (bvslt prod (bvneg (_ bv" << power(2, width-1) << " " << width*2 << "))))))";
     }
     else if(op_type.id()==ID_unsignedbv)
     {
@@ -1399,24 +1249,6 @@ void smt2_convt::convert_expr(const exprt &expr)
     defined_expressionst::const_iterator it=defined_expressions.find(expr);
     assert(it!=defined_expressions.end());
     smt2_prop.out << it->second;
-  } else if(expr.id() == ID_forall || expr.id() == ID_exists) {
-    if (expr.id() == ID_forall) {
-      smt2_prop.out << "(forall ";
-    } else if (expr.id() == ID_exists) {
-      smt2_prop.out << "(exists ";
-    }
-
-    exprt bound = expr.op0();
-
-    smt2_prop.out << "((";
-    convert_expr(bound);
-    smt2_prop.out << " ";
-    convert_type(bound.type());
-    smt2_prop.out << ")) ";
-
-    convert_expr(expr.op1());
-
-    smt2_prop.out << ")";
   }
   else
     throw "smt2_convt::convert_expr: `"+
@@ -1480,7 +1312,7 @@ void smt2_convt::convert_typecast(const typecast_exprt &expr)
         if(op_type.id()==ID_signedbv)
           smt2_prop.out << "((_ sign_extend ";
         else
-          smt2_prop.out << "((_ zero_extend ";
+          smt2_prop.out << "((_ zero_extend";
 
         smt2_prop.out << (to_width-from_width)
                       << ") "; // ind
@@ -1587,7 +1419,7 @@ void smt2_convt::convert_typecast(const typecast_exprt &expr)
     else
     {
       throw "TODO typecast2 "+op_type.id_string()+
-            " -> "+expr_type.id_string() + " op == " + from_expr(ns, "", op);
+            " -> "+expr_type.id_string();
     }
   }
   else if(expr_type.id()==ID_fixedbv) // to fixedbv
@@ -1600,8 +1432,6 @@ void smt2_convt::convert_typecast(const typecast_exprt &expr)
        op_type.id()==ID_signedbv ||
        op_type.id()==ID_c_enum)
     {
-      // integer to fixedbv
-      
       unsigned from_width=to_bitvector_type(op_type).get_width();
       smt2_prop.out << "(concat ";
 
@@ -1609,14 +1439,13 @@ void smt2_convt::convert_typecast(const typecast_exprt &expr)
         convert_expr(op);
       else if(from_width>to_integer_bits)
       {
-        // too many integer bits
-        smt2_prop.out << "((_ extract " << (to_integer_bits-1) << " 0) ";
+        smt2_prop.out << "((_ extract " << (to_integer_bits-1) << " "
+                      << to_fraction_bits << ") ";
         convert_expr(op);
         smt2_prop.out << ")";
       }
       else
       {
-        // too few integer bits
         assert(from_width<to_integer_bits);
         if(expr_type.id()==ID_unsignedbv)
         {
@@ -2001,7 +1830,7 @@ void smt2_convt::convert_constant(const constant_exprt &expr)
   }
   else if(expr.type().id()==ID_rational)
   {
-    std::string value=id2string(expr.get(ID_value));
+    std::string value=expr.get(ID_value).as_string();
     size_t pos=value.find("/");
 
     if(pos==std::string::npos)
@@ -2127,8 +1956,7 @@ void smt2_convt::convert_relation(const exprt &expr)
 
   smt2_prop.out << "(";
 
-  if(op_type.id()==ID_unsignedbv ||
-     op_type.id()==ID_pointer)
+  if(op_type.id()==ID_unsignedbv)
   {
     if(expr.id()==ID_le)
       smt2_prop.out << "bvule";
@@ -2285,6 +2113,7 @@ void smt2_convt::convert_plus(const plus_exprt &expr)
       smt2_prop.out << "(bvadd ";
       convert_expr(p);
       smt2_prop.out << " ";
+      smt2_prop.out << "((_ zero_extend " << BV_ADDR_BITS << ") ";
 
       if(element_size>=2)
       {
@@ -2296,7 +2125,7 @@ void smt2_convt::convert_plus(const plus_exprt &expr)
       else
         convert_expr(i);
 
-      smt2_prop.out << ")";
+      smt2_prop.out << "))";
     }
     else
     {
@@ -2617,17 +2446,23 @@ void smt2_convt::convert_with(const exprt &expr)
 
     const irep_idt &component_name=index.get(ID_component_name);
 
-    assert(type_map.find(expr_type) != type_map.end());
-    const std::string smt_typename = type_map.find(expr_type)->second;
-
     if(!struct_type.has_component(component_name))
       throw "with failed to find component in struct";
 
-    smt2_prop.out << "(update-" << smt_typename << "." << component_name << " ";
+    unsigned update_number=struct_type.component_number(component_name);
+    unsigned total_number=struct_type.components().size();
+
+    smt2_prop.out << "((_ update "
+                  << total_number << " "
+                  << update_number << ") ";
+
     convert_expr(expr.op0());
+
     smt2_prop.out << " ";
+
     convert_expr(value);
-    smt2_prop.out << ")";
+
+    smt2_prop.out << ")"; // update
   }
   else if(expr_type.id()==ID_union)
   {
@@ -2773,12 +2608,11 @@ void smt2_convt::convert_member(const member_exprt &expr)
     if(!struct_type.has_component(name))
       throw "failed to find struct member";
 
-    assert(type_map.find(struct_type) != type_map.end());
-    const std::string smt_typename = type_map.find(struct_type)->second;
+    unsigned number=struct_type.component_number(name);
 
-    smt2_prop.out << "(" << smt_typename << "."
-                  << struct_type.get_component(name).get_name()
-                  << " ";
+    smt2_prop.out << "((_ project "
+                  << struct_type.components().size()
+                  << " " << (number+1) << ") ";
     convert_expr(struct_op);
     smt2_prop.out << ")";
   }
@@ -2847,48 +2681,13 @@ Function: smt2_convt::set_to
 
 void smt2_convt::set_to(const exprt &expr, bool value)
 {
-  if(smt2_prop.core_enabled)
-  {
-    // we refrain from various optimizations
-    // in case cores are enabled
-    
-    smt2_prop.out << "(! ";
-
-    if(!value)
-    {
-      smt2_prop.out << "(not ";
-      convert_expr(expr);
-      smt2_prop.out << ")";
-    }
-    else
-      convert_expr(expr);
-
-    std::string core_name = "core_expr_" + i2string(num_core_constraints);
-    num_core_constraints++;
-
-    smt2_prop.out << " :named " << core_name << ")";
-
-    core_map[core_name] = expr;
-
-    smt2_prop.out << ")" << std::endl;
-
-    return;    
-  }
-
   if(expr.id()==ID_and && value)
   {
     forall_operands(it, expr)
       set_to(*it, true);
     return;
   }
-
-  if(expr.id()==ID_or && !value)
-  {
-    forall_operands(it, expr)
-      set_to(*it, false);
-    return;
-  }
-
+  
   if(expr.id()==ID_not)
   {
     assert(expr.operands().size()==1);
@@ -2958,8 +2757,6 @@ void smt2_convt::set_to(const exprt &expr, bool value)
     convert_expr(expr);
 
   smt2_prop.out << ")" << std::endl;
-
-  return;
 }
 
 /*******************************************************************\
@@ -2996,7 +2793,7 @@ void smt2_convt::find_symbols(const exprt &expr)
       identifier="nondet_"+id2string(expr.get(ID_identifier));
 
     identifiert &id=identifier_map[identifier];
-
+    
     if(id.type.is_nil())
     {
       id.type=expr.type();
@@ -3071,7 +2868,7 @@ void smt2_convt::find_symbols(const exprt &expr)
       for(unsigned i=0; i<tmp.operands().size(); i++)
       {
         smt2_prop.out << "(assert (= (select " << id 
-                      << " (_ bv" << i << " " << array_index_bits << ")) ";
+                      << " (_ bv" << i << " " << array_index_bits << ")_ ";
         convert_expr(tmp.operands()[i]);
         smt2_prop.out << "))" << std::endl;
       }
@@ -3112,9 +2909,16 @@ void smt2_convt::convert_type(const typet &type)
   }
   else if(type.id()==ID_struct)
   {
-    assert(type_map.find(type) != type_map.end());
+    const struct_typet::componentst &components=
+      to_struct_type(type).components();
 
-    smt2_prop.out << type_map.find(type)->second;
+    smt2_prop.out << "((_ Tuple " << components.size()
+                  << ") ";
+
+    for(unsigned i=0; i<components.size(); i++)
+      convert_type(components[i].type());
+
+    smt2_prop.out << ")";
   }
   else if(type.id()==ID_vector)
   {
@@ -3182,10 +2986,8 @@ void smt2_convt::convert_type(const typet &type)
     smt2_prop.out << "Int";
   else if(type.id()==ID_symbol)
     convert_type(ns.follow(type));
-  else {
+  else
     throw "unsupported type: "+type.id_string();
-  }
-
 }
 
 /*******************************************************************\
@@ -3232,93 +3034,11 @@ void smt2_convt::find_symbols_rec(
    {
      find_symbols_rec(type.subtype(), recstack);
    }
-   else if(type.id()==ID_struct)
+   else if(type.id()==ID_struct ||
+           type.id()==ID_union)
    {
-     const struct_typet::componentst &components=
-       to_struct_type(type).components();
-
-     for(unsigned i=0; i<components.size(); i++)
-       find_symbols_rec(components[i].type(), recstack);
-
-     // Declare the corresponding SMT type if we haven't already.
-
-     if(type_map.find(type) == type_map.end())
-     {
-       std::string smt_typename = "struct."+i2string(type_map.size());
-       type_map[type] = smt_typename;
-
-       // We're going to create a datatype named something like `struct.0'.
-       // It's going to have a single constructor named `mk-struct.0' with an
-       // argument for each member of the struct.  The declaration that
-       // creates this type looks like:
-       //
-       // (declare-datatypes () ((struct.0 (mk-struct.0
-       //                                   (struct.0.component1 type1)
-       //                                   ...
-       //                                   (struct.0.componentN typeN)))))
-       smt2_prop.out << "(declare-datatypes () ((" << smt_typename << " "
-                     << "(mk-" << smt_typename << " ";
-
-       for (unsigned i = 0; i < components.size(); i++)
-       {
-         const struct_union_typet::componentt &component = components[i];
-         smt2_prop.out << "(" << smt_typename << "." << component.get_name()
-                       << " ";
-         convert_type(component.type());
-         smt2_prop.out << ") ";
-       }
-
-       smt2_prop.out << "))))" << std::endl;
-
-       // Let's also declare some convenience functions to update members of
-       // the struct whil we're at it.  The functions are named like
-       // `update-struct.0.component1'.  Their declarations look like:
-       //
-       // (declare-fun update-struct.0.component1
-       //               ((s struct.0)     ; first arg -- the struct to update
-       //                (v type1))       ; second arg -- the value to update
-       //               struct.0          ; the output type
-       //               (mk-struct.0      ; build the new struct...
-       //                v                ; the updated value
-       //                (struct.0.component2 s)  ; retain the other members
-       //                ...
-       //                (struct.0.componentN s)))
-
-       for (unsigned i = 0; i < components.size(); i++)
-       {
-         const struct_union_typet::componentt &component = components[i];
-         smt2_prop.out << "(define-fun update-" << smt_typename << "."
-                       << component.get_name() << " "
-                       << "((s " << smt_typename << ") "
-                       <<  "(v ";
-         convert_type(component.type());
-         smt2_prop.out << ")) " << smt_typename << " "
-                       << "(mk-" << smt_typename
-                       << " ";
-
-         for (unsigned j = 0; j < components.size(); j++)
-         {
-           if (j == i)
-           {
-             smt2_prop.out << "v ";
-           }
-           else
-           {
-             smt2_prop.out << "(" << smt_typename << "."
-                           << components[j].get_name() << " s) ";
-           }
-         }
-
-         smt2_prop.out << "))" << std::endl;
-       }
-
-       smt2_prop.out << std::endl;
-     }
-   }
-   else if(type.id()==ID_union)
-   {
-     const union_typet::componentst &components=
-       to_union_type(type).components();
+     const struct_union_typet::componentst &components=
+       to_struct_union_type(type).components();
 
      for(unsigned i=0; i<components.size(); i++)
        find_symbols_rec(components[i].type(), recstack);
@@ -3326,7 +3046,8 @@ void smt2_convt::find_symbols_rec(
    else if(type.id()==ID_code)
    {
      const code_typet::argumentst &arguments=
-         to_code_type(type).arguments();
+       to_code_type(type).arguments();
+
      for(unsigned i=0; i<arguments.size(); i++)
        find_symbols_rec(arguments[i].type(), recstack);
 
@@ -3347,26 +3068,4 @@ void smt2_convt::find_symbols_rec(
        find_symbols_rec(ns.follow(type), recstack);
      }
    }
-}
-
-/*******************************************************************\
-
-Function: smt2_convt::in_core
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-bool smt2_convt::in_core(const exprt &expr)
-{
-  if(smt2_prop.core_enabled)
-  {
-    return (unsat_core.find(expr) != unsat_core.end());
-  }
-  else
-    return true;
 }

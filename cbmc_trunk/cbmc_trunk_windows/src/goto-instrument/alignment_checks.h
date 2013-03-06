@@ -14,7 +14,7 @@ Author:
 #include <goto-programs/goto_functions.h>
 
 void print_struct_alignment_problems(
-  const symbol_tablet &symbol_table,
+  const contextt &context,
   std::ostream &out);
 
 #endif

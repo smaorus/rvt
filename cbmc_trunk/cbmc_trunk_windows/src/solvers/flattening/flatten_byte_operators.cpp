@@ -118,12 +118,9 @@ exprt flatten_byte_extract(
       }
 
       // the new offset is width%offset
-      exprt new_offset;
-      
-      if(element_width==1)
-        new_offset=from_integer(0, offset_type);
-      else
-        new_offset=mod_exprt(offset, from_integer(element_width, offset_type));
+      exprt new_offset=
+        (element_width==1)?from_integer(0, offset_type):
+        mod_exprt(offset, from_integer(element_width, offset_type));
 
       // build new byte-extract expression
       exprt tmp(src.id(), src.type());
@@ -140,11 +137,8 @@ exprt flatten_byte_extract(
     const typet &offset_type=ns.follow(offset.type());
 
     mult_exprt times_eight(offset, from_integer(8, offset_type));
-
-    // cast to generic bit-vector
-    unsigned op0_width=integer2long(pointer_offset_size(ns, src.op0().type()))*8;
-    typecast_exprt src_op0_tc(src.op0(), bv_typet(op0_width));
-    lshr_exprt left_shift(src_op0_tc, times_eight);
+        
+    lshr_exprt left_shift(src.op0(), times_eight);
 
     extractbits_exprt extractbits;
     

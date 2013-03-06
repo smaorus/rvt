@@ -11,7 +11,9 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "boolbv.h"
 #include "boolbv_type.h"
 
+#ifdef HAVE_FLOATBV
 #include "../floatbv/float_utils.h"
+#endif
 
 /*******************************************************************\
 
@@ -46,6 +48,7 @@ literalt boolbvt::convert_bv_rel(const exprt &expr)
     {
       if(bvtype0==IS_FLOAT)
       {
+        #ifdef HAVE_FLOATBV
         float_utilst float_utils(prop);
         float_utils.spec=to_floatbv_type(op0.type());
 
@@ -59,6 +62,9 @@ literalt boolbvt::convert_bv_rel(const exprt &expr)
           return float_utils.relation(bv0, float_utilst::GT, bv1);
         else
           return SUB::convert_rest(expr);
+        #else
+        return SUB::convert_rest(expr);
+        #endif
       }
       else if((op0.type().id()==ID_range &&
                op1.type()==op0.type()) ||

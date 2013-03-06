@@ -18,7 +18,7 @@ Function: get_base_name
 
  Outputs: a new string
 
- Purpose: cleans a filename from path and extension
+ Purpose: cleans a filename from paths and extensions
 
 \*******************************************************************/
 

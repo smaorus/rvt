@@ -10,7 +10,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <arith_tools.h>
 #include <i2string.h>
-#include <std_expr.h>
 
 #include <ansi-c/c_types.h>
 
@@ -37,21 +36,19 @@ exprt convert_character_literal(
   
   exprt result;
 
-  if(src[0]=='L' || src[0]=='u' || src[0]=='U')
+  if(src[0]=='L')
   {
     assert(src[1]=='\'');
     assert(src[src.size()-1]=='\'');
   
-    std::basic_string<unsigned int> value;
+    std::vector<unsigned int> value;
     unescape_wide_string(std::string(src, 2, src.size()-3), value);
-    
-    // L is wchar_t, u is char16_t, U is char32_t
-    typet type=wchar_t_type();
     
     if(value.size()==0)
       throw "empty wide character literal";
     else if(value.size()==1)
     {
+      typet type=force_integer_type?int_type():wchar_t_type();
       result=from_integer(value[0], type);
     }
     else if(value.size()>=2 && value.size()<=4)
@@ -68,7 +65,7 @@ exprt convert_character_literal(
       }
 
       // always wchar_t
-      result=from_integer(x, type);
+      result=from_integer(x, wchar_t_type());
     }
     else
       throw "wide literals with "+i2string(value.size())+
@@ -86,7 +83,7 @@ exprt convert_character_literal(
       throw "empty character literal";
     else if(value.size()==1)
     {
-      typet type=force_integer_type?signed_int_type():char_type();
+      typet type=force_integer_type?int_type():char_type();
       result=from_integer(value[0], type);
     }
     else if(value.size()>=2 && value.size()<=4)
@@ -101,7 +98,7 @@ exprt convert_character_literal(
       }
 
       // always integer, never char!
-      result=from_integer(x, signed_int_type());
+      result=from_integer(x, int_type());
     }
     else
       throw "literals with "+i2string(value.size())+

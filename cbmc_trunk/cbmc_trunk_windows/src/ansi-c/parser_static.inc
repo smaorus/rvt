@@ -293,24 +293,6 @@ static void make_subtype(YYSTYPE dest, YYSTYPE src)
     
 /*******************************************************************\
 
-Function: make_pointer
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-static void make_pointer(const YYSTYPE dest)
-{
-  set(dest, ID_pointer);
-  stack(dest).add(ID_subtype)=irept(ID_abstract);
-}
-
-/*******************************************************************\
-
 Function: do_pointer
 
   Inputs:
@@ -323,7 +305,8 @@ Function: do_pointer
 
 static void do_pointer(const YYSTYPE ptr, const YYSTYPE dest)
 {
-  make_pointer(ptr);
+  set(ptr, ID_pointer);
+  stack(ptr).add(ID_subtype)=irept(ID_abstract);
   make_subtype(dest, ptr);
 }
 
@@ -345,16 +328,16 @@ static void do_enum_members(
 {  
   exprt value;
 
-  // This assigns increasing values to enum constants
-  // that do not have an explicit value. We start with 0.
-  // In C, enum constants always have type "int".
-  value=gen_zero(::enum_type());
+  // start with 0  
+  value=gen_zero(int_type());
 
   Forall_operands(it, members)
   {
     ansi_c_declarationt &ansi_c_declaration=
       to_ansi_c_declaration(*it);
 
+    ansi_c_declaration.type()=enum_type;
+    
     exprt &v=ansi_c_declaration.value();
     if(v.is_nil())
       v=value;
@@ -363,7 +346,7 @@ static void do_enum_members(
     symbol_expr.set(ID_identifier, ansi_c_declaration.get_name());
     
     value=exprt(ID_plus);
-    value.copy_to_operands(symbol_expr, gen_one(::enum_type()));
+    value.copy_to_operands(symbol_expr, gen_one(int_type()));    
     
     PARSER.copy_item(ansi_c_declaration);
   }

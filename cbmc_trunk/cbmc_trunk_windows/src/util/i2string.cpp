@@ -20,6 +20,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <sstream>
 
 #include "i2string.h"
+#include "strstream2string.h"
 
 #endif
 
@@ -43,8 +44,12 @@ std::string i2string(int i)
   return buffer;
   #else
   std::ostringstream strInt;
+
   strInt << i;
-  return strInt.str();
+  std::string str;
+  strstream2string(strInt, str);
+
+  return str;
   #endif
 }
 
@@ -65,7 +70,7 @@ std::string i2string(signed long int i)
   #ifdef USE_SPRINTF
   char buffer[100];
   #ifdef _WIN32
-  #ifdef __MINGW32__
+  #ifdef __MINGW32_VERSION
   snprintf(buffer, sizeof(buffer), "%ld", i);
   #else
   sprintf_s(buffer, sizeof(buffer), "%ld", i);
@@ -76,8 +81,12 @@ std::string i2string(signed long int i)
   return buffer;
   #else
   std::ostringstream strInt;
+
   strInt << i;
-  return strInt.str();
+  std::string str;
+  strstream2string(strInt, str);
+
+  return str; 
   #endif
 }
 
@@ -101,8 +110,12 @@ std::string i2string(unsigned i)
   return buffer;
   #else
   std::ostringstream strInt;
+
   strInt << i;
-  return strInt.str();
+  std::string str;
+  strstream2string(strInt, str);
+
+  return str; 
   #endif
 }
 
@@ -126,8 +139,12 @@ std::string i2string(unsigned long int i)
   return buffer;
   #else
   std::ostringstream strInt;
+
   strInt << i;
-  return strInt.str();
+  std::string str;
+  strstream2string(strInt, str);
+
+  return str; 
   #endif
 }
 
@@ -135,7 +152,7 @@ std::string i2string(unsigned long int i)
 
 Function: i2string
 
-  Inputs: signed long long
+  Inputs: signed __int64
 
  Outputs: string class
 
@@ -143,11 +160,12 @@ Function: i2string
 
 \*******************************************************************/
 
-std::string i2string(signed long long i)
+#ifdef _MSC_VER
+std::string i2string(signed __int64 i)
 {
   #ifdef USE_SPRINTF
   char buffer[100];
-  sprintf(buffer, "%lld", i);
+  sprintf(buffer, "%I64d", i);
   return buffer;
   #else
   std::ostringstream strInt;
@@ -159,12 +177,13 @@ std::string i2string(signed long long i)
   return str; 
   #endif
 }
+#endif
 
 /*******************************************************************\
 
 Function: i2string
 
-  Inputs: unsigned long long
+  Inputs: unsigned __int64
 
  Outputs: string class
 
@@ -172,11 +191,12 @@ Function: i2string
 
 \*******************************************************************/
 
-std::string i2string(unsigned long long i)
+#ifdef _MSC_VER
+std::string i2string(unsigned __int64 i)
 {
   #ifdef USE_SPRINTF
   char buffer[100];
-  sprintf(buffer, "%llu", i);
+  sprintf(buffer, "%I64u", i);
   return buffer;
   #else
   std::ostringstream strInt;
@@ -188,3 +208,4 @@ std::string i2string(unsigned long long i)
   return str; 
   #endif
 }
+#endif

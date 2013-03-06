@@ -12,7 +12,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <sstream>
 
 #include "mp_arith.h"
-#include "arith_tools.h"
 
 /*******************************************************************\
 
@@ -26,24 +25,14 @@ Function: >>
 
 \*******************************************************************/
 
-#include <iostream>
-
-mp_integer operator>>(const mp_integer &a, const mp_integer &b)
+mp_integer operator>>(const mp_integer &a, unsigned int b)
 {
-  mp_integer power=::power(2, b);
-  
-  if(a>=0)
-    return a/power;
-  else
-  {
-    // arithmetic shift right isn't division for negative numbers!
-    // http://en.wikipedia.org/wiki/Arithmetic_shift 
+  mp_integer result=a;
 
-    if((a%power)==0)
-      return a/power;
-    else
-      return a/power-1;
-  }
+  for(unsigned i=0; i<b; i++)
+    result/=2;
+
+  return result;
 }
 
 /*******************************************************************\
@@ -58,9 +47,14 @@ Function: <<
 
 \*******************************************************************/
 
-mp_integer operator<<(const mp_integer &a, const mp_integer &b)
+mp_integer operator<<(const mp_integer &a, unsigned int b)
 {
-  return a*power(2, b);
+  mp_integer result=a;
+
+  for(unsigned i=0; i<b; i++)
+    result*=2;
+
+  return result;
 }
 
 /*******************************************************************\

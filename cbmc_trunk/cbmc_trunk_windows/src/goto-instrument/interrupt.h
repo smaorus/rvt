@@ -17,7 +17,7 @@ Date: September 2011
 
 void interrupt(
   value_setst &value_sets,
-  const class symbol_tablet &symbol_table,
+  const class contextt &context,
   goto_functionst &goto_functions,
   const irep_idt &interrupt_handler);
 

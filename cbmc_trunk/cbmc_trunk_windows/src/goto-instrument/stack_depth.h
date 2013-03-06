@@ -11,11 +11,11 @@ Date: November 2011
 #ifndef CPROVER_STACK_DEPTH_H
 #define CPROVER_STACK_DEPTH_H
 
-class symbol_tablet;
+class contextt;
 class goto_functionst;
 
 void stack_depth(
-  symbol_tablet &symbol_table,
+  contextt &context,
   goto_functionst &goto_functions,
   const int depth);
 

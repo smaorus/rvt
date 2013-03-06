@@ -11,6 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <fstream>
 
 #include <i2string.h>
+#include <str_getline.h>
 
 #include "satcheck_zcore.h"
 
@@ -131,7 +132,7 @@ propt::resultt satcheck_zcoret::prop_solve()
     while(true)
     {
       std::string line;
-      if(!std::getline(in, line)) break;
+      if(!str_getline(in, line)) break;
       
       if(!(line.substr(0,1)=="c" || line.substr(0,1)=="p"))
       {

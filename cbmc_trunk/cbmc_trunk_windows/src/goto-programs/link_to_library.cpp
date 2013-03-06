@@ -25,8 +25,9 @@ Function: link_to_library
 \*******************************************************************/
 
 void link_to_library(
-  symbol_tablet &symbol_table,
+  contextt &context,
   goto_functionst &goto_functions,
+  const optionst &options,
   message_handlert &message_handler)
 {
   // this needs a fixedpoint, as library functions
@@ -67,7 +68,7 @@ void link_to_library(
     // done?
     if(missing_functions.empty()) break;
     
-    add_cprover_library(missing_functions, symbol_table, message_handler);
+    add_cprover_library(missing_functions, context, message_handler);
 
     // convert to CFG
     for(std::set<irep_idt>::const_iterator
@@ -75,8 +76,8 @@ void link_to_library(
         it!=missing_functions.end();
         it++)
     {
-      if(symbol_table.symbols.find(*it)!=symbol_table.symbols.end())
-        goto_convert(*it, symbol_table, goto_functions, message_handler);
+      if(context.symbols.find(*it)!=context.symbols.end())
+        goto_convert(*it, context, options, goto_functions, message_handler);
         
       added_functions.insert(*it);
     }

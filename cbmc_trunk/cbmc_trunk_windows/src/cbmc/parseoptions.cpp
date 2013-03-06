@@ -24,11 +24,13 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/interpreter.h>
 #include <goto-programs/string_abstraction.h>
 #include <goto-programs/string_instrumentation.h>
-#include <goto-programs/loop_ids.h>
+#include <goto-programs/loop_numbers.h>
 #include <goto-programs/link_to_library.h>
 
+#include <pointer-analysis/value_set_analysis.h>
 #include <pointer-analysis/goto_program_dereference.h>
 #include <pointer-analysis/add_failed_symbols.h>
+#include <pointer-analysis/show_value_sets.h>
 
 #include <langapi/mode.h>
 
@@ -276,8 +278,11 @@ void cbmc_parseoptionst::get_command_line_options(optionst &options)
   if(cmdline.isset("z3"))
     options.set_option("z3", true);
 
-  if(cmdline.isset("beautify"))
-    options.set_option("beautify", true);
+  if(cmdline.isset("beautify-pbs"))
+    options.set_option("beautify-pbs", true);
+
+  if(cmdline.isset("beautify-greedy"))
+    options.set_option("beautify-greedy", true);
 
   options.set_option("pretty-names", 
                      !cmdline.isset("no-pretty-names"));
@@ -328,7 +333,7 @@ int cbmc_parseoptionst::doit()
   optionst options;
   get_command_line_options(options);
 
-  bmct bmc(options, symbol_table, ui_message_handler);
+  bmct bmc(options, context, ui_message_handler);
   set_verbosity(bmc);
   set_verbosity(*this);
   
@@ -342,12 +347,10 @@ int cbmc_parseoptionst::doit()
 
   if(get_goto_program(options, bmc, goto_functions))
     return 6;
-    
-  label_claims(goto_functions);
 
   if(cmdline.isset("show-claims"))
   {
-    const namespacet ns(symbol_table);
+    const namespacet ns(context);
     show_claims(ns, get_ui(), goto_functions);
     return 0;
   }
@@ -430,10 +433,10 @@ bool cbmc_parseoptionst::get_goto_program(
       status("Reading GOTO program from file");
 
       if(read_goto_binary(cmdline.args[0],
-           symbol_table, goto_functions, get_message_handler()))
+           context, goto_functions, get_message_handler()))
         return true;
         
-      config.ansi_c.set_from_symbol_table(symbol_table);
+      config.ansi_c.set_from_context(context);
 
       if(cmdline.isset("show-symbol-table"))
       {
@@ -441,7 +444,7 @@ bool cbmc_parseoptionst::get_goto_program(
         return true;
       }
       
-      if(symbol_table.symbols.find(ID_main)==symbol_table.symbols.end())
+      if(context.symbols.find(ID_main)==context.symbols.end())
       {
         error("The goto binary has no entry point; please complete linking");
         return true;
@@ -463,7 +466,7 @@ bool cbmc_parseoptionst::get_goto_program(
         return true;
       }
 
-      if(symbol_table.symbols.find(ID_main)==symbol_table.symbols.end())
+      if(context.symbols.find(ID_main)==context.symbols.end())
       {
         error("No entry point; please provide a main function");
         return true;
@@ -471,12 +474,15 @@ bool cbmc_parseoptionst::get_goto_program(
 
       status("Generating GOTO Program");
 
-      goto_convert(symbol_table, goto_functions, ui_message_handler);
+      goto_convert(
+        context, options, goto_functions,
+        ui_message_handler);
     }
 
     // finally add the library
     status("Adding CPROVER library");      
-    link_to_library(symbol_table, goto_functions, ui_message_handler);
+    link_to_library(
+      context, goto_functions, options, ui_message_handler);
 
     if(process_goto_program(options, goto_functions))
       return true;
@@ -593,14 +599,14 @@ bool cbmc_parseoptionst::process_goto_program(
 {
   try
   {
-    namespacet ns(symbol_table);
+    namespacet ns(context);
 
     if(cmdline.isset("string-abstraction"))
       string_instrumentation(
-        symbol_table, get_message_handler(), goto_functions);
+        context, get_message_handler(), goto_functions);
 
     status("Function Pointer Removal");
-    remove_function_pointers(symbol_table, goto_functions,
+    remove_function_pointers(ns, goto_functions,
       cmdline.isset("pointer-check"));
 
     status("Partial Inlining");
@@ -614,14 +620,35 @@ bool cbmc_parseoptionst::process_goto_program(
     if(cmdline.isset("string-abstraction"))
     {
       status("String Abstraction");
-      string_abstraction(symbol_table,
+      string_abstraction(context,
         get_message_handler(), goto_functions);
     }
 
     // add failed symbols
     // needs to be done before pointer analysis
-    add_failed_symbols(symbol_table);
+    add_failed_symbols(context);
     
+    if(cmdline.isset("pointer-check") ||
+       cmdline.isset("show-value-sets"))
+    {
+      status("Pointer Analysis");
+      value_set_analysist value_set_analysis(ns);
+      value_set_analysis(goto_functions);
+
+      // show it?
+      if(cmdline.isset("show-value-sets"))
+      {
+        show_value_sets(get_ui(), goto_functions, value_set_analysis);
+        return true;
+      }
+
+      status("Adding Pointer Checks");
+
+      // add pointer checks
+      pointer_checks(
+        goto_functions, context, options, value_set_analysis);
+    }
+
     // recalculate numbers, etc.
     goto_functions.update();
 
@@ -637,7 +664,7 @@ bool cbmc_parseoptionst::process_goto_program(
     // show it?
     if(cmdline.isset("show-loops"))
     {
-      show_loop_ids(get_ui(), goto_functions);
+      show_loop_numbers(get_ui(), goto_functions);
       return true;
     }
 
@@ -751,7 +778,6 @@ void cbmc_parseoptionst::help()
     " --i386-linux                 set Linux/I386 architecture\n"
     " --i386-win32                 set Windows/I386 architecture (default)\n"
     " --winx64                     set Windows/X64 architecture\n"
-    " --gcc                        use GCC as preprocessor\n"
     #else
     #ifdef __APPLE__
     " --i386-macos                 set MACOS/I386 architecture (default)\n"
@@ -798,12 +824,11 @@ void cbmc_parseoptionst::help()
     " --show-vcc                   show the verification conditions\n"
     " --slice-formula              remove assignments unrelated to property\n"
     " --no-unwinding-assertions    do not generate unwinding assertions\n"
-    " --partial-loops              permit paths with partial loops\n"
     " --no-pretty-names            do not simplify identifiers\n"
     "\n"
     "Backend options:\n"
     " --dimacs                     generate CNF in DIMACS format\n"
-    " --beautify                   beautify the counterexample (greedy heuristic)\n"
+    " --beautify-greedy            beautify the counterexample (greedy heuristic)\n"
     " --smt1                       output subgoals in SMT1 syntax (experimental)\n"
     " --smt2                       output subgoals in SMT2 syntax (experimental)\n"
     " --boolector                  use Boolector (experimental)\n"
