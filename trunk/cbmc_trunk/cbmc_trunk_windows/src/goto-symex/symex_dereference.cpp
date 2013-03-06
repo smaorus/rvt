@@ -6,6 +6,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include <simplify_expr.h>
 #include <expr_util.h>
 #include <pointer_offset_size.h>
 #include <arith_tools.h>
@@ -229,7 +230,7 @@ void goto_symext::dereference_rec(
 
     dereferencet dereference(
       renaming_ns,
-      new_symbol_table,
+      new_context,
       options,
       symex_dereference_state);      
     
@@ -338,7 +339,7 @@ void goto_symext::dereference(
   // in order to distinguish addresses of local variables
   // from different frames. Would be enough to rename
   // symbols whose address is taken.
-  assert(!state.call_stack().empty());
+  assert(!state.call_stack.empty());
   state.rename(expr, ns, goto_symex_statet::L1);
 
   // start the recursion!

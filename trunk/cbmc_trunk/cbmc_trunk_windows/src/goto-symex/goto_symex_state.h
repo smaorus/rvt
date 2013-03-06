@@ -31,7 +31,7 @@ public:
 
   guardt guard;
   symex_targett::sourcet source;
-
+  
   void initialize(const goto_functionst &goto_functions);
 
   // we have a two-level renaming
@@ -74,43 +74,16 @@ public:
     {
       expr.set_identifier(operator()(expr.get_identifier()));
     }
-    
-    irep_idt rename(const irep_idt &identifier, unsigned count)
+
+    void rename(const irep_idt &identifier, unsigned count)
     {
       current_names[identifier]=count;
-      irep_idt new_name=name(identifier, count);
-      original_identifiers[new_name]=identifier;
-      return new_name;
-    }
-    
-    irep_idt increase_counter(const irep_idt &identifier)
-    {
-      return rename(identifier, current_names[identifier]+1);
+      original_identifiers[name(identifier, count)]=identifier;
     }
     
     inline bool is_renamed(const irep_idt &identifier) const
     {
       return original_identifiers.find(identifier)!=original_identifiers.end();
-    }
-    
-    void restore_from(const current_namest &other)
-    {
-      for(current_namest::const_iterator
-          it=other.begin();
-          it!=other.end();
-          it++)
-      {
-        // could be done faster exploing ordering
-        current_names[it->first]=it->second;
-      }
-    }
-
-    void get_variables(std::set<irep_idt> &vars) const
-    {
-      for(current_namest::const_iterator it=current_names.begin();
-          it!=current_names.end();
-          it++)
-        vars.insert(it->first);
     }
 
   protected:
@@ -171,7 +144,7 @@ public:
 
     level1t() { }
     virtual ~level1t() { }
-  } level1;
+  };
   
   // level 2 -- SSA
 
@@ -181,6 +154,14 @@ public:
     virtual irep_idt name(const irep_idt &identifier, unsigned count) const
     {
       return id2string(identifier)+"#"+i2string(count);
+    }
+
+    void get_variables(std::set<irep_idt> &vars) const
+    {
+      for(current_namest::const_iterator it=current_names.begin();
+          it!=current_names.end();
+          it++)
+        vars.insert(it->first);
     }
 
     virtual irep_idt current_name(const irep_idt &identifier) const
@@ -247,14 +228,12 @@ public:
     level2t level2;
     value_sett value_set;
     guardt guard;
-    propagationt propagation;
     
     explicit goto_statet(const goto_symex_statet &s):
       depth(s.depth),
       level2(s.level2),
       value_set(s.value_set),
-      guard(s.guard),
-      propagation(s.propagation)
+      guard(s.guard)
     {
     }
   };
@@ -268,15 +247,15 @@ public:
   class framet
   {
   public:
-    // function calls  
+    // function calls
+  
     irep_idt function_identifier;
     goto_state_mapt goto_state_map;
+    level1t level1;
     symex_targett::sourcet calling_location;
 
     goto_programt::const_targett end_of_function;
     exprt return_value;
-
-    renaming_levelt::current_namest old_level1;
     
     typedef std::set<irep_idt> local_variablest;
     local_variablest local_variables;
@@ -289,55 +268,25 @@ public:
     typedef std::map<irep_idt, goto_programt::targett> catch_mapt;
     catch_mapt catch_map;
   };
-
-  typedef std::vector<framet> call_stackt;
-
-  inline call_stackt &call_stack()
-  {
-    assert(source.thread_nr<threads.size());
-    return threads[source.thread_nr].call_stack;
-  }
   
-  inline const call_stackt &call_stack() const
-  {
-    assert(source.thread_nr<threads.size());
-    return threads[source.thread_nr].call_stack;
-  }
+  typedef std::vector<framet> call_stackt;
+  call_stackt call_stack;
   
   inline framet &top()
   {
-    assert(!call_stack().empty());
-    return call_stack().back();
+    assert(!call_stack.empty());
+    return call_stack.back();
   }
 
   inline const framet &top() const
   {
-    assert(!call_stack().empty());
-    return call_stack().back();
+    assert(!call_stack.empty());
+    return call_stack.back();
   }
   
-  inline framet &new_frame() { call_stack().push_back(framet()); return top(); }
-  inline void pop_frame() { call_stack().pop_back(); }
-  inline const framet &previous_frame() { return *(--(--call_stack().end())); }
-
-  // threads
-  unsigned atomic_section_count;
-  
-  class threadt
-  {
-  public:
-    goto_programt::const_targett pc;
-    guardt guard;
-    call_stackt call_stack;
-    std::map<irep_idt, unsigned> function_frame;
-    unsigned parent_thread;
-  };
-
-  typedef std::vector<threadt> threadst;
-  threadst threads;
-  
-  bool l2_thread_encoding(exprt &expr, const namespacet &ns);
-  void switch_to_thread(unsigned t);
+  inline framet &new_frame() { call_stack.push_back(framet()); return call_stack.back(); }
+  inline void pop_frame() { call_stack.pop_back(); }
+  inline const framet &previous_frame() { return *(--(--call_stack.end())); }
 };
 
 #endif

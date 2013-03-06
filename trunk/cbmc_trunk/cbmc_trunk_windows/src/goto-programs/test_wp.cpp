@@ -3,7 +3,6 @@
 #include <cout_message.h>
 #include <config.h>
 #include <simplify_expr.h>
-#include <cmdline.h>
 
 #include <langapi/mode.h>
 #include <ansi-c/ansi_c_language.h>
@@ -16,8 +15,7 @@ int main(int argc, const char **argv)
 {
   try
   {
-    cmdlinet cmdline;
-    config.set(cmdline);
+    config.ansi_c.set_32();
 
     register_language(new_ansi_c_language);
     
@@ -26,15 +24,15 @@ int main(int argc, const char **argv)
     
     language.parse(std::cin, "", message_handler);
     
-    symbol_tablet symbol_table;
-    language.typecheck(symbol_table, "cin", message_handler);
+    contextt context;
+    language.typecheck(context, "cin", message_handler);
 
     optionst options;
     options.set_option("assertions", true);
     options.set_option("assumptions", true);
     goto_functionst goto_functions;
 
-    goto_convert(symbol_table, options, goto_functions, message_handler);
+    goto_convert(context, options, goto_functions, message_handler);
 
     goto_functionst::function_mapt::const_iterator
       f_it=goto_functions.function_map.find("c::f");
@@ -47,7 +45,7 @@ int main(int argc, const char **argv)
     
     const goto_programt &p=f_it->second.body;
     
-    //p.output(namespacet(symbol_table), "c::f", std::cout);
+    //p.output(namespacet(context), "c::f", std::cout);
 
     forall_goto_program_instructions(it, p)
     {
@@ -63,7 +61,7 @@ int main(int argc, const char **argv)
     
       exprt post=it->guard;
     
-      namespacet ns(symbol_table);
+      namespacet ns(context);
     
       exprt pre=wp(code, post, ns);
 

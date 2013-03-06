@@ -24,10 +24,7 @@ class prop_convt;
 class symex_target_equationt:public symex_targett
 {
 public:
-  explicit symex_target_equationt(
-    const namespacet &_ns):ns(_ns)
-  {
-  }
+  symex_target_equationt(const namespacet &_ns):ns(_ns) { }
 
   // assignment to a variable - lhs must be symbol
   virtual void assignment(
@@ -57,13 +54,11 @@ public:
   // record a function call
   virtual void function_call(
     const guardt &guard,
-    const irep_idt &identifier,
     const sourcet &source);
 
   // record return from a function
   virtual void function_return(
     const guardt &guard,
-    const irep_idt &identifier,
     const sourcet &source);
 
   // just record a location
@@ -104,6 +99,7 @@ public:
     const guardt &guard,
     const exprt &cond,
     const std::string &msg,
+    const unsigned priority,
     const sourcet &source);
 
   void convert(prop_convt &prop_conv);
@@ -145,14 +141,14 @@ public:
     literalt cond_literal;
     std::string comment;
     
+    // Priority of assertions. Higher values mean higher importance.
+    unsigned priority;
+
     // for INPUT/OUTPUT
     irep_idt format_string, io_id;
     bool formatted;
     std::list<exprt> io_args;
     std::list<exprt> converted_io_args;
-    
-    // for function call/return
-    irep_idt identifier;
     
     // for slicing
     bool ignore;
@@ -165,6 +161,7 @@ public:
       original_full_lhs(static_cast<const exprt &>(get_nil_irep())),
       ssa_rhs(static_cast<const exprt &>(get_nil_irep())),
       cond_expr(static_cast<const exprt &>(get_nil_irep())),
+      priority(0),
       formatted(false),
       ignore(false)
     {

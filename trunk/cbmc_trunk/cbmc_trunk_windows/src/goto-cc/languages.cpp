@@ -18,11 +18,11 @@ Author: CM Wintersteiger
 #include <specc/specc_language.h>
 #endif
 
-#include "goto_cc_mode.h"
+#include "cmdline_options.h"
 
 /*******************************************************************\
 
-Function: goto_cc_modet::register_languages
+Function: cmdline_optionst::register_languages
 
   Inputs:
 
@@ -32,7 +32,7 @@ Function: goto_cc_modet::register_languages
 
 \*******************************************************************/
 
-void goto_cc_modet::register_languages()
+void cmdline_optionst::register_languages()
 {
   register_language(new_ansi_c_language);
 

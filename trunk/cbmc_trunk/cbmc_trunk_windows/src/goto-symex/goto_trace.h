@@ -78,9 +78,6 @@ public:
   typedef std::list<exprt> io_argst;
   io_argst io_args;
   bool formatted;
-  
-  // for function call/return
-  irep_idt identifier;
 
   /*! \brief outputs the trace step in ASCII to a given stream
   */
@@ -137,6 +134,11 @@ public:
     steps.push_back(step);
   }
 };
+
+void show_goto_trace_gui(
+  std::ostream &out,
+  const namespacet &ns,
+  const goto_tracet &goto_trace);
 
 void show_goto_trace(
   std::ostream &out,

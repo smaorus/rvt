@@ -146,10 +146,9 @@ std::ostream& goto_programt::output_instruction(
     break;
     
   case CATCH:
-    if(!it->targets.empty())
-    {
-      out << "CATCH-PUSH ";
+    out << "CATCH ";
     
+    {
       unsigned i=0;
       const irept::subt &exception_list=
         it->code.find(ID_exception_list).get_sub();
@@ -165,8 +164,6 @@ std::ostream& goto_programt::output_instruction(
             << (*gt_it)->target_number;
       }
     }
-    else
-      out << "CATCH-POP";
       
     out << std::endl;
     break;

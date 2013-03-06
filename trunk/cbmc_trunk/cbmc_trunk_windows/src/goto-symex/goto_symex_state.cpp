@@ -26,11 +26,9 @@ Function: goto_symex_statet::goto_symex_statet
 
 \*******************************************************************/
 
-goto_symex_statet::goto_symex_statet():
-  depth(0),
-  atomic_section_count(0)
+goto_symex_statet::goto_symex_statet()
 {
-  threads.resize(1);
+  depth=0;
   new_frame();
 }
 
@@ -56,9 +54,10 @@ void goto_symex_statet::initialize(const goto_functionst &goto_functions)
 
   const goto_programt &body=it->second.body;
 
-  source=symex_targett::sourcet(body);
+  source.is_set=true;
+  source.pc=body.instructions.begin();
   top().end_of_function=--body.instructions.end();
-  top().calling_location.pc=top().end_of_function;
+  top().calling_location=top().end_of_function;
 }
 
 /*******************************************************************\
@@ -82,7 +81,6 @@ irep_idt goto_symex_statet::level0t::operator()(
   if(original_identifiers.find(identifier)!=original_identifiers.end())
     return identifier;
 
-  // guards are not L0-renamed
   if(identifier=="goto_symex::\\guard")
   {
     original_identifiers[identifier]=identifier;
@@ -96,9 +94,8 @@ irep_idt goto_symex_statet::level0t::operator()(
     abort();
   }
   
-  // don't rename shared variables or functions
-  if(s->type.id()==ID_code ||
-     s->is_shared())
+  // don't rename globals or code
+  if(s->type.id()==ID_code || is_global(*s))
   {
     original_identifiers[identifier]=identifier;
     return identifier;
@@ -278,7 +275,7 @@ void goto_symex_statet::assignment(
   irep_idt identifier=lhs.get_identifier();
     
   // identifier should be l0 or l1, make sure it's l1
-  irep_idt l1_identifier=level1(identifier);
+  irep_idt l1_identifier=top().level1(identifier);
 
   #if 0  
   assert(l1_identifier != get_original_name(l1_identifier)
@@ -289,17 +286,9 @@ void goto_symex_statet::assignment(
   #endif
 
   // do the l2 renaming 
-  irep_idt new_l2_name=level2.increase_counter(l1_identifier);
-  lhs.set_identifier(new_l2_name);
-
-  // in case we happen to be multi-threaded, record the memory access
-  {
-    irep_idt orig_identifier=get_original_name(l1_identifier);
-    if(orig_identifier!="goto_symex::\\guard" &&
-       ns.lookup(orig_identifier).is_shared())
-    {
-    }
-  }
+  unsigned new_count=level2.current_count(l1_identifier)+1;
+  level2.rename(l1_identifier, new_count);
+  lhs.set_identifier(level2.name(l1_identifier, new_count));
 
   // for value propagation -- the RHS is L2
   
@@ -385,16 +374,16 @@ irep_idt goto_symex_statet::rename(
   case L1:
     {
       if(level2.is_renamed(identifier)) return identifier;
-      if(level1.is_renamed(identifier)) return identifier;
+      if(top().level1.is_renamed(identifier)) return identifier;
       irep_idt l0_identifier=level0(identifier, ns, source.thread_nr);
-      return level1(l0_identifier);
+      return top().level1(l0_identifier);
     }
   
   case L2:
     {
       if(level2.is_renamed(identifier)) return identifier;
       irep_idt l0_identifier=level0(identifier, ns, source.thread_nr);
-      irep_idt l1_identifier=level1(l0_identifier);
+      irep_idt l1_identifier=top().level1(l0_identifier);
       return level2(l1_identifier); // L2
     }
     
@@ -426,37 +415,30 @@ void goto_symex_statet::rename(
 
   if(expr.id()==ID_symbol)
   {
-    const irep_idt identifier=to_symbol_expr(expr).get_identifier();
+    irep_idt identifier=to_symbol_expr(expr).get_identifier();
 
     if(level==L0 || level==L1)
     {
-      const irep_idt new_name=rename(identifier, ns, level);
-      to_symbol_expr(expr).set_identifier(new_name);
+      identifier=rename(identifier, ns, level);
+      to_symbol_expr(expr).set_identifier(identifier);
     }  
     else if(level==L2)
     {
       if(!level2.is_renamed(identifier))
       {
-        if(l2_thread_encoding(expr, ns))
-        {
-          // done
-        }
+        identifier=rename(identifier, ns, L1);
+
+        // We also consider propagation if we go up to L2.
+        // L1 identifiers are used for propagation!
+        propagationt::valuest::const_iterator p_it=
+          propagation.values.find(identifier);
+
+        if(p_it!=propagation.values.end())
+          expr=p_it->second; // already L2
         else
         {
-          irep_idt l1_identifier=rename(identifier, ns, L1);
-
-          // We also consider propagation if we go up to L2.
-          // L1 identifiers are used for propagation!
-          propagationt::valuest::const_iterator p_it=
-            propagation.values.find(l1_identifier);
-
-          if(p_it!=propagation.values.end())
-            expr=p_it->second; // already L2
-          else
-          {
-            const irep_idt new_name=level2(l1_identifier); // L2
-            to_symbol_expr(expr).set_identifier(new_name);
-          }
+          identifier=level2(identifier); // L2
+          to_symbol_expr(expr).set_identifier(identifier);
         }
       }
     }
@@ -473,40 +455,6 @@ void goto_symex_statet::rename(
     Forall_operands(it, expr)
       rename(*it, ns, level);
   }
-}
-
-/*******************************************************************\
-
-Function: goto_symex_statet::l2_thread_encoding
-
-  Inputs:
-
- Outputs:
-
- Purpose: thread encoding
-
-\*******************************************************************/
-
-bool goto_symex_statet::l2_thread_encoding(
-  exprt &expr,
-  const namespacet &ns)
-{
-  #if 0
-  // do we have threads at all?
-  if(threads.size()<=1) return false;
-
-  irep_idt original_identifier=get_original_name(identifier);
-  if(ns.lookup(original_identifier).is_shared() &&
-     threads.size()>1)
-  {
-    // take a fresh l2 name
-    const irep_idt new_name=level2.increase_counter(l1_identifier);
-    to_symbol_expr(expr).set_identifier(new_name);
-    return true;
-  }
-  #else
-  return false;
-  #endif
 }
 
 /*******************************************************************\
@@ -657,7 +605,7 @@ void goto_symex_statet::get_original_name(exprt &expr) const
   if(expr.id()==ID_symbol)
   {
     level2.get_original_name(expr);
-    level1.get_original_name(expr);
+    top().level1.get_original_name(expr);
     level0.get_original_name(expr);
   }
 }
@@ -759,7 +707,7 @@ Function: goto_symex_statet::renaming_levelt::get_original_name
 
 void goto_symex_statet::renaming_levelt::get_original_name(typet &type) const
 {
-  // rename all the symbols back to their original name
+  // rename all the symbols with their last known value
 
   if(type.id()==ID_array)
   {
@@ -793,34 +741,6 @@ Function: goto_symex_statet::get_original_name
 const irep_idt &goto_symex_statet::get_original_name(
   const irep_idt &identifier) const
 {
-  return level0.get_original_name(
-         level1.get_original_name(
-         level2.get_original_name(identifier)));
-}
-
-/*******************************************************************\
-
-Function: goto_symex_statet::switch_to_thread
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void goto_symex_statet::switch_to_thread(unsigned t)
-{
-  assert(source.thread_nr<threads.size());
-  assert(t<threads.size());
-  
-  // save PC
-  threads[source.thread_nr].pc=source.pc;
-
-  // get new PC
-  source.thread_nr=t;
-  source.pc=threads[t].pc;
-  
-  guard=threads[t].guard;
+  return level0.get_original_name(top().level1.get_original_name(
+        level2.get_original_name(identifier)));
 }

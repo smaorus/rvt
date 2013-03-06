@@ -168,8 +168,8 @@ const symbolt &cpp_typecheckt::class_template_symbol(
     "tag."+id2string(template_symbol.base_name);
   
   // already there?
-  symbol_tablet::symbolst::const_iterator s_it=symbol_table.symbols.find(identifier);
-  if(s_it!=symbol_table.symbols.end())
+  contextt::symbolst::const_iterator s_it=context.symbols.find(identifier);
+  if(s_it!=context.symbols.end())
     return s_it->second;
 
   // create as incomplete_struct, but mark as
@@ -188,7 +188,7 @@ const symbolt &cpp_typecheckt::class_template_symbol(
   new_symbol.is_type=true;
   
   symbolt *s_ptr;
-  symbol_table.move(new_symbol, s_ptr);
+  context.move(new_symbol, s_ptr);
 
   // put into template scope
   cpp_idt &id=cpp_scopes.put_into_scope(*s_ptr, *template_scope);
@@ -403,7 +403,7 @@ const symbolt &cpp_typecheckt::instantiate_template(
   // been instantiated using these arguments
   {
     // need non-const handle on template symbol
-    symbolt &s=symbol_table.symbols.find(template_symbol.name)->second;
+    symbolt &s=context.symbols.find(template_symbol.name)->second;
     irept &instantiated_with=s.value.add("instantiated_with");
     instantiated_with.get_sub().push_back(specialization_template_args);
   }
@@ -481,10 +481,10 @@ const symbolt &cpp_typecheckt::instantiate_template(
 
   if(is_template_method)
   {
-    symbol_tablet::symbolst::iterator it = 
-      symbol_table.symbols.find(class_name);
+    contextt::symbolst::iterator it = 
+      context.symbols.find(class_name);
 
-    assert(it!=symbol_table.symbols.end());
+    assert(it!=context.symbols.end());
 
     symbolt &symb = it->second;
 

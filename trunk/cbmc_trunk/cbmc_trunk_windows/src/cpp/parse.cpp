@@ -5,6 +5,8 @@
 #include <std_types.h>
 #include <i2string.h>
 
+#include <ansi-c/concatenate_strings.h>
+
 #include "tokens.h"
 #include "cpp_token_buffer.h"
 #include "cpp_parser.h"
@@ -48,7 +50,6 @@ protected:
   bool rLinkageSpec(cpp_linkage_spect &);
   bool rNamespaceSpec(cpp_namespace_spect &);
   bool rUsing(cpp_usingt &);
-  bool rStaticAssert(cpp_static_assertt &);
   bool rLinkageBody(cpp_linkage_spect::itemst &);
   bool rTemplateDecl(cpp_declarationt &);
   bool rTemplateDecl2(typet &, TemplateDeclKind &kind);
@@ -123,7 +124,6 @@ protected:
   bool rThrowExpr(exprt &);
   bool rSizeofExpr(exprt &);
   bool rTypeidExpr(exprt &);
-  bool rAlignofExpr(exprt &);
   bool isAllocateExpr(int);
   bool rAllocateExpr(exprt &);
   bool rAllocateType(exprt &, typet &, exprt &);
@@ -190,6 +190,19 @@ bool Parser::rString(Token &tk)
 {
   if(lex->GetToken(tk)!=TOK_STRING)
     return false;
+
+  // merge with following string literals
+  if(lex->LookAhead(0)==TOK_STRING)
+  {
+    exprt &dest=tk.data;
+
+    while(lex->LookAhead(0)==TOK_STRING)
+    {
+      Token tk2;
+      lex->GetToken(tk2);
+      concatenate_strings(dest, tk2.data);
+    }
+  }
 
   return true;
 }
@@ -293,12 +306,8 @@ bool Parser::rDefinition(cpp_itemt &item)
     res=rExternTemplateDecl(item.make_declaration());
   else if(t==TOK_NAMESPACE)
     res=rNamespaceSpec(item.make_namespace_spec());
-  else if(t==TOK_INLINE && lex->LookAhead(1)==TOK_NAMESPACE)
-    res=rNamespaceSpec(item.make_namespace_spec());
   else if(t==TOK_USING)
     res=rUsing(item.make_using());
-  else if(t==TOK_STATIC_ASSERT)
-    res=rStaticAssert(item.make_static_assert());
   else
     res=rDeclaration(item.make_declaration());
 
@@ -468,21 +477,14 @@ bool Parser::rLinkageSpec(cpp_linkage_spect &linkage_spec)
 
 /*
   namespace.spec
-  : { INLINE } NAMESPACE Identifier definition
-  | { INLINE } NAMESPACE Identifier = name
-  | { INLINE } NAMESPACE { Identifier } linkage.body
+  : NAMESPACE Identifier definition
+  | NAMESPACE Identifier = name
+  | NAMESPACE { Identifier } linkage.body
 */
 
 bool Parser::rNamespaceSpec(cpp_namespace_spect &namespace_spec)
 {
   Token tk1, tk2;
-  bool is_inline=false;
-
-  if(lex->LookAhead(0)==TOK_INLINE)
-  {
-    lex->GetToken(tk1);
-    is_inline=true;
-  }
 
   if(lex->GetToken(tk1)!=TOK_NAMESPACE)
     return false;
@@ -502,7 +504,6 @@ bool Parser::rNamespaceSpec(cpp_namespace_spect &namespace_spec)
   namespace_spec=cpp_namespace_spect();
   set_location(namespace_spec, tk1);
   namespace_spec.set_namespace(name);
-  namespace_spec.set_is_inline(is_inline);
 
   switch(lex->LookAhead(0))
   {
@@ -542,40 +543,6 @@ bool Parser::rUsing(cpp_usingt &cpp_using)
   }
 
   if(!rName(cpp_using.name()))
-    return false;
-
-  if(lex->GetToken(tk)!=';')
-    return false;
-
-  return true;
-}
-
-/*
-  static_assert.declaration : STATIC_ASSERT ( expression , expression ) ';'
-*/
-bool Parser::rStaticAssert(cpp_static_assertt &cpp_static_assert)
-{
-  Token tk;
-
-  if(lex->GetToken(tk)!=TOK_STATIC_ASSERT)
-    return false;
-
-  cpp_static_assert=cpp_static_assertt();
-  set_location(cpp_static_assert, tk);
-
-  if(lex->GetToken(tk)!='(')
-    return false;
-
-  if(!rExpression(cpp_static_assert.cond()))
-    return false;
-
-  if(lex->GetToken(tk)!=',')
-    return false;
-
-  if(!rExpression(cpp_static_assert.description()))
-    return false;
-
-  if(lex->GetToken(tk)!=')')
     return false;
 
   if(lex->GetToken(tk)!=';')
@@ -1839,39 +1806,16 @@ bool Parser::rConstructorDecl(
 
   if(lex->LookAhead(0)=='=')
   {
-    Token eq, value;
+    Token eq, zero;
     lex->GetToken(eq);
-    
-    switch(lex->GetToken(value))
-    {
-    case TOK_INTEGER:
-      {
-        exprt pure_virtual(ID_code);
-        pure_virtual.set(ID_statement, "cpp-pure-virtual");
-        constructor.add(ID_value).swap(pure_virtual);
-      }
-      break;
-      
-    case TOK_DEFAULT: // C++0x
-      {
-        exprt pure_virtual(ID_code);
-        pure_virtual.set(ID_statement, ID_default);
-        constructor.add(ID_value).swap(pure_virtual);
-      }
-      break;
-    
-    case TOK_DELETE: // C++0x
-      {
-        exprt pure_virtual(ID_code);
-        pure_virtual.set(ID_statement, ID_cpp_delete);
-        constructor.add(ID_value).swap(pure_virtual);
-      }
-      break;
-    
-    default:
-      return false;
-    }
 
+    if(lex->GetToken(zero)!=TOK_INTEGER)
+      return false;
+
+    exprt pure_virtual(ID_code);
+    pure_virtual.set(ID_statement, "cpp-pure-virtual");
+
+    constructor.add(ID_value).swap(pure_virtual);
   }
   else
     constructor.add(ID_value).make_nil();
@@ -1967,18 +1911,15 @@ bool Parser::rDeclarators(
 /*
   declarator.with.init
   : ':' expression
-  | declarator 
-    {'=' initialize.expr | 
-     ':' expression}
+  | declarator {'=' initialize.expr | ':' expression}
 */
 bool Parser::rDeclaratorWithInit(
   cpp_declaratort &dw,
   bool should_be_declarator,
   bool is_statement)
 {
-  if(lex->LookAhead(0)==':')
+  if(lex->LookAhead(0)==':')        // bit field
   {
-    // This is an anonymous bit field.
     Token tk;
     lex->GetToken(tk);
 
@@ -2016,7 +1957,6 @@ bool Parser::rDeclaratorWithInit(
       // initializer
       Token tk;
       lex->GetToken(tk);
-      
       if(!rInitializeExpr(declarator.value()))
         return false;
 
@@ -2026,20 +1966,15 @@ bool Parser::rDeclaratorWithInit(
     else if(t==':')
     {
       // bit field
-      Token tk;
-      lex->GetToken(tk); // get :
-
       exprt e;
+
+      Token tk;
+      lex->GetToken(tk);
       if(!rExpression(e))
         return false;
-        
-      typet bit_field_type(ID_c_bitfield);
-      bit_field_type.set(ID_size, e);
-      bit_field_type.subtype().make_nil();
-      set_location(bit_field_type, tk);
-      
-      merge_types(bit_field_type, declarator.type());
-        
+
+      //dw=Ptree::Nconc(d, Ptree::List(new Leaf(tk), e));
+      // TODO
       dw.swap(declarator);
       return true;
     }
@@ -2135,7 +2070,7 @@ bool Parser::rDeclarator(
 
     Token op;
     lex->GetToken(op);
-    
+
     cpp_declaratort declarator2;
     if(!rDeclarator(declarator2, kind, true, true, false))
       return false;
@@ -2146,7 +2081,7 @@ bool Parser::rDeclarator(
       return false;
 
     if(!should_be_declarator)
-      if((kind==kDeclarator || kind==kCastDeclarator) && d_outer.is_nil())
+      if(kind==kDeclarator && d_outer.is_nil())
       {
         t=lex->LookAhead(0);
         if(t!='[' && t!='(')
@@ -3429,6 +3364,8 @@ bool Parser::rClassBody(exprt &body)
   if(lex->GetToken(tk)!='{')
     return false;
 
+  //Ptree ob=new Leaf(tk);
+
   exprt members=exprt("cpp-class-body");
 
   set_location(members, tk);
@@ -3447,6 +3384,9 @@ bool Parser::rClassBody(exprt &body)
       //body=Ptree::List(ob, nil, new Leaf(tk));
       return true;        // error recovery
     }
+
+    //lex->GetComments();
+    //mems=Ptree::Snoc(mems, m);
 
     #ifdef DEBUG
     std::cout << "Parser::rClassBody " << member << std::endl;
@@ -3471,7 +3411,6 @@ bool Parser::rClassBody(exprt &body)
   | metaclass.decl
   | declaration
   | access.decl
-  | static_assert
 
   Note: if you modify this function, see ClassWalker::TranslateClassSpec()
   as well.
@@ -3521,8 +3460,6 @@ bool Parser::rClassMember(cpp_itemt &member)
     return rTemplateDecl(member.make_declaration());
   else if(t==TOK_USING)
     return rUsing(member.make_using());
-  else if(t==TOK_STATIC_ASSERT)
-    return rStaticAssert(member.make_static_assert());
   else
   {
     cpp_token_buffert::post pos=lex->Save();
@@ -4174,13 +4111,7 @@ bool Parser::rCastExpr(exprt &exp)
     return rUnaryExpr(exp);
   else
   {
-    // There is an ambiguity in the C++ grammar as follows:
-    // (TYPENAME) + expr   (typecast of unary plus)  vs.
-    // (expr) + expr       (sum of two expressions)
-    // Same issue with the operators & and - and *
-  
     Token tk1, tk2;
-    typet tname;
 
     #ifdef DEBUG
     std::cout << "Parser::rCastExpr 1\n";
@@ -4189,17 +4120,11 @@ bool Parser::rCastExpr(exprt &exp)
     cpp_token_buffert::post pos=lex->Save();
     lex->GetToken(tk1);
 
+    typet tname;
+
     if(rTypeName(tname))
-    {
       if(lex->GetToken(tk2)==')')
-      {
-        if(lex->LookAhead(0)=='&' &&
-           lex->LookAhead(1)==TOK_INTEGER)
-        {
-          // we have (x) & 123
-          // This is likely a binary bit-wise 'and'
-        }
-        else if(rCastExpr(exp))
+        if(rCastExpr(exp))
         {
           exprt op;
           op.swap(exp);
@@ -4208,11 +4133,8 @@ bool Parser::rCastExpr(exprt &exp)
           exp.type().swap(tname);
           exp.move_to_operands(op);
           set_location(exp, tk1);
-          
           return true;
         }
-      }
-    }
 
     lex->Restore(pos);
     return rUnaryExpr(exp);
@@ -4226,7 +4148,7 @@ bool Parser::rCastExpr(exprt &exp)
 bool Parser::rTypeName(typet &tname)
 {
   typet type_name;
-  
+
   if(!rTypeSpecifier(type_name, true))
     return false;
 
@@ -4323,8 +4245,6 @@ bool Parser::rUnaryExpr(exprt &exp)
   }
   else if(t==TOK_SIZEOF)
     return rSizeofExpr(exp);
-  else if(t==TOK_ALIGNOF)
-    return rAlignofExpr(exp);
   else if(t==TOK_THROW)
     return rThrowExpr(exp);
   else if(t==TOK_REAL || t==TOK_IMAG)
@@ -4489,35 +4409,6 @@ bool Parser::rSizeofExpr(exprt &exp)
 
   exp=exprt(ID_sizeof);
   exp.move_to_operands(unary);
-  set_location(exp, tk);
-  return true;
-}
-
-/*
-  alignof.expr
-  | ALIGNOF '(' type.name ')'
-*/
-
-bool Parser::rAlignofExpr(exprt &exp)
-{
-  Token tk;
-
-  if(lex->GetToken(tk)!=TOK_ALIGNOF)
-    return false;
-
-  typet tname;
-  Token op, cp;
-
-  lex->GetToken(op);
-
-  if(!rTypeName(tname))
-    return false;
-  
-  if(lex->GetToken(cp)!=')')
-    return false;
-
-  exp=exprt(ID_alignof);
-  exp.add(ID_type_arg).swap(tname);
   set_location(exp, tk);
   return true;
 }
@@ -5590,7 +5481,6 @@ bool Parser::rCompoundStatement(codet &statement)
   | Identifier ':' statement
   | expr.statement
   | USING { NAMESPACE } identifier ';'
-  | STATIC_ASSERT ( expression ',' expression ) ';'
 */
 bool Parser::rStatement(codet &statement)
 {
@@ -5794,20 +5684,6 @@ bool Parser::rStatement(codet &statement)
         
       return true;      
     }
-    
-  case TOK_STATIC_ASSERT:
-    {
-      cpp_static_assertt cpp_static_assert;
-      
-      if(!rStaticAssert(cpp_static_assert))
-        return false;
-        
-      statement.set_statement(ID_static_assert);
-      statement.location()=cpp_static_assert.location();
-      statement.operands().swap(cpp_static_assert.operands());
-      
-      return true;
-    }
 
   default:
     return rExprStatement(statement);
@@ -5842,9 +5718,9 @@ bool Parser::rIfStatement(codet &statement)
   if(!rStatement(then))
     return false;
 
-  statement.operands().resize(3);
-  statement.op0().swap(exp);
-  statement.op1().swap(then);
+  statement.reserve_operands(3);
+  statement.move_to_operands(exp);
+  statement.move_to_operands(then);
 
   if(lex->LookAhead(0)==TOK_ELSE)
   {
@@ -5854,10 +5730,8 @@ bool Parser::rIfStatement(codet &statement)
     if(!rStatement(otherwise))
       return false;
 
-    statement.op2().swap(otherwise);
+    statement.move_to_operands(otherwise);
   }
-  else
-    statement.op2().make_nil();
 
   return true;
 }

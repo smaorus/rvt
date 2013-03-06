@@ -100,7 +100,6 @@ void c_typecheck_baset::typecheck_code_type(code_typet &type)
       typet &type=argument.type();
 
       typecheck_type(type);
-      
       adjust_function_argument(type);
       
       // adjust the identifier
@@ -130,24 +129,6 @@ void c_typecheck_baset::typecheck_code_type(code_typet &type)
   }
 
   typecheck_type(type.return_type());
-  
-  // 6.7.6.3:
-  // "A function declarator shall not specify a return type that
-  // is a function type or an array type."
-  
-  const typet &return_type=follow(type.return_type());
-  
-  if(return_type.id()==ID_array)
-  {
-    err_location(type);
-    throw "function must not return array";
-  }
-  
-  if(return_type.id()==ID_code)
-  {
-    err_location(type);
-    throw "function must not return function type";
-  }
 }
 
 /*******************************************************************\
@@ -169,14 +150,6 @@ void c_typecheck_baset::typecheck_array_type(array_typet &type)
 
   // check subtype
   typecheck_type(type.subtype());
-  
-  // we don't allow void as subtype
-  if(follow(type.subtype()).id()==ID_empty)
-  {
-    err_location(type);
-    str << "array of voids";
-    throw 0;
-  }
 
   // check size, if any
   
@@ -290,9 +263,7 @@ void c_typecheck_baset::typecheck_vector_type(vector_typet &type)
   if(s%sub_size!=0)
   {
     err_location(size_location);
-    str << "vector size (" << s
-        << ") expected to be multiple of base type size (" << sub_size
-        << ")";
+    str << "vector size expected to be multiple of base type size";
     throw 0;
   }
   
@@ -371,31 +342,28 @@ void c_typecheck_baset::typecheck_compound_type(struct_union_typet &type)
   // We allow an incomplete (C99) array as _last_ member!
   // Zero-length is allowed everywhere.
 
-  if(type.id()==ID_struct)
+  for(struct_union_typet::componentst::iterator
+      it=components.begin();
+      it!=components.end();
+      it++)
   {
-    for(struct_union_typet::componentst::iterator
-        it=components.begin();
-        it!=components.end();
-        it++)
+    typet &type=it->type();
+  
+    if(type.id()==ID_array &&
+       to_array_type(type).is_incomplete())
     {
-      typet &type=it->type();
-    
-      if(type.id()==ID_array &&
-         to_array_type(type).is_incomplete())
+      // needs to be last member
+      if(it!=--components.end())
       {
-        // needs to be last member
-        if(it!=--components.end())
-        {
-          err_location(*it);
-          throw "flexible struct member must be last member";
-        }
-        
-        // make it zero-length
-        type.id(ID_array);
-        type.set(ID_size, gen_zero(index_type()));
+        err_location(*it);
+        throw "flexible struct member must be last member";
       }
-    }  
-  }
+      
+      // make it zero-length
+      type.id(ID_array);
+      type.set(ID_size, gen_zero(index_type()));
+    }
+  }  
 
   // we may add some minimal padding inside structs (not unions)
   // unless there is an attribute that says that the struct is
@@ -403,37 +371,6 @@ void c_typecheck_baset::typecheck_compound_type(struct_union_typet &type)
 
   if(type.id()==ID_struct)
     add_padding(to_struct_type(type), *this);
-
-  // finally, check _Static_assert inside the compound
-  for(struct_union_typet::componentst::iterator
-      it=components.begin();
-      it!=components.end();
-      ) // no it++
-  {
-    if(it->id()==ID_code && it->get(ID_statement)==ID_static_assert)
-    {
-      assert(it->operands().size()==2);
-      exprt &assertion=it->op0();
-      typecheck_expr(assertion);
-      typecheck_expr(it->op1());
-      assertion.make_typecast(bool_typet());
-      make_constant(assertion);
-      
-      if(assertion.is_false())
-      {
-        err_location(*it);
-        throw "failed _Static_assert";
-      }
-      else if(!assertion.is_true())
-      {
-        // should warn/complain
-      }
-      
-      it=components.erase(it);
-    }
-    else
-      it++;
-  }  
 }
 
 /*******************************************************************\
@@ -608,10 +545,10 @@ void c_typecheck_baset::typecheck_symbol_type(typet &type)
   const irep_idt &identifier=
     to_symbol_type(type).get_identifier();
 
-  symbol_tablet::symbolst::const_iterator s_it=
-    symbol_table.symbols.find(identifier);
+  contextt::symbolst::const_iterator s_it=
+    context.symbols.find(identifier);
 
-  if(s_it==symbol_table.symbols.end())
+  if(s_it==context.symbols.end())
   {
     err_location(type);
     str << "type symbol `" << identifier << "' not found";
@@ -628,9 +565,9 @@ void c_typecheck_baset::typecheck_symbol_type(typet &type)
   
   if(symbol.is_macro)
   {
-    // overwrite, but preserve (add) any qualifiers
-    c_qualifierst c_qualifiers(type);
-    c_qualifiers+=c_qualifierst(symbol.type);
+    // overwrite, but preserve any qualifiers
+    c_qualifierst c_qualifiers;
+    c_qualifiers.read(type);
     type=symbol.type;
     c_qualifiers.write(type);
   }
@@ -676,7 +613,7 @@ void c_typecheck_baset::adjust_function_argument(typet &type) const
   else if(type.id()==ID_KnR)
   {
     // any KnR args without type yet?
-    type=signed_int_type(); // the default is integer!
+    type=int_type(); // the default is integer!
   }
 }
 
@@ -703,8 +640,8 @@ void c_typecheck_baset::clean_type(
     irep_idt identifier=to_symbol_type(type).get_identifier();
     if(already_cleaned.insert(identifier).second)
     {
-      symbol_tablet::symbolst::iterator s_it=symbol_table.symbols.find(identifier);
-      assert(s_it!=symbol_table.symbols.end());
+      contextt::symbolst::iterator s_it=context.symbols.find(identifier);
+      assert(s_it!=context.symbols.end());
       clean_type(identifier, s_it->second.type, code);
     }
   }
@@ -723,13 +660,7 @@ void c_typecheck_baset::clean_type(
        !size.is_constant() &&
        size.id()!=ID_infinity)
     {
-      assert(current_symbol_id!=irep_idt());
-        
-      const symbolt &base_symbol=
-        lookup(
-          base_symbol_identifier!=irep_idt()?
-          base_symbol_identifier:
-          current_symbol_id);
+      const symbolt &base_symbol=lookup(base_symbol_identifier);
       
       // Need to pull out! We insert new symbol.
       locationt location=size.find_location();
@@ -742,20 +673,19 @@ void c_typecheck_baset::clean_type(
         temp_identifier=id2string(base_symbol.name)+suffix;
         count++;
       }
-      while(symbol_table.symbols.find(temp_identifier)!=symbol_table.symbols.end());
+      while(context.symbols.find(temp_identifier)!=context.symbols.end());
 
-      // add the symbol to symbol table
+      // add the symbol to context
       symbolt new_symbol;
       new_symbol.name=temp_identifier;
       new_symbol.pretty_name=id2string(base_symbol.pretty_name)+suffix;
       new_symbol.base_name=id2string(base_symbol.base_name)+suffix;
       new_symbol.type=size.type();
-      new_symbol.is_file_local=true;
+      new_symbol.file_local=true;
       new_symbol.is_type=false;
-      new_symbol.is_thread_local=true;
       new_symbol.value.make_nil();
       new_symbol.location=location;
-      symbol_table.add(new_symbol);
+      context.add(new_symbol);
 
       // produce the code that initializes the symbol      
       symbol_exprt symbol_expr;

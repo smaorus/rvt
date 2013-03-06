@@ -18,7 +18,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
-Function: goto_convertt::make_static_symbol
+Function: goto_convertt::make_temp_symbol
 
   Inputs:
 
@@ -28,39 +28,24 @@ Function: goto_convertt::make_static_symbol
 
 \*******************************************************************/
 
-symbol_exprt goto_convertt::make_static_symbol(
-  const exprt &expr,
+void goto_convertt::make_temp_symbol(
+  exprt &expr,
   const std::string &suffix,
   goto_programt &dest)
 {
   const locationt location=expr.find_location();
   
-  symbolt new_symbol;
-  symbolt *symbol_ptr;
-  
-  do
-  {
-    new_symbol.base_name="static_"+suffix+"$"+i2string(++temporary_counter);
-    new_symbol.name=tmp_symbol_prefix+id2string(new_symbol.base_name);
-    new_symbol.is_lvalue=true;
-    new_symbol.is_thread_local=false;
-    new_symbol.is_static_lifetime=true;
-    new_symbol.is_file_local=true;
-    new_symbol.value=expr;
-    new_symbol.type=expr.type();
-  }
-  while(symbol_table.move(new_symbol, symbol_ptr));    
+  symbolt &new_symbol=
+    new_tmp_symbol(expr.type(), suffix, dest, location);
 
-  // The value might depend on a variable, thus
-  // generate code for this.
+  code_assignt assignment;
+  assignment.lhs()=symbol_expr(new_symbol);
+  assignment.rhs()=expr;
+  assignment.location()=location;
 
-  symbol_exprt result=symbol_expr(*symbol_ptr);
-  
-  code_assignt code_assign(result, expr);
-  code_assign.location()=expr.find_location();
-  convert(code_assign, dest);
+  convert(assignment, dest);
 
-  return result;
+  expr=symbol_expr(new_symbol);  
 }
 
 /*******************************************************************\
@@ -203,115 +188,48 @@ void goto_convertt::clean_expr(
   }
   else if(expr.id()==ID_if)
   {
-    // first clean condition
-    clean_expr(to_if_expr(expr).cond(), dest, true);
+    if(expr.operands().size()!=3)
+      throw "if takes three arguments";
 
-    // possibly done now
-    if(!needs_cleaning(to_if_expr(expr).true_case()) &&
-       !needs_cleaning(to_if_expr(expr).false_case()))
-      return;
-
-    // copy expression
-    if_exprt if_expr=to_if_expr(expr);
-
-    if(!if_expr.cond().is_boolean())
+    if(!expr.op0().is_boolean())
       throw "first argument of `if' must be boolean, but got "
-        +if_expr.cond().to_string();
+        +expr.op0().to_string();
 
-    const locationt location=expr.find_location();
-  
-    goto_programt tmp_true;
-    clean_expr(if_expr.true_case(), tmp_true, result_is_used);
+    // first pull out condition -- we need to prevent
+    // this getting destroyed by the side-effects in the other
+    // operands
+    make_temp_symbol(expr.op0(), "condition", dest);
 
-    goto_programt tmp_false;
-    clean_expr(if_expr.false_case(), tmp_false, result_is_used);
-    
-    if(result_is_used)
-    {
-      symbolt &new_symbol=
-        new_tmp_symbol(expr.type(), "if_expr", dest, location);
-
-      code_assignt assignment_true;
-      assignment_true.lhs()=symbol_expr(new_symbol);
-      assignment_true.rhs()=if_expr.true_case();
-      assignment_true.location()=location;
-      convert(assignment_true, tmp_true);
-
-      code_assignt assignment_false;
-      assignment_false.lhs()=symbol_expr(new_symbol);
-      assignment_false.rhs()=if_expr.false_case();
-      assignment_false.location()=location;
-      convert(assignment_false, tmp_false);
-
-      // overwrites expr
-      expr=symbol_expr(new_symbol);  
-    }
-    else
-    {
-      // preserve the expressions for possible later checks
-      if(if_expr.true_case().is_not_nil())
-      {
-        code_expressiont code_expression(if_expr.true_case());
-        convert(code_expression, tmp_true);
-      }
-      
-      if(if_expr.false_case().is_not_nil())
-      {
-        code_expressiont code_expression(if_expr.false_case());
-        convert(code_expression, tmp_false);
-      }
-      
-      expr=nil_exprt();
-    }
+    // now clean arguments    
+    goto_programt tmp_true, tmp_false;
+    clean_expr(expr.op1(), tmp_true, result_is_used);
+    clean_expr(expr.op2(), tmp_false, result_is_used);
 
     // generate guard for argument side-effects    
     generate_ifthenelse(
-      if_expr.cond(), tmp_true, tmp_false,
-      location, dest);
+      expr.op0(), tmp_true, tmp_false,
+      expr.location(), dest);
 
     return;
   }
   else if(expr.id()==ID_comma)
   {
-    if(result_is_used)
+    exprt result;
+  
+    Forall_operands(it, expr)
     {
-      exprt result;
-    
-      Forall_operands(it, expr)
-      {
-        bool last=(it==--expr.operands().end());
-        
-        // special treatment for last one
-        if(last)
-        {
-          result.swap(*it);
-          clean_expr(result, dest, true);
-        }
-        else
-        {
-          clean_expr(*it, dest, false);
-
-          // remember these for later checks
-          if(it->is_not_nil())
-            convert(code_expressiont(*it), dest);
-        }
-      }
-
-      expr.swap(result);
-    }
-    else // result not used
-    {
-      Forall_operands(it, expr)
-      {
-        clean_expr(*it, dest, false);
-
-        // remember as expression statement for later checks
-        if(it->is_not_nil())
-          convert(code_expressiont(*it), dest);
-      }
+      bool last=(it==--expr.operands().end());
       
-      expr=nil_exprt();
+      if(last)
+      {
+        result.swap(*it);
+        clean_expr(result, dest, result_is_used);
+      }
+      else
+        clean_expr(*it, dest, false);
     }
+    
+    expr.swap(result);
     
     return;
   }
@@ -323,15 +241,12 @@ void goto_convertt::clean_expr(
     // preserve 'result_is_used'
     clean_expr(expr.op0(), dest, result_is_used);
     
-    if(expr.op0().is_nil())
-      expr.make_nil();
-    
     return;
   }
   else if(expr.id()==ID_sideeffect)
   {
     // some of the side-effects need special treatment!
-    const irep_idt statement=to_side_effect_expr(expr).get_statement();
+    const irep_idt statement=expr.get(ID_statement);
     
     if(statement==ID_gcc_conditional_expression)
     {
@@ -346,40 +261,6 @@ void goto_convertt::clean_expr(
       remove_statement_expression(to_side_effect_expr(expr), dest, result_is_used);
       return;
     }
-    else if(statement==ID_assign)
-    {
-      // we do a special treatment for x=f(...)
-      assert(expr.operands().size()==2);
-      if(expr.op1().id()==ID_sideeffect &&
-         to_side_effect_expr(expr.op1()).get_statement()==ID_function_call)
-      {
-        clean_expr(expr.op0(), dest);
-        exprt lhs=expr.op0();
-
-        // turn into code
-        code_assignt assignment;
-        assignment.lhs()=lhs;
-        assignment.rhs()=expr.op1();
-        assignment.location()=expr.location();
-        convert_assign(assignment, dest);
-
-        if(result_is_used)
-          expr.swap(lhs);
-        else
-          expr.make_nil();
-        return;
-      }
-    }
-  }
-  else if(expr.id()==ID_forall || expr.id()==ID_exists)
-  {
-    assert(expr.operands().size()==2);
-    // check if there are side-effects
-    goto_programt tmp;
-    clean_expr(expr.op1(), tmp, true);
-    if(tmp.instructions.empty())
-      throw "no side-effects in quantified expressions allowed";
-    return;
   }
 
   // TODO: evaluation order
@@ -415,15 +296,13 @@ void goto_convertt::address_of_replace_objects(
   goto_programt &dest)
 {
   if(expr.id()==ID_struct)
-    expr=make_static_symbol(expr, "struct", dest);
+    make_temp_symbol(expr, "struct", dest);
   else if(expr.id()==ID_union)
-    expr=make_static_symbol(expr, "union", dest);
+    make_temp_symbol(expr, "union", dest);
   else if(expr.id()==ID_array)
-    expr=make_static_symbol(expr, "array", dest);
+    make_temp_symbol(expr, "array", dest);
   else if(expr.id()==ID_string_constant)
   {
-    // Leave for now, but long-term these might become static symbols.
-    // LLVM appears to do precisely that.
   }
   else
     Forall_operands(it, expr)

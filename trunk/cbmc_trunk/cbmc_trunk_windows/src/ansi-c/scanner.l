@@ -119,7 +119,6 @@ delimiter       [ \t\b\r]
 newline         [\n\f\v]|"\\\n"
 whitespace      {delimiter}+
 ws              {delimiter}*
-ws_or_newline   ({delimiter}|{newline})*
 ucletter	[A-Z]
 lcletter	[a-z]
 letter		({ucletter}|{lcletter})
@@ -130,13 +129,31 @@ hexdigit	[0-9a-fA-F]
 identifier	(({letter}|"_"|"$")({letter}|{digit}|"_"|"$")*)
 integer		{digit}+
 binary		{bindigit}+
-msiw_suffix     ([iI]("8"|"16"|"32"|"64"|"128"))
-int_suffix      [uUlLiIjJ]*|[uU]?{msiw_suffix}
-bininteger	"0"[bB]{bindigit}+{int_suffix}
-decinteger	[1-9]{digit}*{int_suffix}
-octinteger	"0"{octdigit}*{int_suffix}
-hexinteger	"0"[xX]{hexdigit}+{int_suffix}
-integer_s       {decinteger}|{bininteger}|{octinteger}|{hexinteger}
+iw_suffix       ("i8"|"i16"|"i32"|"i64"|"i128")
+decinteger	[1-9]{digit}*
+decinteger_w    {decinteger}{iw_suffix}
+octinteger	"0"{octdigit}*
+octinteger_w    {octinteger}{iw_suffix}
+hexinteger	"0"[xX]{hexdigit}+
+hexinteger_w    {hexinteger}{iw_suffix}
+decinteger_u	{decinteger}[uU]
+decinteger_uw   {decinteger_u}{iw_suffix}
+octinteger_u	{octinteger}[uU]
+octinteger_uw   {octinteger_u}{iw_suffix}
+hexinteger_u	{hexinteger}[uU]
+hexinteger_uw   {hexinteger_u}{iw_suffix}
+decinteger_l	{decinteger}[lL]
+octinteger_l	{octinteger}[lL]
+hexinteger_l	{hexinteger}[lL]
+decinteger_ul	{decinteger}([uU][lL]|[lL][uU])
+octinteger_ul	{octinteger}([uU][lL]|[lL][uU])
+hexinteger_ul	{hexinteger}([uU][lL]|[lL][uU])
+decinteger_ll	{decinteger}[lL][lL]
+octinteger_ll	{octinteger}[lL][lL]
+hexinteger_ll	{hexinteger}[lL][lL]
+decinteger_ull	{decinteger}([uU][lL][lL]|[lL][lL][uU])
+octinteger_ull	{octinteger}([uU][lL][lL]|[lL][lL][uU])
+hexinteger_ull	{hexinteger}([uU][lL][lL]|[lL][lL][uU])
 octchar		"\\"{octdigit}{1,3}
 hexchar		"\\x"{hexdigit}+
 exponent	[eE][+-]?{integer}
@@ -147,9 +164,9 @@ float3		{integer}{exponent}
 hexfloat1       "0"[xX]{hexdigit}+"."{hexdigit}+[pP][+-]?{integer}
 hexfloat2       "0"[xX]{hexdigit}+"."[pP][+-]?{integer}
 hexfloat3       "0"[xX]{hexdigit}+[pP][+-]?{integer}
-float_suffix    [fFlLiIjJ]*
 float		{float1}|{float2}|{float3}|{hexfloat1}|{hexfloat2}|{hexfloat3}
-float_s         {float}{float_suffix}|{integer}[fF]
+float_f		{float}[fF]|{integer}[fF]
+float_l		{float}[lL]
 bitvector	{binary}[bB]
 bitvector_u	{binary}([uU][bB]|[bB][uU])
 cppstart	{ws}"#"{ws}
@@ -157,17 +174,17 @@ cpplineno	{cppstart}"line"*{ws}{integer}{ws}.*{newline}
 cpppragma	{cppstart}"pragma"{ws}.*
 cppdirective	{cppstart}.*
 
-escape_sequence [\\][^\n]
+simple_escape [abfnrtve'"?\\]
+octal_escape  [0-7]{1,3}
+hex_escape "x"[0-9a-fA-F]+
+
+escape_sequence [\\]({simple_escape}|{octal_escape}|{hex_escape})
 c_char [^'\\\n]|{escape_sequence}
 s_char [^"\\\n]|{escape_sequence}
-
-char_lit        ("L"|"u"|"U")?[']{c_char}+[']
-string_lit      ("L"|"u"|"U"|"u8")?["]{s_char}*["]
 
 %x GRAMMAR
 %x COMMENT1
 %x COMMENT2
-%x STRING_LITERAL
 %x ASM_BLOCK
 %x MSC_ASM
 %x MSC_DECLSPEC
@@ -221,35 +238,17 @@ void ansi_c_scanner_init()
    .*		{ } /* all characters within comments are ignored */
 	}
 
-<GRAMMAR>{char_lit} {
+<GRAMMAR>"L"?[']{c_char}+['] {
                   newstack(yyansi_clval);
                   stack(yyansi_clval)=convert_character_literal(yytext, true);
                   PARSER.set_location(stack(yyansi_clval));
                   return TOK_CHARACTER;
                 }
 
-<GRAMMAR>{string_lit} {
-                  PARSER.string_literal.clear();
-                  PARSER.string_literal.append(yytext);
+<GRAMMAR>"L"?["]{s_char}*["] {
                   newstack(yyansi_clval);
+                  stack(yyansi_clval)=convert_string_literal(yytext);
                   PARSER.set_location(stack(yyansi_clval));
-                  // String literals can be continued in
-                  // the next line
-                  BEGIN(STRING_LITERAL);
-                }
-
-<STRING_LITERAL>{string_lit} { PARSER.string_literal.append(yytext); }
-<STRING_LITERAL>{newline} { /* ignore */ }
-<STRING_LITERAL>{whitespace} { /* ignore */ }
-<STRING_LITERAL>{cpplineno} {
-                  preprocessor_line(yytext, PARSER.line_no, PARSER.filename);
-                  PARSER.line_no--;
-		 }
-<STRING_LITERAL>{cppdirective} { /* ignore */ }
-<STRING_LITERAL>. { 
-                  stack(yyansi_clval)=convert_string_literal(PARSER.string_literal);
-                  BEGIN(GRAMMAR); // back to normal
-                  yyless(0); // put back
                   return TOK_STRING;
                 }
 
@@ -271,9 +270,6 @@ void ansi_c_scanner_init()
 		  TmpString = "";
                   #endif
 		 }
-<GRAMMAR>{cppstart}"ident"{ws}.* { /* ignore */ }
-<GRAMMAR>{cppstart}"define"{ws}.* { /* ignore */ }
-<GRAMMAR>{cppstart}"undef"{ws}.* { /* ignore */ }
 <GRAMMAR>{cppdirective}	{
 		  yyansi_cerror("Preprocessor directive found");
 		  return TOK_SCANNER_ERROR;
@@ -306,7 +302,7 @@ void ansi_c_scanner_init()
 "int"		{ loc(); return TOK_INT; }
 "long"		{ loc(); return TOK_LONG; }
 "register"	{ loc(); return TOK_REGISTER; }
-"restrict"      { /* C99, ignore for now */ }
+"restrict"      { /* ignore */ }
 "return"	{ loc(); return TOK_RETURN; }
 "short" 	{ loc(); return TOK_SHORT; }
 "signed"	{ loc(); return TOK_SIGNED; }
@@ -323,30 +319,6 @@ void ansi_c_scanner_init()
 
 "__float128"	{ if(PARSER.mode==ansi_c_parsert::GCC)
                     { loc(); return TOK_GCC_FLOAT128; }
-                  else
-                    return make_identifier();
-                }
-
-"__int128"	{ if(PARSER.mode==ansi_c_parsert::GCC)
-                    { loc(); return TOK_GCC_INT128; }
-                  else
-                    return make_identifier();
-                }
-
-"_Decimal32"    { if(PARSER.mode==ansi_c_parsert::GCC)
-                    { loc(); return TOK_GCC_DECIMAL32; }
-                  else
-                    return make_identifier();
-                }
-
-"_Decimal64"    { if(PARSER.mode==ansi_c_parsert::GCC)
-                    { loc(); return TOK_GCC_DECIMAL64; }
-                  else
-                    return make_identifier();
-                }
-
-"_Decimal128"   { if(PARSER.mode==ansi_c_parsert::GCC)
-                    { loc(); return TOK_GCC_DECIMAL128; }
                   else
                     return make_identifier();
                 }
@@ -373,24 +345,21 @@ void ansi_c_scanner_init()
 */
 %}
 
-"__complex__" |
-"__complex"     { if(PARSER.mode==ansi_c_parsert::GCC ||
+"__complex__"	{ if(PARSER.mode==ansi_c_parsert::GCC ||
                      PARSER.mode==ansi_c_parsert::ARM)
                     { loc(); return TOK_COMPLEX; }
                   else
                     return make_identifier();
                 }
 
-"__real__" |
-"__real"	{ if(PARSER.mode==ansi_c_parsert::GCC ||
+"__real__"	{ if(PARSER.mode==ansi_c_parsert::GCC ||
                      PARSER.mode==ansi_c_parsert::ARM)
                     { loc(); return TOK_REAL; }
                   else
                     return make_identifier();
                 }
 
-"__imag__" |
-"__imag"	{ if(PARSER.mode==ansi_c_parsert::GCC ||
+"__imag__"	{ if(PARSER.mode==ansi_c_parsert::GCC ||
                      PARSER.mode==ansi_c_parsert::ARM)
                     { loc(); return TOK_IMAG; }
                   else
@@ -439,27 +408,14 @@ void ansi_c_scanner_init()
                     return make_identifier();
                 }
 
-"__alignof"     { // MS supports __alignof:
-                  // http://msdn.microsoft.com/en-us/library/45t0s5f4%28v=vs.71%29.aspx
-                  if(PARSER.mode==ansi_c_parsert::MSC ||
-                     PARSER.mode==ansi_c_parsert::GCC ||
-                     PARSER.mode==ansi_c_parsert::ARM)
-                    { loc(); return TOK_ALIGNOF; }
-                  else
-                    return make_identifier();
-                }
-
 "__ALIGNOF__"   { if(PARSER.mode==ansi_c_parsert::ARM)
                     { loc(); return TOK_ALIGNOF; }
                   else
                     return make_identifier();
                 }
 
-"__builtin_alignof" {
-                  // interestingly, gcc doesn't support this,
-                  // but Visual Studio does!
-                  if(PARSER.mode==ansi_c_parsert::MSC ||
-                     PARSER.mode==ansi_c_parsert::ARM)
+"__builtin_alignof" { if(PARSER.mode==ansi_c_parsert::GCC ||
+                         PARSER.mode==ansi_c_parsert::ARM)
                     { loc(); return TOK_ALIGNOF; }
                   else
                     return make_identifier();
@@ -486,12 +442,6 @@ void ansi_c_scanner_init()
                      PARSER.mode==ansi_c_parsert::CW ||
                      PARSER.mode==ansi_c_parsert::ARM)
                     BEGIN(GCC_ASM);
-                  else
-                    return make_identifier();
-                }
-
-"__based"       { if(PARSER.mode==ansi_c_parsert::MSC)
-                    { loc(); return TOK_MSC_BASED; }
                   else
                     return make_identifier();
                 }
@@ -542,12 +492,6 @@ wchar_t	            { // CodeWarrior doesn't have wchar_t built in
                         PARSER.tag_following=false;
                         return ':';
                       }
-                    }
-
-__decltype          { if(PARSER.cpp && PARSER.mode==ansi_c_parsert::GCC)
-                        return cpp_keyword(TOK_DECLTYPE);
-                      else
-                        return make_identifier();
                     }
 
 %{
@@ -643,8 +587,7 @@ __decltype          { if(PARSER.cpp && PARSER.mode==ansi_c_parsert::GCC)
 
 "__extension__" { /* ignore */ }
 
-"__restrict"    { /* gcc, ignore */ }
-"__restrict__"  { /* gcc, ignore */ }
+"__restrict"    { /* ignore */ }
 
 "_cdecl"        { /* ignore */ }
 "__cdecl"       { /* ignore */ }
@@ -821,14 +764,6 @@ __decltype          { if(PARSER.cpp && PARSER.mode==ansi_c_parsert::GCC)
                   else
                     return make_identifier();
                 }
-
-"_inline"       { // http://msdn.microsoft.com/en-us/library/z8y1yy88.aspx
-                  if(PARSER.mode==ansi_c_parsert::MSC)
-                    { loc(); return TOK_INLINE; }
-                  else
-                    return make_identifier();
-                }
-
 "__inline"	{ loc(); return TOK_INLINE; }
 "__inline__"	{ loc(); return TOK_INLINE; }
 
@@ -840,7 +775,7 @@ __decltype          { if(PARSER.cpp && PARSER.mode==ansi_c_parsert::GCC)
                 }
 
 "__try"         { if(PARSER.mode==ansi_c_parsert::MSC)
-                    { loc(); return TOK_TRY; }
+                    { loc(); return TOK_MSC_TRY; }
                   else
                     return make_identifier();
                 }
@@ -848,7 +783,7 @@ __decltype          { if(PARSER.cpp && PARSER.mode==ansi_c_parsert::GCC)
 "try"           { if(PARSER.cpp) // C++?
                     { loc(); return TOK_TRY; }
                   else if(PARSER.mode==ansi_c_parsert::MSC)
-                    { loc(); return TOK_TRY; }                    
+                    { loc(); return TOK_MSC_TRY; }                    
                   else
                     return make_identifier();
                 }
@@ -874,56 +809,12 @@ __decltype          { if(PARSER.cpp && PARSER.mode==ansi_c_parsert::GCC)
                     return make_identifier();
                 }
 
-"__CPROVER_atomic" { loc(); return TOK_CPROVER_ATOMIC; }
 "__CPROVER_forall" { loc(); return TOK_FORALL; }
 "__CPROVER_exists" { loc(); return TOK_EXISTS; }
 "__CPROVER_array_of" { loc(); return TOK_ARRAY_OF; }
 "__CPROVER_thread_local" { loc(); return TOK_THREAD_LOCAL; }
 "__CPROVER_bitvector" { loc(); return TOK_CPROVER_BITVECTOR; }
 "__CPROVER_bool" { loc(); return TOK_CPROVER_BOOL; }
-
-"\x22\x00" |
-"\\forall"      { /* Non-standard, obviously. Found in ACSL syntax. */
-                  loc(); return TOK_ACSL_FORALL;
-                }
-
-"\x22\x03" |
-"\\exists"      { /* Non-standard, obviously. Found in ACSL syntax. */
-                  loc(); return TOK_ACSL_EXISTS;
-                }
-"\x21\xD2" |
-"==>"           { /* Non-standard, obviously. Found in Spec# and ACSL syntax. */
-                  loc(); return TOK_IMPLIES;
-                }
-
-"\x21\xD4" |
-"<==>"          { /* Non-standard, obviously. Found in Spec# and ACSL syntax. */
-                  loc(); return TOK_EQUIVALENT;
-                }
-
-"\x22\x65"      { /* Non-standard, obviously. Found in ACSL syntax. */
-                  loc(); return TOK_GE;
-                }
-
-"\x22\x64"      { /* Non-standard, obviously. Found in ACSL syntax. */
-                  loc(); return TOK_LE;
-                }
-
-"\x22\x27"      { /* Non-standard, obviously. Found in ACSL syntax. */
-                  loc(); return TOK_ANDAND;
-                }
-
-"\x22\x28"      { /* Non-standard, obviously. Found in ACSL syntax. */
-                  loc(); return TOK_OROR;
-                }
-
-"\\true"        { /* Non-standard, obviously. Found in ACSL syntax. */
-                  loc(); return TOK_TRUE;
-                }
-
-"\\false"       { /* Non-standard, obviously. Found in ACSL syntax. */
-                  loc(); return TOK_FALSE;
-                }
 
 "__thread"      { if(PARSER.mode==ansi_c_parsert::GCC ||
                      PARSER.mode==ansi_c_parsert::ARM)
@@ -1038,13 +929,56 @@ __decltype          { if(PARSER.cpp && PARSER.mode==ansi_c_parsert::GCC)
 
 {identifier}	{ return make_identifier(); }
 
-{integer_s}     { newstack(yyansi_clval);
-                  stack(yyansi_clval)=convert_integer_literal(yytext);
+{decinteger} |
+{decinteger_l} |
+{decinteger_ll} |
+{decinteger_u} |
+{decinteger_ul} |
+{decinteger_ull} |
+{decinteger_w} |
+{decinteger_uw} { newstack(yyansi_clval);
+                  stack(yyansi_clval)=convert_integer_literal(yytext, 10);
                   PARSER.set_location(stack(yyansi_clval));
                   return TOK_INTEGER;
                 }
 
-{float_s}	{ newstack(yyansi_clval); 
+{octinteger} |
+{octinteger_l} |
+{octinteger_ll} |
+{octinteger_u} |
+{octinteger_ul} |
+{octinteger_ull} |
+{octinteger_w} |
+{octinteger_uw} { newstack(yyansi_clval);
+                  stack(yyansi_clval)=convert_integer_literal(yytext, 8);
+                  PARSER.set_location(stack(yyansi_clval));
+                  return TOK_INTEGER;
+                }
+
+{hexinteger} |
+{hexinteger_l} |
+{hexinteger_ll} |
+{hexinteger_u} |
+{hexinteger_ul} |
+{hexinteger_ull} |
+{hexinteger_w} |
+{hexinteger_uw} { newstack(yyansi_clval);
+                  stack(yyansi_clval)=convert_integer_literal(yytext, 16);
+                  PARSER.set_location(stack(yyansi_clval));
+                  return TOK_INTEGER;
+                }
+
+{float}		{ newstack(yyansi_clval); 
+                  stack(yyansi_clval)=convert_float_literal(yytext);
+                  PARSER.set_location(stack(yyansi_clval));
+		  return TOK_FLOATING;
+		}
+{float_f}	{ newstack(yyansi_clval); 
+                  stack(yyansi_clval)=convert_float_literal(yytext);
+                  PARSER.set_location(stack(yyansi_clval));
+		  return TOK_FLOATING;
+		}
+{float_l}	{ newstack(yyansi_clval); 
                   stack(yyansi_clval)=convert_float_literal(yytext);
                   PARSER.set_location(stack(yyansi_clval));
 		  return TOK_FLOATING;
@@ -1105,7 +1039,6 @@ __decltype          { if(PARSER.cpp && PARSER.mode==ansi_c_parsert::GCC)
 "{"             { yyless(0); BEGIN(GRAMMAR); loc(); PARSER.asm_block_following=true; return TOK_GCC_ASM_PAREN; }
 "("             { yyless(0); BEGIN(GRAMMAR); loc(); return TOK_GCC_ASM_PAREN; }
 "volatile"      { yyless(0); BEGIN(GRAMMAR); loc(); return TOK_GCC_ASM_PAREN; }
-"__volatile"    { yyless(0); BEGIN(GRAMMAR); loc(); return TOK_GCC_ASM_PAREN; }
 "__volatile__"  { yyless(0); BEGIN(GRAMMAR); loc(); return TOK_GCC_ASM_PAREN; }
 "goto"          { yyless(0); BEGIN(GRAMMAR); loc(); return TOK_GCC_ASM_PAREN; }
 .               { yyless(0); BEGIN(GRAMMAR); loc(); PARSER.asm_block_following=true; return TOK_GCC_ASM; }
@@ -1169,8 +1102,27 @@ __decltype          { if(PARSER.cpp && PARSER.mode==ansi_c_parsert::GCC)
                     return ',';
                   }
                 }
-{integer_s}     { newstack(yyansi_clval);
-                  stack(yyansi_clval)=convert_integer_literal(yytext);
+{decinteger} |
+{decinteger_l} |
+{decinteger_ll} |
+{decinteger_u} |
+{decinteger_ul} |
+{decinteger_ull} |
+{decinteger_w} |
+{decinteger_uw} { newstack(yyansi_clval);
+                  stack(yyansi_clval)=convert_integer_literal(yytext, 10);
+                  PARSER.set_location(stack(yyansi_clval));
+                  return TOK_INTEGER;
+                }
+{hexinteger} |
+{hexinteger_l} |
+{hexinteger_ll} |
+{hexinteger_u} |
+{hexinteger_ul} |
+{hexinteger_ull} |
+{hexinteger_w} |
+{hexinteger_uw} { newstack(yyansi_clval);
+                  stack(yyansi_clval)=convert_integer_literal(yytext, 16);
                   PARSER.set_location(stack(yyansi_clval));
                   return TOK_INTEGER;
                 }

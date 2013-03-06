@@ -13,7 +13,6 @@ Author: Daniel Kroening, kroening@cs.cmu.edu
 #include <namespace.h>
 #include <language.h>
 #include <cmdline.h>
-#include <unicode.h>
 
 #include "language_ui.h"
 #include "mode.h"
@@ -32,7 +31,9 @@ Function: get_ui_cmdline
 
 static ui_message_handlert::uit get_ui_cmdline(const cmdlinet &cmdline)
 {
-  if(cmdline.isset("xml-ui"))
+  if(cmdline.isset("gui"))
+    return ui_message_handlert::OLD_GUI;
+  else if(cmdline.isset("xml-ui"))
     return ui_message_handlert::XML_UI;
 
   return ui_message_handlert::PLAIN;
@@ -112,11 +113,7 @@ Function: language_uit::parse()
 
 bool language_uit::parse(const std::string &filename)
 {
-  #ifdef _MSC_VER
-  std::ifstream infile(widen(filename).c_str());
-  #else
   std::ifstream infile(filename.c_str());
-  #endif
 
   if(!infile)
   {
@@ -175,7 +172,7 @@ bool language_uit::typecheck()
   language_files.set_message_handler(*message_handler);
   language_files.set_verbosity(get_verbosity());
 
-  if(language_files.typecheck(symbol_table))
+  if(language_files.typecheck(context))
   {
     if(get_ui()==ui_message_handlert::PLAIN)
       std::cerr << "CONVERSION ERROR" << std::endl;
@@ -203,7 +200,7 @@ bool language_uit::final()
   language_files.set_message_handler(*message_handler);
   language_files.set_verbosity(get_verbosity());
 
-  if(language_files.final(symbol_table))
+  if(language_files.final(context))
   {
     if(get_ui()==ui_message_handlert::PLAIN)
       std::cerr << "CONVERSION ERROR" << std::endl;
@@ -276,9 +273,9 @@ void language_uit::show_symbol_table_plain(std::ostream &out)
 {
   out << std::endl << "Symbols:" << std::endl << std::endl;
   
-  const namespacet ns(symbol_table);
+  const namespacet ns(context);
 
-  forall_symbols(it, symbol_table.symbols)
+  forall_symbols(it, context.symbols)
   {
     const symbolt &symbol=it->second;
     
@@ -310,17 +307,20 @@ void language_uit::show_symbol_table_plain(std::ostream &out)
     out << "Value.......: " << value_str << std::endl;
     out << "Flags.......:";
 
-    if(symbol.is_lvalue)          out << " lvalue";
-    if(symbol.is_static_lifetime) out << " static_lifetime";
-    if(symbol.is_thread_local)    out << " thread_local";
-    if(symbol.is_file_local)      out << " file_local";
-    if(symbol.is_type)            out << " type";
-    if(symbol.is_extern)          out << " extern";
-    if(symbol.is_input)           out << " input";
-    if(symbol.is_output)          out << " output";
-    if(symbol.is_macro)           out << " macro";
-    if(symbol.is_property)        out << " property";
-    if(symbol.is_state_var)       out << " state_var";
+    if(symbol.lvalue)          out << " lvalue";
+    if(symbol.static_lifetime) out << " static_lifetime";
+    if(symbol.thread_local)    out << " thread_local";
+    if(symbol.file_local)      out << " file_local";
+    if(symbol.theorem)         out << " theorem";
+    if(symbol.is_type)         out << " type";
+    if(symbol.is_extern)       out << " extern";
+    if(symbol.is_input)        out << " input";
+    if(symbol.is_output)       out << " output";
+    if(symbol.is_macro)        out << " macro";
+    if(symbol.is_actual)       out << " actual";
+    if(symbol.binding)         out << " binding";
+    if(symbol.free_var)        out << " free_var";
+    if(symbol.is_statevar)     out << " statevar";
 
     out << std::endl;
     out << "Location....: " << symbol.location << std::endl;

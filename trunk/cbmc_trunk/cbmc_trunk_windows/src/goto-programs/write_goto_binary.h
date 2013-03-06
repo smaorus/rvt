@@ -14,19 +14,19 @@ Author: CM Wintersteiger
 #include <ostream>
 #include <string>
 
-class symbol_tablet;
+class contextt;
 class goto_functionst;
 class message_handlert;
 
 bool write_goto_binary(
   std::ostream &out,
-  const symbol_tablet &symbol_table,
+  const contextt &context,
   const goto_functionst &goto_functions,
   int version=GOTO_BINARY_VERSION);
 
 bool write_goto_binary(
   const std::string &filename,
-  const symbol_tablet &lsymbol_table,
+  const contextt &lcontext,
   const goto_functionst &goto_functions,
   message_handlert &message_handler);
 

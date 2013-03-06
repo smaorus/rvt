@@ -7,8 +7,6 @@ Author: Daniel Kroening, kroening@kroening.com
 \*******************************************************************/
 
 #include <std_expr.h>
-#include <expr_util.h>
-#include <cprover_prefix.h>
 
 #include "goto_symex.h"
 
@@ -98,56 +96,6 @@ void goto_symext::replace_array_equal(exprt &expr)
 
 /*******************************************************************\
 
-Function: goto_symext::adjust_float_expressions
-
-  Inputs:
-
- Outputs:
-
- Purpose: This adds the rounding mode to floating-point operations,
-          including those in vectors and complex numbers.
-
-\*******************************************************************/
-
-void goto_symext::adjust_float_expressions(exprt &expr)
-{
-  Forall_operands(it, expr)
-    adjust_float_expressions(*it);
-
-  const typet &type=ns.follow(expr.type());
-
-  if(type.id()==ID_floatbv ||
-     (type.id()==ID_complex &&
-      ns.follow(type.subtype()).id()==ID_floatbv))
-  {
-    symbol_exprt rounding_mode=
-      symbol_expr(ns.lookup(CPROVER_PREFIX "rounding_mode"));
-      
-    rounding_mode.location()=expr.location();
-  
-    if(expr.id()==ID_plus || expr.id()==ID_minus ||
-       expr.id()==ID_mult || expr.id()==ID_div)
-    {
-      // make sure we have binary expressions
-      if(expr.operands().size()>2)
-        expr=make_binary(expr);
-
-      assert(expr.operands().size()==2);
-
-      // now add rounding mode
-      expr.id(expr.id()==ID_plus?ID_floatbv_plus:
-              expr.id()==ID_minus?ID_floatbv_minus:
-              expr.id()==ID_mult?ID_floatbv_mult:
-                                 ID_floatbv_div);
-
-      expr.operands().resize(3);
-      expr.op2()=rounding_mode;
-    }
-  }
-}
-
-/*******************************************************************\
-
 Function: goto_symext::clean_expr
 
   Inputs:
@@ -166,5 +114,4 @@ void goto_symext::clean_expr(
   replace_nondet(expr);
   dereference(expr, state, write);
   replace_array_equal(expr);
-  adjust_float_expressions(expr);
 }

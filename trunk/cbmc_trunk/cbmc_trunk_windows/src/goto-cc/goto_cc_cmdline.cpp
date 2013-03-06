@@ -8,10 +8,9 @@ Date:   April 2010
 
 \*******************************************************************/
 
-#include <cstring>
-#include <cassert>
+#include <string.h>
 
-#include <prefix.h>
+#include <assert.h>
 
 #include "goto_cc_cmdline.h"
 
@@ -84,7 +83,7 @@ int goto_cc_cmdlinet::get_optnr(const std::string &opt_string)
   int optnr;
   cmdlinet::optiont option;
   
-  if(has_prefix(opt_string, "--")) // starts with -- ?
+  if(std::string(opt_string, 0, 2)=="--") // starts with -- ?
   {
     if(opt_string.size()==3) // still "short"
     {
@@ -100,7 +99,7 @@ int goto_cc_cmdlinet::get_optnr(const std::string &opt_string)
       optnr=getoptnr(option.optstring);
     }
   }
-  else if(has_prefix(opt_string, "-")) // starts with - ?
+  else if(std::string(opt_string, 0, 1)=="-")
   {
     if(opt_string.size()==2)
     {

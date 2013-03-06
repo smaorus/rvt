@@ -12,72 +12,45 @@ Author: Daniel Kroening, kroening@kroening.com
 /*! \defgroup goto_symex Symbolic execution of goto programs
 */
 
-#include <options.h>
-
 #include <goto-programs/goto_functions.h>
 
+#include "basic_symex.h"
 #include "goto_symex_state.h"
 
 class typet;
 class code_typet;
-class symbol_tablet;
-class code_assignt;
-class code_function_callt;
-class exprt;
-class goto_symex_statet;
-class guardt;
-class if_exprt;
-class index_exprt;
-class symbol_exprt;
-class member_exprt;
-class namespacet;
-class side_effect_exprt;
-class symex_targett;
-class typecast_exprt;
 
-/*! \brief The main class for the forward symbolic simulator
-*/
-class goto_symext
+class goto_symext:
+  public basic_symext
 {
 public:
   goto_symext(
     const namespacet &_ns,
-    symbol_tablet &_new_symbol_table,
+    contextt &_new_context,
     symex_targett &_target):
+    basic_symext(_ns, _new_context, _target),
     total_claims(0),
     remaining_claims(0),
-    constant_propagation(true),
-    new_symbol_table(_new_symbol_table),
-    ns(_ns),
-    target(_target),
     guard_identifier("goto_symex::\\guard")
   {
-    options.set_option("simplify", true);
     options.set_option("assertions", true);
   }
-  
-  virtual ~goto_symext()
-  {
-  }
 
-  typedef goto_symex_statet statet;
-
-  /** symex all at once, starting from entry point */
+  // all at once
   virtual void operator()(
     const goto_functionst &goto_functions);
 
-  /** symex starting from given goto program */
   virtual void operator()(
     const goto_functionst &goto_functions,
     const goto_programt &goto_program);
 
-  /** start symex in a given state */
+  // start in a given state
   virtual void operator()(
     statet &state,
     const goto_functionst &goto_functions,
     const goto_programt &goto_program);	   
 
-  /** execute just one step */
+  // execute one step
   virtual void symex_step(
     const goto_functionst &goto_functions,
     statet &state);
@@ -89,15 +62,7 @@ public:
   // statistics
   unsigned total_claims, remaining_claims;
 
-  bool constant_propagation;
-
-  optionst options;
-  symbol_tablet &new_symbol_table;
-
 protected:
-  const namespacet &ns;
-  symex_targett &target;  
-
   friend class symex_dereference_statet;
   
   void new_name(symbolt &symbol);
@@ -110,7 +75,6 @@ protected:
     exprt &expr, statet &state, bool write);
     
   void replace_array_equal(exprt &expr);
-  void adjust_float_expressions(exprt &expr);
   void trigger_auto_object(const exprt &expr, statet &state);
   void initialize_auto_object(const exprt &expr, statet &state);
   void process_array_expr(exprt &expr);
@@ -146,9 +110,6 @@ protected:
   // symex
 
   virtual void symex_goto(statet &state);
-  virtual void symex_start_thread(statet &state);
-  virtual void symex_atomic_begin(statet &state);
-  virtual void symex_atomic_end(statet &state);  
   virtual void symex_decl(statet &state);
   virtual void symex_return(statet &state);
 
@@ -159,6 +120,7 @@ protected:
   virtual void claim(
     const exprt &expr,
     const std::string &msg,
+    unsigned priority,
     statet &state);
     
   // gotos
@@ -215,7 +177,7 @@ protected:
     const exprt::operandst &arguments);
 
   void locality(
-    const irep_idt function_identifier,
+    unsigned frame_counter,
     statet &state,
     const goto_functionst::goto_functiont &goto_function);
 
@@ -224,47 +186,13 @@ protected:
     const irep_idt &identifier);
                            
   std::map<irep_idt, unsigned> function_unwind;
+  std::map<irep_idt, unsigned> function_frame;
   std::map<symex_targett::sourcet, unsigned> unwind_map;
   
   // exceptions
   
   void symex_throw(statet &state);
   void symex_catch(statet &state);
-
-  virtual void do_simplify(exprt &expr);
-  
-  //virtual void symex_block(statet &state, const codet &code);
-  virtual void symex_assign(statet &state, const code_assignt &code);
-  
-  typedef enum { VISIBLE, HIDDEN } visibilityt;
-  
-  void symex_assign_rec(statet &state, const exprt &lhs, const exprt &full_lhs, const exprt &rhs, guardt &guard, visibilityt visibility);
-  void symex_assign_symbol(statet &state, const symbol_exprt &lhs, const exprt &full_lhs, const exprt &rhs, guardt &guard, visibilityt visibility);
-  void symex_assign_typecast(statet &state, const typecast_exprt &lhs, const exprt &full_lhs, const exprt &rhs, guardt &guard, visibilityt visibility);
-  void symex_assign_array(statet &state, const index_exprt &lhs, const exprt &full_lhs, const exprt &rhs, guardt &guard, visibilityt visibility);
-  void symex_assign_member(statet &state, const member_exprt &lhs, const exprt &full_lhs, const exprt &rhs, guardt &guard, visibilityt visibility);
-  void symex_assign_if(statet &state, const if_exprt &lhs, const exprt &full_lhs, const exprt &rhs, guardt &guard, visibilityt visibility);
-  void symex_assign_byte_extract(statet &state, const exprt &lhs, const exprt &full_lhs, const exprt &rhs, guardt &guard, visibilityt visibility);
-  
-  static exprt add_to_lhs(const exprt &lhs, const exprt &what);
-  
-  virtual void symex_gcc_builtin_va_arg_next(statet &state, const exprt &lhs, const side_effect_exprt &code);
-  virtual void symex_malloc        (statet &state, const exprt &lhs, const side_effect_exprt &code);
-  virtual void symex_cpp_delete    (statet &state, const codet &code);
-  virtual void symex_cpp_new       (statet &state, const exprt &lhs, const side_effect_exprt &code);
-  virtual void symex_fkt           (statet &state, const code_function_callt &code);
-  virtual void symex_macro         (statet &state, const code_function_callt &code);
-  virtual void symex_trace         (statet &state, const code_function_callt &code);
-  virtual void symex_printf        (statet &state, const exprt &lhs, const exprt &rhs);
-  virtual void symex_input         (statet &state, const codet &code);
-  virtual void symex_output        (statet &state, const codet &code);
-
-  static unsigned nondet_count;
-  static unsigned dynamic_counter;
-  
-  void read(exprt &expr);
-  void replace_nondet(exprt &expr);
-  void rewrite_quantifiers(exprt &expr, statet &state);
 };
 
 #endif

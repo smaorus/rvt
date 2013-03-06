@@ -37,6 +37,7 @@ exprt gen_zero(const typet &type)
      type_id==ID_real ||
      type_id==ID_integer ||
      type_id==ID_natural ||
+     type_id==ID_complex ||
      type_id==ID_c_enum)
   {
     result.set(ID_value, ID_0);
@@ -54,12 +55,6 @@ exprt gen_zero(const typet &type)
       value+='0';
 
     result.set(ID_value, value);
-  }
-  else if(type_id==ID_complex)
-  {
-    result=exprt(ID_complex, type);
-    exprt sub_zero=gen_zero(type.subtype());
-    result.operands().resize(2, sub_zero);
   }
   else if(type_id==ID_bool)
   {
@@ -96,7 +91,8 @@ exprt gen_one(const typet &type)
      type_id==ID_rational ||
      type_id==ID_real ||
      type_id==ID_integer ||
-     type_id==ID_natural)
+     type_id==ID_natural ||
+     type_id==ID_complex)
   {
     result.set(ID_value, ID_1);
   }
@@ -124,13 +120,6 @@ exprt gen_one(const typet &type)
     ieee_float.spec=to_floatbv_type(type);
     ieee_float.from_integer(1);
     result=ieee_float.to_expr();
-  }
-  else if(type_id==ID_complex)
-  {
-    result=exprt(ID_complex, type);
-    result.operands().resize(2);
-    result.op0()=gen_one(type.subtype());
-    result.op1()=gen_zero(type.subtype());
   }
   else
     result.make_nil();

@@ -41,19 +41,14 @@ public:
     return get(ID_property);
   }
 
-  inline const irep_idt &get_source() const
-  {
-    return get(ID_source);
-  }
-
   inline const irep_idt &get_comment() const
   {
     return get(ID_comment);
   }
   
-  inline const irep_idt &get_claim() const
+  inline unsigned get_priority() const
   {
-    return get(ID_claim);
+    return get_int(ID_priority);
   }
 
   inline void set_file(const irep_idt &file)
@@ -91,19 +86,14 @@ public:
     set(ID_property, property);
   }
 
-  inline void set_source(const irep_idt &source)
-  {
-    set(ID_source, source);
-  }
-
   inline void set_comment(const irep_idt &comment)
   {
     set(ID_comment, comment);
   }
   
-  inline void set_claim(const irep_idt &claim)
+  inline void set_priority(unsigned priority)
   {
-    set(ID_claim, claim);
+    set(ID_priority, priority);
   }
 
 };

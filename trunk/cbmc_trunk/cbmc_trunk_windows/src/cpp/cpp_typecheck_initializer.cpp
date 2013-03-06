@@ -10,7 +10,6 @@ Author: Daniel Kroening, kroening@cs.cmu.edu
 #include <arith_tools.h>
 #include <std_expr.h>
 
-#include <linking/zero_initializer.h>
 #include <ansi-c/c_types.h>
 #include <ansi-c/c_sizeof.h>
 
@@ -227,7 +226,7 @@ void cpp_typecheckt::zero_initializer(
     if(cpp_is_pod(final_type.subtype()))
     {
       exprt value=
-        ::zero_initializer(final_type, location, *this, get_message_handler());
+        c_typecheck_baset::zero_initializer(final_type, location);
 
       exprt obj=object;
       typecheck_expr(obj);
@@ -256,7 +255,7 @@ void cpp_typecheckt::zero_initializer(
       for(mp_integer i=0; i<size; ++i)
       {
         exprt index(ID_index);
-        index.copy_to_operands(object, from_integer(i, index_type()));
+        index.copy_to_operands(object, from_integer(i, int_type()));
         zero_initializer(index, array_type.subtype(), location, ops);
       }
     }

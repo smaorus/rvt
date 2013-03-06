@@ -6,7 +6,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <symbol_table.h>
+#include <context.h>
 #include <namespace.h>
 #include <std_expr.h>
 
@@ -41,9 +41,9 @@ Function: add_failed_symbol
 
 \*******************************************************************/
 
-void add_failed_symbol(symbolt &symbol, symbol_tablet &symbol_table)
+void add_failed_symbol(symbolt &symbol, contextt &context)
 {
-  if(!symbol.is_lvalue) return;
+  if(!symbol.lvalue) return;
   
   if(symbol.type.get("#failed_symbol")!="")
     return;
@@ -51,7 +51,7 @@ void add_failed_symbol(symbolt &symbol, symbol_tablet &symbol_table)
   if(symbol.type.id()==ID_pointer)
   {
     symbolt new_symbol;
-    new_symbol.is_lvalue=true;
+    new_symbol.lvalue=true;
     new_symbol.module=symbol.module;
     new_symbol.mode=symbol.mode;
     new_symbol.base_name=id2string(symbol.base_name)+"$object";
@@ -63,9 +63,9 @@ void add_failed_symbol(symbolt &symbol, symbol_tablet &symbol_table)
     symbol.type.set(ID_C_failed_symbol, new_symbol.name);
     
     if(new_symbol.type.id()==ID_pointer)
-      add_failed_symbol(new_symbol, symbol_table); // recursive call
+      add_failed_symbol(new_symbol, context); // recursive call
         
-    symbol_table.move(new_symbol);
+    context.move(new_symbol);
   }
 }
 
@@ -81,7 +81,7 @@ Function: add_failed_symbols
 
 \*******************************************************************/
 
-void add_failed_symbols(symbol_tablet &symbol_table)
+void add_failed_symbols(contextt &context)
 {
   // the symbol table iterators are not stable, and
   // we are adding new symbols, this
@@ -89,7 +89,7 @@ void add_failed_symbols(symbol_tablet &symbol_table)
   typedef std::list< ::symbolt *> symbol_listt;
   symbol_listt symbol_list;
 
-  Forall_symbols(it, symbol_table.symbols)
+  Forall_symbols(it, context.symbols)
     symbol_list.push_back(&(it->second));
   
   for(symbol_listt::const_iterator
@@ -97,7 +97,7 @@ void add_failed_symbols(symbol_tablet &symbol_table)
       it!=symbol_list.end();
       it++)
   {
-    add_failed_symbol(**it, symbol_table);
+    add_failed_symbol(**it, context);
   }
 }
 

@@ -88,22 +88,6 @@ void messaget::print(
   
 /*******************************************************************\
 
-Function: message_clientt::~message_clientt
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-message_clientt::~message_clientt()
-{
-}
-
-/*******************************************************************\
-
 Function: message_clientt::set_message_handler
 
   Inputs:
@@ -119,38 +103,3 @@ void message_clientt::set_message_handler(
 {
   message_handler=&_message_handler;
 }
-
-/*******************************************************************\
-
-Function: message_clientt::set_verbosity
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void message_clientt::set_verbosity(unsigned _verbosity)
-{
-  verbosity=_verbosity;
-}
-
-/*******************************************************************\
-
-Function: message_clientt::get_verbosity
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-unsigned message_clientt::get_verbosity() const
-{
-  return verbosity;
-}
-

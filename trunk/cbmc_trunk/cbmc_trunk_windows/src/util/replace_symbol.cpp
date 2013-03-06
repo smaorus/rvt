@@ -7,7 +7,6 @@ Author: Daniel Kroening, kroening@kroening.com
 \*******************************************************************/
 
 #include <std_types.h>
-#include <std_expr.h>
 
 #include "replace_symbol.h"
 
@@ -41,26 +40,6 @@ Function: replace_symbolt::~replace_symbolt
 
 replace_symbolt::~replace_symbolt()
 {
-}
-
-/*******************************************************************\
-
-Function: replace_symbolt::insert
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-void replace_symbolt::insert(
-  const symbol_exprt &old_expr,
-  const exprt &new_expr)
-{
-  expr_map.insert(std::pair<irep_idt, exprt>(
-    old_expr.get_identifier(), new_expr));
 }
 
 /*******************************************************************\
@@ -170,12 +149,10 @@ bool replace_symbolt::replace(typet &dest) const
   if(dest.id()==ID_struct ||
      dest.id()==ID_union)
   {
-    struct_union_typet &struct_union_type=to_struct_union_type(dest);    
-    struct_union_typet::componentst &components=
-      struct_union_type.components();
+    struct_typet &struct_type = to_struct_type(dest);    
+    struct_typet::componentst &components = struct_type.components();
 
-    for(struct_union_typet::componentst::iterator
-        it=components.begin();
+    for(struct_typet::componentst::iterator it = components.begin();
         it!=components.end();
         it++)
       if(!replace(*it))
@@ -192,7 +169,8 @@ bool replace_symbolt::replace(typet &dest) const
       if(!replace(*it))
         result=false;
   }
-  else if(dest.id()==ID_symbol)
+  
+  if(dest.id()==ID_symbol)
   {
     type_mapt::const_iterator it=
       type_map.find(dest.get(ID_identifier));
@@ -202,12 +180,6 @@ bool replace_symbolt::replace(typet &dest) const
       dest=it->second;
       result=false;
     }
-  }
-  else if(dest.id()==ID_array)
-  {
-    array_typet &array_type=to_array_type(dest);
-    if(!replace(array_type.size()))
-      result=false;
   }
 
   return result;
@@ -238,13 +210,10 @@ bool replace_symbolt::have_to_replace(const typet &dest) const
   if(dest.id()==ID_struct ||
      dest.id()==ID_union)
   {
-    const struct_union_typet &struct_union_type=
-      to_struct_union_type(dest);    
+    const struct_typet &struct_type = to_struct_type(dest);    
+    const struct_typet::componentst &components = struct_type.components();
 
-    const struct_union_typet::componentst &components=
-      struct_union_type.components();
-
-    for(struct_union_typet::componentst::const_iterator
+    for(struct_typet::componentst::const_iterator
         it=components.begin();
         it!=components.end();
         it++)
@@ -266,10 +235,9 @@ bool replace_symbolt::have_to_replace(const typet &dest) const
       if(have_to_replace(*it))
         return true;
   }
-  else if(dest.id()==ID_symbol)
+  
+  if(dest.id()==ID_symbol)
     return type_map.find(dest.get(ID_identifier))!=type_map.end();
-  else if(dest.id()==ID_array)
-    return have_to_replace(to_array_type(dest).size());
 
   return false;
 }

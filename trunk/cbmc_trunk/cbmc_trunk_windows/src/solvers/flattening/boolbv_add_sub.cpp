@@ -12,7 +12,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "boolbv.h"
 
+#ifdef HAVE_FLOATBV
 #include "../floatbv/float_utils.h"
+#endif
 
 /*******************************************************************\
 
@@ -29,13 +31,12 @@ Function: boolbvt::convert_add_sub
 void boolbvt::convert_add_sub(const exprt &expr, bvt &bv)
 {
   const typet &type=ns.follow(expr.type());
-  
+
   if(type.id()!=ID_unsignedbv &&
      type.id()!=ID_signedbv &&
      type.id()!=ID_fixedbv &&
      type.id()!=ID_floatbv &&
      type.id()!=ID_range &&
-     type.id()!=ID_complex &&
      type.id()!=ID_vector)
     return conversion_failed(expr, bv);
 
@@ -47,7 +48,7 @@ void boolbvt::convert_add_sub(const exprt &expr, bvt &bv)
   const exprt::operandst &operands=expr.operands();
 
   if(operands.size()==0)
-    throw "operator "+expr.id_string()+" takes at least one operand";
+    throw "operand "+expr.id_string()+" takes at least one operand";
 
   const exprt &op0=expr.op0();
 
@@ -69,8 +70,7 @@ void boolbvt::convert_add_sub(const exprt &expr, bvt &bv)
                     expr.id()=="no-overflow-minus");
 
   typet arithmetic_type=
-    (type.id()==ID_vector || type.id()==ID_complex)?
-      ns.follow(type.subtype()):type;
+    (type.id()==ID_vector)?ns.follow(type.subtype()):type;
 
   bv_utilst::representationt rep=
     (arithmetic_type.id()==ID_signedbv ||
@@ -92,7 +92,7 @@ void boolbvt::convert_add_sub(const exprt &expr, bvt &bv)
     if(op.size()!=width)
       throw "convert_add_sub: unexpected operand width";
 
-    if(type.id()==ID_vector || type.id()==ID_complex)
+    if(type.id()==ID_vector)
     {
       const typet &subtype=ns.follow(type.subtype());
     
@@ -126,9 +126,13 @@ void boolbvt::convert_add_sub(const exprt &expr, bvt &bv)
         
         if(type.subtype().id()==ID_floatbv)
         {
+          #ifdef HAVE_FLOATBV
           float_utilst float_utils(prop);
           float_utils.spec=to_floatbv_type(subtype);
           tmp_result=float_utils.add_sub(tmp_result, tmp_op, subtract);
+          #else
+          return conversion_failed(expr, bv);
+          #endif
         }
         else
           tmp_result=bv_utils.add_sub(tmp_result, tmp_op, subtract);
@@ -144,9 +148,13 @@ void boolbvt::convert_add_sub(const exprt &expr, bvt &bv)
     }
     else if(type.id()==ID_floatbv)
     {
+      #ifdef HAVE_FLOATBV
       float_utilst float_utils(prop);
       float_utils.spec=to_floatbv_type(arithmetic_type);
       bv=float_utils.add_sub(bv, op, subtract);
+      #else
+      return conversion_failed(expr, bv);
+      #endif
     }
     else if(no_overflow)
       bv=bv_utils.add_sub_no_overflow(bv, op, subtract, rep);

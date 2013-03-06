@@ -1,28 +1,21 @@
 SRC = main.cpp parseoptions.cpp document_claims.cpp languages.cpp \
-      uninitialized.cpp full_slicer.cpp \
+      uninitialized.cpp uninitialized_domain.cpp full_slicer.cpp \
       object_id.cpp show_locations.cpp points_to.cpp \
       alignment_checks.cpp race_check.cpp rw_set.cpp \
-      nondet_volatile.cpp interrupt.cpp \
-      mmio.cpp stack_depth.cpp nondet_static.cpp \
-      concurrency.cpp dump_c.cpp dot.cpp \
-      wmm/weak_memory.cpp wmm/fence.cpp wmm/event_graph.cpp \
-      wmm/goto2graph.cpp wmm/data_dp.cpp wmm/abstract_event.cpp \
-      wmm/instrumenter_strategies.cpp wmm/cycle_collection.cpp
+      weak_memory.cpp nondet_volatile.cpp interrupt.cpp \
+      mmio.cpp stack_depth.cpp nondet_static.cpp
 
 OBJ += ../ansi-c/ansi-c$(LIBEXT) \
-      ../linking/linking$(LIBEXT) \
       ../big-int/bigint$(OBJEXT) \
       ../goto-programs/goto-programs$(LIBEXT) \
       ../goto-symex/goto-symex$(LIBEXT) \
-      ../assembler/assembler$(LIBEXT) \
       ../pointer-analysis/pointer-analysis$(LIBEXT) \
-      ../analyses/analyses$(LIBEXT) \
       ../langapi/langapi$(LIBEXT) \
       ../util/util$(LIBEXT)
 
 INCLUDES= -I .. -I ../util
 
-LIBS = 
+LIBS =
 
 CLEANFILES = goto-instrument$(EXEEXT)
 
@@ -55,9 +48,4 @@ endif
 
 goto-instrument$(EXEEXT): $(OBJ)
 	$(LINKBIN)
-
-.PHONY: goto-instrument-mac-signed
-
-goto-instrument-mac-signed: goto-instrument$(EXEEXT)
-	codesign -v -s $(OSX_IDENTITY) goto-instrument$(EXEEXT)
 

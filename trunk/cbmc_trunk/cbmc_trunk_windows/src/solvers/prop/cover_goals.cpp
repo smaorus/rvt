@@ -13,13 +13,13 @@ Author: Daniel Kroening, kroening@kroening.com
 
 /*******************************************************************\
 
-Function: cover_goalst::mark
+Function: cover_goalst::operator()
 
   Inputs:
 
  Outputs:
 
- Purpose: Mark goals that are covered
+ Purpose: Try to cover all goals
 
 \*******************************************************************/
 
@@ -45,7 +45,7 @@ Function: cover_goalst::constaint
 
  Outputs:
 
- Purpose: Build clause
+ Purpose: Try to cover all goals
 
 \*******************************************************************/
 

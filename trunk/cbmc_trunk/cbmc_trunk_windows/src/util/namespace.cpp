@@ -6,12 +6,12 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include <cstring>
 #include <cassert>
 #include <cstdlib>
 
 #include "namespace.h"
-#include "symbol_table.h"
-#include "prefix.h"
+#include "context.h"
 
 /*******************************************************************\
 
@@ -27,33 +27,17 @@ Function: get_max
 
 unsigned get_max(
   const std::string &prefix,
-  const symbol_tablet::symbolst &symbols)
+  const contextt::symbolst &symbols)
 {
   unsigned max_nr=0;
 
   forall_symbols(it, symbols)
-    if(has_prefix(id2string(it->first), prefix))
+    if(strncmp(it->first.c_str(), prefix.c_str(), prefix.size())==0)
       max_nr=
         std::max(unsigned(atoi(it->first.c_str()+prefix.size())),
                  max_nr);
 
   return max_nr;
-}
-
-/*******************************************************************\
-
-Function: namespace_baset::~namespace_baset
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-namespace_baset::~namespace_baset()
-{
 }
 
 /*******************************************************************\
@@ -165,11 +149,11 @@ unsigned namespacet::get_max(const std::string &prefix) const
 {
   unsigned m=0;
 
-  if(symbol_table1!=NULL)
-    m=std::max(m, ::get_max(prefix, symbol_table1->symbols));
+  if(context1!=NULL)
+    m=std::max(m, ::get_max(prefix, context1->symbols));
 
-  if(symbol_table2!=NULL)
-    m=std::max(m, ::get_max(prefix, symbol_table2->symbols));
+  if(context2!=NULL)
+    m=std::max(m, ::get_max(prefix, context2->symbols));
 
   return m;
 }
@@ -190,24 +174,24 @@ bool namespacet::lookup(
   const irep_idt &name,
   const symbolt *&symbol) const  
 {
-  symbol_tablet::symbolst::const_iterator it;
+  contextt::symbolst::const_iterator it;
 
-  if(symbol_table1!=NULL)
+  if(context1!=NULL)
   {
-    it=symbol_table1->symbols.find(name);
+    it=context1->symbols.find(name);
 
-    if(it!=symbol_table1->symbols.end())
+    if(it!=context1->symbols.end())
     {
       symbol=&(it->second);
       return false;
     }
   }
 
-  if(symbol_table2!=NULL)
+  if(context2!=NULL)
   {
-    it=symbol_table2->symbols.find(name);
+    it=context2->symbols.find(name);
 
-    if(it!=symbol_table2->symbols.end())
+    if(it!=context2->symbols.end())
     {
       symbol=&(it->second);
       return false;
@@ -233,9 +217,9 @@ unsigned multi_namespacet::get_max(const std::string &prefix) const
 {
   unsigned m=0;
 
-  for(symbol_table_listt::const_iterator
-      it=symbol_table_list.begin();
-      it!=symbol_table_list.end();
+  for(context_listt::const_iterator
+      it=context_list.begin();
+      it!=context_list.end();
       it++)
     m=std::max(m, ::get_max(prefix, (*it)->symbols));
 
@@ -258,11 +242,11 @@ bool multi_namespacet::lookup(
   const irep_idt &name,
   const symbolt *&symbol) const  
 {
-  symbol_tablet::symbolst::const_iterator s_it;
+  contextt::symbolst::const_iterator s_it;
 
-  for(symbol_table_listt::const_iterator
-      c_it=symbol_table_list.begin();
-      c_it!=symbol_table_list.end();
+  for(context_listt::const_iterator
+      c_it=context_list.begin();
+      c_it!=context_list.end();
       c_it++)
   {
     s_it=(*c_it)->symbols.find(name);

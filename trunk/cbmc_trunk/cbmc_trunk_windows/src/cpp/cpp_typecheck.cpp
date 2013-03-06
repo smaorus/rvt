@@ -13,7 +13,6 @@ Author: Daniel Kroening, kroening@cs.cmu.edu
 #include <location.h>
 #include <symbol.h>
 
-#include <linking/zero_initializer.h>
 #include <ansi-c/c_typecast.h>
 
 #include "cpp_typecheck.h"
@@ -102,8 +101,6 @@ void cpp_typecheckt::convert(cpp_itemt &item)
     convert(item.get_namespace_spec());
   else if(item.is_using())
     convert(item.get_using());
-  else if(item.is_static_assert())
-    convert(item.get_static_assert());
   else
   {
     err_location(item);
@@ -134,7 +131,7 @@ void cpp_typecheckt::typecheck()
       it++)
     convert(*it);
 
-  static_and_dynamic_initialization();
+  static_initialization();
 
   do_not_typechecked();
 
@@ -155,11 +152,11 @@ Function: cpp_typecheck
 
 bool cpp_typecheck(
   cpp_parse_treet &cpp_parse_tree,
-  symbol_tablet &symbol_table,
+  contextt &context,
   const std::string &module,
   message_handlert &message_handler)
 {
-  cpp_typecheckt cpp_typecheck(cpp_parse_tree, symbol_table, module, message_handler);
+  cpp_typecheckt cpp_typecheck(cpp_parse_tree, context, module, message_handler);
   return cpp_typecheck.typecheck_main();
 }
 
@@ -180,11 +177,11 @@ bool cpp_typecheck(
   message_handlert &message_handler,
   const namespacet &ns)
 {
-  symbol_tablet symbol_table;
+  contextt context;
   cpp_parse_treet cpp_parse_tree;
 
-  cpp_typecheckt cpp_typecheck(cpp_parse_tree, symbol_table,
-                               ns.get_symbol_table(), "", message_handler);
+  cpp_typecheckt cpp_typecheck(cpp_parse_tree, context,
+                               ns.get_context(), "", message_handler);
 
   try
   {
@@ -211,7 +208,7 @@ bool cpp_typecheck(
 
 /*******************************************************************\
 
-Function: cpp_typecheckt::static_and_dynamic_initialization
+Function: cpp_typecheckt::static_initialization
 
   Inputs:
 
@@ -234,19 +231,19 @@ Function: cpp_typecheckt::static_and_dynamic_initialization
 
 \*******************************************************************/
 
-void cpp_typecheckt::static_and_dynamic_initialization()
+void cpp_typecheckt::static_initialization()
 {
-  code_blockt init_block; // Dynamic Initialization Block
+  code_blockt block_sini; // Static Initialization Block
+  code_blockt block_dini; // Dynamic Initialization Block
 
   disable_access_control = true;
 
-  // fill in any missing zero initializers
-  // for static initialization
-  Forall_symbols(s_it, symbol_table.symbols)
+  // first do zero initialization
+  forall_symbols(s_it, context.symbols)
   {
-    symbolt &symbol=s_it->second;
+    const symbolt &symbol=s_it->second;
 
-    if(!symbol.is_static_lifetime)
+    if(!symbol.static_lifetime)
       continue;
       
     if(symbol.mode!=ID_cpp)
@@ -265,50 +262,51 @@ void cpp_typecheckt::static_and_dynamic_initialization()
     if(symbol.is_extern)
       continue;
 
-    if(!symbol.is_lvalue)
+    if(!symbol.lvalue)
       continue;
 
-    if(cpp_is_pod(symbol.type))
-      symbol.value=::zero_initializer(symbol.type, symbol.location, *this, get_message_handler());
-    else
-    {
-      // _always_ zero initialize,
-      // even if there is already an initializer.
-      zero_initializer(
-        cpp_symbol_expr(symbol),
-        symbol.type,
-        symbol.location,
-        init_block.operands());
-    }
+    zero_initializer(
+      cpp_symbol_expr(symbol),
+      symbol.type,
+      symbol.location,
+      block_sini.operands());
   }
 
-  for(dynamic_initializationst::const_iterator
-      d_it=dynamic_initializations.begin();
-      d_it!=dynamic_initializations.end();
-      d_it++)
+  while(!dinis.empty())
   {
-    symbolt &symbol=symbol_table.symbols.find(*d_it)->second;
+    symbolt &symbol=context.symbols.find(dinis.front())->second;
+    dinis.pop_front();
 
     if(symbol.is_extern)
       continue;
-    
-    // PODs are always statically initialized  
-    if(cpp_is_pod(symbol.type))
-      continue;
 
-    assert(symbol.is_static_lifetime);
+    assert(symbol.static_lifetime);
     assert(!symbol.is_type);
     assert(symbol.type.id()!=ID_code);
 
-    exprt symbol_expr=cpp_symbol_expr(symbol);
+    exprt symexpr=cpp_symbol_expr(symbol);
 
-    // initializer given?
     if(symbol.value.is_not_nil())
     {
-      code_assignt code(symbol_expr, symbol.value);
-      code.location()=symbol.location;
+      if(!cpp_is_pod(symbol.type))
+      {
+        block_dini.move_to_operands(symbol.value);
+      }
+      else
+      {
+        exprt symbexpr(ID_symbol, symbol.type);
+        symbexpr.set(ID_identifier, symbol.name);
 
-      init_block.move_to_operands(code);
+        codet code;
+        code.set_statement(ID_assign);
+        code.copy_to_operands(symbexpr, symbol.value);
+        code.location()=symbol.location;
+
+        if(symbol.value.id()==ID_constant)
+          block_sini.move_to_operands(code);
+        else
+          block_dini.move_to_operands(code);
+      }
 
       // Make it nil because we do not want
       // global_init to try to initialize the
@@ -317,27 +315,25 @@ void cpp_typecheckt::static_and_dynamic_initialization()
     }
     else
     {
-      // use default constructor
       exprt::operandst ops;
 
       codet call=
-        cpp_constructor(symbol.location, symbol_expr, ops);
+        cpp_constructor(locationt(),
+          symexpr, ops);
 
       if(call.is_not_nil())
-        init_block.move_to_operands(call);
+        block_dini.move_to_operands(call);
     }
   }
-  
-  dynamic_initializations.clear();
 
-  //block_sini.move_to_operands(block_dini);
+  block_sini.move_to_operands(block_dini);
 
-  // Create the dynamic initialization procedure
+  // Create the initialization procedure
   symbolt init_symbol;
 
-  init_symbol.name="c::#cpp_dynamic_initialization#"+id2string(module);
-  init_symbol.base_name="#cpp_dynamic_initialization#"+id2string(module);
-  init_symbol.value.swap(init_block);
+  init_symbol.name="c::#ini#"+id2string(module);
+  init_symbol.base_name="#ini#"+id2string(module);
+  init_symbol.value.swap(block_sini);
   init_symbol.mode=ID_cpp;
   init_symbol.module=module;
   init_symbol.type=code_typet();
@@ -345,8 +341,9 @@ void cpp_typecheckt::static_and_dynamic_initialization()
   init_symbol.type.set("initialization", true);
   init_symbol.is_type=false;
   init_symbol.is_macro=false;
+  init_symbol.theorem=true;
 
-  symbol_table.move(init_symbol);
+  context.move(init_symbol);
 
   disable_access_control=false;
 }
@@ -371,7 +368,7 @@ void cpp_typecheckt::do_not_typechecked()
   {
     cont = false;
 
-    Forall_symbols(s_it, symbol_table.symbols)
+    Forall_symbols(s_it, context.symbols)
     {
       symbolt &symbol=s_it->second;
 
@@ -404,7 +401,7 @@ void cpp_typecheckt::do_not_typechecked()
   }
   while(cont);
 
-  Forall_symbols(s_it, symbol_table.symbols)
+  Forall_symbols(s_it, context.symbols)
   {
     symbolt &symbol=s_it->second;
     if(symbol.value.id()=="cpp_not_typechecked")
@@ -426,18 +423,18 @@ Function: cpp_typecheckt::clean_up
 
 void cpp_typecheckt::clean_up()
 {
-  symbol_tablet::symbolst::iterator it=symbol_table.symbols.begin();
+  contextt::symbolst::iterator it=context.symbols.begin();
   
-  while(it!=symbol_table.symbols.end())
+  while(it!=context.symbols.end())
   {
-    symbol_tablet::symbolst::iterator cur_it = it;
+    contextt::symbolst::iterator cur_it = it;
     it++;
 
     symbolt &symbol = cur_it->second;
 
     if(symbol.type.get_bool(ID_is_template))
     {
-      symbol_table.symbols.erase(cur_it);
+      context.symbols.erase(cur_it);
       continue;
     }
     else if(symbol.type.id()==ID_struct ||
@@ -454,7 +451,7 @@ void cpp_typecheckt::clean_up()
 
       struct_union_typet::componentst &function_members=
         (struct_union_typet::componentst &)
-        (struct_union_type.add(ID_methods).get_sub());
+        (struct_union_type.add("methods").get_sub());
         
       function_members.reserve(components.size());
 

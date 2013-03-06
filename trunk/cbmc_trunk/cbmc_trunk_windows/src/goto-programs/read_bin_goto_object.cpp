@@ -10,18 +10,81 @@ Date: June 2006
 
 #include <namespace.h>
 #include <message_stream.h>
-#include <symbol_table.h>
+#include <context.h>
 
 #include "read_bin_goto_object.h"
 #include "goto_function_serialization.h"
+//#include "symbol_serialization.h"
 #include "irep_serialization.h"
 #include "goto_program_irep.h"
 
 /*******************************************************************\
  
+Function: read_goto_object_v1
+ 
+  Inputs: input stream, context, functions
+ 
+ Outputs: true on error, false otherwise
+ 
+ Purpose: read goto binary format v1
+ 
+\*******************************************************************/
+
+#if 0
+OBSOLETE
+bool read_bin_goto_object_v1(
+  std::istream &in,
+  const std::string &filename,
+  contextt &context,
+  goto_functionst &functions,
+  message_handlert &message_handler,
+  irep_serializationt &irepconverter,
+  symbol_serializationt &symbolconverter,
+  goto_function_serializationt &gfconverter)
+{ 
+  unsigned count = irepconverter.read_long(in);
+
+  for (unsigned i=0; i<count; i++)
+  {
+    irept t;
+    symbolconverter.convert(in, t);
+    symbolt symbol;
+    symbol.from_irep(t);
+    
+    if(!symbol.is_type &&
+       symbol.type.id()==ID_code)
+    {
+      // makes sure there is an empty function
+      // for every function symbol and fixes
+      // the function types. 
+      functions.function_map[symbol.name].type=
+        to_code_type(symbol.type);      
+    }
+    // std::cout << "Adding Symbol: " << symbol.name << std::endl;
+    context.add(symbol);
+  }
+  
+  count = irepconverter.read_long(in); 
+  for (unsigned i=0; i<count; i++)
+  {
+    irept t;
+    dstring fname=irepconverter.read_string(in);    
+    gfconverter.convert(in, t);
+    // std::cout << "Adding function body: " << fname << std::endl;        
+    goto_functionst::goto_functiont &f = functions.function_map[fname];
+    convert(t, f.body);
+    f.body_available = f.body.instructions.size()>0;    
+  }
+  
+  return false;
+}
+#endif
+
+/*******************************************************************\
+ 
 Function: read_goto_object_v2
  
-  Inputs: input stream, symbol_table, functions
+  Inputs: input stream, context, functions
  
  Outputs: true on error, false otherwise
  
@@ -32,7 +95,7 @@ Function: read_goto_object_v2
 bool read_bin_goto_object_v2(
   std::istream &in,
   const std::string &filename,
-  symbol_tablet &symbol_table,
+  contextt &context,
   goto_functionst &functions,
   message_handlert &message_handler,
   irep_serializationt &irepconverter,
@@ -54,25 +117,24 @@ bool read_bin_goto_object_v2(
     sym.mode = irepconverter.read_string_ref(in);
     sym.pretty_name = irepconverter.read_string_ref(in);
     
-    // obsolete: symordering
-    irepconverter.read_long(in);
+    sym.ordering = irepconverter.read_long(in);
 
     unsigned flags=irepconverter.read_long(in);
     
     sym.is_type = flags & (1 << 15);
-    sym.is_property = flags & (1 << 14); 
+    sym.theorem = flags & (1 << 14); 
     sym.is_macro = flags & (1 << 13);
     sym.is_exported = flags & (1 << 12);
     sym.is_input = flags & (1 << 11);
     sym.is_output = flags & (1 << 10);
-    sym.is_state_var = flags & (1 << 9);
-    sym.is_argument = flags & (1 << 8);
-    //sym.free_var = flags & (1 << 7);
-    //sym.binding = flags & (1 << 6);
-    sym.is_lvalue = flags & (1 << 5);
-    sym.is_static_lifetime = flags & (1 << 4);
-    sym.is_thread_local = flags & (1 << 3);
-    sym.is_file_local = flags & (1 << 2);
+    sym.is_statevar = flags & (1 << 9);
+    sym.is_actual = flags & (1 << 8);
+    sym.free_var = flags & (1 << 7);
+    sym.binding = flags & (1 << 6);
+    sym.lvalue = flags & (1 << 5);
+    sym.static_lifetime = flags & (1 << 4);
+    sym.thread_local = flags & (1 << 3);
+    sym.file_local = flags & (1 << 2);
     sym.is_extern = flags & (1 << 1);
     sym.is_volatile = flags & 1;
     
@@ -84,7 +146,7 @@ bool read_bin_goto_object_v2(
       functions.function_map[sym.name].type=to_code_type(sym.type);      
     }
     
-    symbol_table.add(sym);
+    context.add(sym);
   }
   
   count=irepconverter.read_long(in); // # of functions
@@ -96,8 +158,6 @@ bool read_bin_goto_object_v2(
     
     typedef std::map<goto_programt::targett, std::list<unsigned> > target_mapt;
     target_mapt target_map;
-    typedef std::map<unsigned, goto_programt::targett> rev_target_mapt;
-    rev_target_mapt rev_target_map;
     
     unsigned ins_count = irepconverter.read_long(in); // # of instructions
     for (unsigned i=0; i<ins_count; i++)
@@ -114,10 +174,6 @@ bool read_bin_goto_object_v2(
       irepconverter.reference_convert(in, instruction.guard);
       irepconverter.read_string_ref(in); // former event
       instruction.target_number = irepconverter.read_long(in);
-      if(instruction.is_target() &&
-          rev_target_map.insert(rev_target_map.end(),
-            std::make_pair(instruction.target_number, itarget))->second!=itarget)
-        assert(false);
       
       unsigned t_count = irepconverter.read_long(in); // # of targets
       for (unsigned i=0; i<t_count; i++)
@@ -141,9 +197,15 @@ bool read_bin_goto_object_v2(
           nit++)
       {
         unsigned n=*nit;
-        rev_target_mapt::const_iterator entry=rev_target_map.find(n);
-        assert(entry!=rev_target_map.end());
-        ins->targets.push_back(entry->second);
+        
+        Forall_goto_program_instructions(iit, f.body)
+        {
+          if(iit->target_number==n) 
+          {
+            ins->targets.push_back(iit);
+            break;
+          }
+        }
       }
     }
     
@@ -158,7 +220,7 @@ bool read_bin_goto_object_v2(
  
 Function: read_goto_object
  
-  Inputs: input stream, symbol table, functions
+  Inputs: input stream, context, functions
  
  Outputs: true on error, false otherwise
  
@@ -169,7 +231,7 @@ Function: read_goto_object
 bool read_bin_goto_object(
   std::istream &in,
   const std::string &filename,
-  symbol_tablet &symbol_table,
+  contextt &context,
   goto_functionst &functions,
   message_handlert &message_handler)
 { 
@@ -228,7 +290,7 @@ bool read_bin_goto_object(
 
     case 2:
       return read_bin_goto_object_v2(in, filename, 
-                                     symbol_table, functions, 
+                                     context, functions, 
                                      message_handler,
                                      irepconverter,
                                      gfconverter); 

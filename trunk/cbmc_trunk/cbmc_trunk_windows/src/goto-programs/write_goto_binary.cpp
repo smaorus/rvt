@@ -11,7 +11,7 @@ Author: CM Wintersteiger
 #include <message.h>
 #include <irep_serialization.h>
 #include <symbol_serialization.h>
-#include <symbol_table.h>
+#include <context.h>
 
 #include <goto-programs/goto_function_serialization.h>
 
@@ -31,16 +31,16 @@ Function: goto_programt::write_goto_binary_v2
 
 bool write_goto_binary_v2(
   std::ostream &out,
-  const symbol_tablet &lsymbol_table,
+  const contextt &lcontext,
   const goto_functionst &functions,
   irep_serializationt &irepconverter,  
   goto_function_serializationt &gfconverter)
 {
   // first write symbol table
 
-  write_long(out, lsymbol_table.symbols.size());
+  write_long(out, lcontext.symbols.size());
 
-  forall_symbols(it, lsymbol_table.symbols)
+  forall_symbols(it, lcontext.symbols)
   {
     // In version 2, symbols are not converted to ireps,
     // instead they are saved in a custom binary format
@@ -57,23 +57,23 @@ bool write_goto_binary_v2(
     irepconverter.write_string_ref(out, sym.mode);
     irepconverter.write_string_ref(out, sym.pretty_name);
     
-    write_long(out, 0); // old: sym.ordering
+    write_long(out, sym.ordering);
 
     unsigned flags=0;    
     flags = (flags << 1) | (int)sym.is_type; 
-    flags = (flags << 1) | (int)sym.is_property;
+    flags = (flags << 1) | (int)sym.theorem;
     flags = (flags << 1) | (int)sym.is_macro;
     flags = (flags << 1) | (int)sym.is_exported;
     flags = (flags << 1) | (int)sym.is_input;
     flags = (flags << 1) | (int)sym.is_output;
-    flags = (flags << 1) | (int)sym.is_state_var;
-    flags = (flags << 1) | (int)sym.is_argument;
-    flags = (flags << 1) | (int)false; // sym.free_var;
-    flags = (flags << 1) | (int)false; // sym.binding;
-    flags = (flags << 1) | (int)sym.is_lvalue;
-    flags = (flags << 1) | (int)sym.is_static_lifetime;
-    flags = (flags << 1) | (int)sym.is_thread_local;
-    flags = (flags << 1) | (int)sym.is_file_local;
+    flags = (flags << 1) | (int)sym.is_statevar;
+    flags = (flags << 1) | (int)sym.is_actual;
+    flags = (flags << 1) | (int)sym.free_var;
+    flags = (flags << 1) | (int)sym.binding;
+    flags = (flags << 1) | (int)sym.lvalue;
+    flags = (flags << 1) | (int)sym.static_lifetime;
+    flags = (flags << 1) | (int)sym.thread_local;
+    flags = (flags << 1) | (int)sym.file_local;
     flags = (flags << 1) | (int)sym.is_extern;
     flags = (flags << 1) | (int)sym.is_volatile;
     
@@ -99,7 +99,7 @@ bool write_goto_binary_v2(
       // In version 2, goto functions are not converted to ireps,
       // instead they are saved in a custom binary format      
       
-      write_string(out, id2string(it->first)); // name      
+      write_string(out, it->first.as_string()); // name      
       write_long(out, it->second.body.instructions.size()); // # instructions
       
       forall_goto_program_instructions(i_it, it->second.body)
@@ -153,7 +153,7 @@ Function: goto_programt::write_goto_binary
 
 bool write_goto_binary(
   std::ostream &out,
-  const symbol_tablet &lsymbol_table,
+  const contextt &lcontext,
   const goto_functionst &functions,
   int version)
 {
@@ -172,7 +172,7 @@ bool write_goto_binary(
 
   case 2:
     return write_goto_binary_v2(
-      out, lsymbol_table, functions,
+      out, lcontext, functions,
       irepconverter,
       gfconverter); 
 
@@ -197,7 +197,7 @@ Function: goto_programt::write_goto_binary
 
 bool write_goto_binary(
   const std::string &filename,
-  const symbol_tablet &symbol_table,
+  const contextt &context,
   const goto_functionst &goto_functions,
   message_handlert &message_handler)
 {
@@ -211,6 +211,6 @@ bool write_goto_binary(
     return true;
   }
 
-  return write_goto_binary(out, symbol_table, goto_functions);
+  return write_goto_binary(out, context, goto_functions);
 }
 

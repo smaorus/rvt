@@ -132,19 +132,12 @@ void symex_slicet::slice(symex_target_equationt::SSA_stept &SSA_step)
     break;
 
   case goto_trace_stept::OUTPUT:
-  case goto_trace_stept::INPUT:
     break;
     
   case goto_trace_stept::DECL:
-  case goto_trace_stept::DEAD:
     // ignore for now
     break;
-    
-  case goto_trace_stept::FUNCTION_CALL:
-  case goto_trace_stept::FUNCTION_RETURN:
-    // ignore for now
-    break;
-    
+
   default:
     assert(false);  
   }
@@ -186,8 +179,8 @@ Function: symex_slice_classt::collect_open_variables
 
  Outputs: None. But open_variables is modified as a side-effect.
 
- Purpose: Collect the open variables, i.e., variables that are used
-          in RHS but never written in LHS
+ Purpose: Collect the open variables, i.e. variables that are used in RHS
+          but never written in LHS
 
 \*******************************************************************/
 
@@ -226,14 +219,9 @@ void symex_slicet::collect_open_variables(
       break;
 
     case goto_trace_stept::OUTPUT:
-    case goto_trace_stept::INPUT:
-    case goto_trace_stept::DEAD:
-    case goto_trace_stept::NONE:
       break;
 
     case goto_trace_stept::DECL:
-    case goto_trace_stept::FUNCTION_CALL:
-    case goto_trace_stept::FUNCTION_RETURN:
       // ignore for now
       break;
 
@@ -275,8 +263,8 @@ Function: collect_open_variables
 
  Outputs: None. But open_variables is modified as a side-effect.
 
- Purpose: Collect the open variables, i.e. variables that are used
-          in RHS but never written in LHS
+ Purpose: Collect the open variables, i.e. variables that are used in RHS
+          but never written in LHS
 
 \*******************************************************************/
 

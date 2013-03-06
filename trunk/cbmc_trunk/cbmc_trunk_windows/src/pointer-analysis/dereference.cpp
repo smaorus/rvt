@@ -20,14 +20,14 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <std_expr.h>
 #include <cprover_prefix.h>
 #include <pointer_offset_size.h>
-#include <symbol_table.h>
+#include <context.h>
 #include <guard.h>
 #include <options.h>
-#include <pointer_predicates.h>
 
 #include <ansi-c/c_types.h>
 #include <ansi-c/c_typecast.h>
 
+#include <goto-programs/dynamic_memory.h>
 #include <pointer-analysis/value_set.h>
 
 #include <langapi/language_util.h>
@@ -208,14 +208,14 @@ exprt dereferencet::dereference(
       symbol.type=type;
 
       // make it a lvalue, so we can assign to it
-      symbol.is_lvalue=true;
+      symbol.lvalue=true;
       
       get_new_name(symbol, ns);
 
       failure_value=symbol_expr(symbol);
       failure_value.set(ID_C_invalid_object, true);
       
-      new_symbol_table.move(symbol);
+      new_context.move(symbol);
     }
 
     valuet value;
@@ -315,8 +315,14 @@ void dereferencet::invalid_pointer(
     return;
     
   // constraint that it actually is an invalid pointer
+
+  exprt invalid_pointer_expr("invalid-pointer", bool_typet());
+  invalid_pointer_expr.copy_to_operands(pointer);
+  
+  // produce new guard
+  
   guardt tmp_guard(guard);
-  tmp_guard.add(::invalid_pointer(pointer));
+  tmp_guard.add(invalid_pointer_expr);
   
   dereference_callback.dereference_failure(
     "pointer dereference",
@@ -370,11 +376,13 @@ dereferencet::valuet dereferencet::build_reference_to(
   {
     if(options.get_bool_option("pointer-check"))
     {
+      null_pointer_exprt null_pointer(to_pointer_type(pointer_expr.type()));
+
       guardt tmp_guard(guard);
       
       if(o.offset().is_zero())
       {
-        tmp_guard.add(null_pointer(pointer_expr));
+        tmp_guard.add(equal_exprt(pointer_expr, null_pointer));
 
         dereference_callback.dereference_failure(
           "pointer dereference",
@@ -382,7 +390,9 @@ dereferencet::valuet dereferencet::build_reference_to(
       }
       else
       {
-        tmp_guard.add(null_object(pointer_expr));
+        exprt pointer_guard(ID_same_object, bool_typet());
+        pointer_guard.copy_to_operands(pointer_expr, null_pointer);
+        tmp_guard.add(pointer_guard);
 
         dereference_callback.dereference_failure(
           "pointer dereference",
@@ -418,7 +428,7 @@ dereferencet::valuet dereferencet::build_reference_to(
       {
         // check if it is still alive
         guardt tmp_guard(guard);
-        tmp_guard.add(deallocated(pointer_expr, ns));
+        tmp_guard.add(deallocated(ns, pointer_expr));
         dereference_callback.dereference_failure(
           "pointer dereference",
           "dynamic object deallocated", 
@@ -430,9 +440,18 @@ dereferencet::valuet dereferencet::build_reference_to(
         if(!o.offset().is_zero())
         {
           // check lower bound
+          exprt zero=gen_zero(index_type());
+          assert(zero.is_not_nil());
+
+          exprt object_offset=unary_exprt(
+            ID_pointer_offset, pointer_expr, index_type());
+
+          binary_relation_exprt
+            inequality(object_offset, ID_lt, zero);
+
           guardt tmp_guard(guard);
           tmp_guard.add(is_malloc_object);
-          tmp_guard.add(dynamic_object_lower_bound(pointer_expr));
+          tmp_guard.add(inequality);
           dereference_callback.dereference_failure(
             "pointer dereference",
             "dynamic object lower bound", tmp_guard);
@@ -444,9 +463,34 @@ dereferencet::valuet dereferencet::build_reference_to(
           // we check SAME_OBJECT(__CPROVER_malloc_object, p) &&
           //          POINTER_OFFSET(p)+size>__CPROVER_malloc_size
 
+          exprt malloc_size=
+            symbol_expr(ns.lookup(CPROVER_PREFIX "malloc_size"));
+          
+          assert(ns.follow(malloc_object.type()).id()==ID_pointer);
+          
+          exprt object_offset=unary_exprt(
+            ID_pointer_offset, pointer_expr, index_type());
+            
+          mp_integer element_size=
+            pointer_offset_size(ns, dereference_type);
+            
+          if(element_size<0) element_size=0;
+          
+          exprt size=from_integer(element_size, object_offset.type());
+          
+          // need to add size
+          exprt sum=plus_exprt(object_offset, size);
+          
+          if(ns.follow(sum.type())!=
+             ns.follow(malloc_size.type()))
+            sum.make_typecast(malloc_size.type());
+
+          binary_relation_exprt
+            inequality(sum, ID_gt, malloc_size);
+
           guardt tmp_guard(guard);
           tmp_guard.add(is_malloc_object);
-          tmp_guard.add(dynamic_object_upper_bound(pointer_expr, dereference_type, ns));
+          tmp_guard.add(inequality);
           dereference_callback.dereference_failure(
             "pointer dereference",
             "dynamic object upper bound", tmp_guard);

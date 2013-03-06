@@ -7,7 +7,7 @@
 
 int fcntl(int fd, int cmd, ...)
 {
-__CPROVER_HIDE:;
+__CPROVER_hide:
   int return_value;
   return return_value;
 }

@@ -16,7 +16,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <set>
 
 #include <namespace.h>
-#include <symbol_table.h>
 #include <location.h>
 
 typedef enum { NO_INSTRUCTION_TYPE=0,
@@ -331,7 +330,7 @@ public:
   //! Output goto-program to given stream  
   inline std::ostream &output(std::ostream &out) const
   {
-    return output(namespacet(symbol_tablet()), "", out);
+    return output(namespacet(contextt()), "", out);
   }
 
   //! Output a single instruction  

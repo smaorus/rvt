@@ -30,6 +30,8 @@ Function: armcc_cmdlinet::parse
 static const char *options_no_arg[]=
 {
   // goto-cc-specific
+  "--dot",
+  "--xml",
   "--show-symbol-table",
   "--show-function-table",
   "--16",
@@ -290,29 +292,36 @@ bool armcc_cmdlinet::parse(int argc, const char **argv)
     if(in_list(argv[i], options_no_arg))
     {
       // options that don't have any arguments
-      set(argv[i]);
+      options[get_optnr(argv[i])].isset=true;
     }
     else if(prefix_in_list(argv[i], options_with_arg, prefix))
     {
       // options that have a separated _or_ concatenated argument
+      int optnr=get_optnr(prefix);
+      options[optnr].isset=true;
+      
       if(strlen(argv[i])>prefix.size()) // concatenated?
-        set(prefix, std::string(argv[i], prefix.size(), std::string::npos));
+        options[optnr].values.push_back(
+          std::string(argv[i], prefix.size(), std::string::npos));
       else
       {
         // Separated.
         if(i!=argc-1) // Guard against end of command line.
         {
-          set(prefix, argv[i+1]);
+          options[optnr].values.push_back(argv[i+1]);
           i++;
         }
         else
-          set(prefix, "");
+          options[optnr].values.push_back("");
       }
     } 
     else if(prefix_in_list(argv[i], options_with_prefix, prefix))
     {
       // options that have a concatenated argument
-      set(prefix, std::string(argv[i], prefix.size(), std::string::npos));
+      int optnr=get_optnr(prefix);
+      options[optnr].isset=true;
+      options[optnr].values.push_back(
+        std::string(argv[i], prefix.size(), std::string::npos));
     }
     else
     { // unrecognized option

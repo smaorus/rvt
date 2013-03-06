@@ -28,9 +28,8 @@ public:
     const std::string &_benchmark,
     const std::string &_notes,
     const std::string &_logic,
-    bool _core_enabled,
     std::ostream &_out):
-    smt2_prop(_benchmark, _notes, _logic, _core_enabled, _out) 
+    smt2_prop(_benchmark, _notes, _logic, _out) 
   { }
 
 protected:
@@ -51,31 +50,14 @@ public:
     const namespacet &_ns,
     const std::string &_benchmark,
     const std::string &_notes,
-    const std::string &_logic,
+    const std::string &_logic,    
     std::ostream &_out):
-    smt2_prop_wrappert(_benchmark, _notes, _logic, false, _out),
+    smt2_prop_wrappert(_benchmark, _notes, _logic, _out),
     prop_convt(_ns, smt2_prop),
     use_FPA_theory(false),
     boolbv_width(_ns),
     pointer_logic(_ns),
-    array_index_bits(32),
-    num_core_constraints(0)
-  { }
-
-  smt2_convt(
-    const namespacet &_ns,
-    const std::string &_benchmark,
-    const std::string &_notes,
-    const std::string &_logic,
-    bool _core_enabled,
-    std::ostream &_out):
-    smt2_prop_wrappert(_benchmark, _notes, _logic, _core_enabled, _out),
-    prop_convt(_ns, smt2_prop),
-    use_FPA_theory(false),
-    boolbv_width(_ns),
-    pointer_logic(_ns),
-    array_index_bits(32),
-    num_core_constraints(0)
+    array_index_bits(32)
   { }
 
   virtual ~smt2_convt() { }
@@ -83,14 +65,13 @@ public:
 
   bool use_FPA_theory;
 
-  // overloading interfaces
+protected:
+  boolbv_widtht boolbv_width;
+
+  // overloading
   virtual literalt convert(const exprt &expr);
   virtual void set_to(const exprt &expr, bool value);
   virtual exprt get(const exprt &expr) const;
-  virtual bool in_core(const exprt &expr);
-
-protected:
-  boolbv_widtht boolbv_width;
 
   // new stuff
   void convert_expr(const exprt &expr);
@@ -121,9 +102,6 @@ protected:
   void find_symbols(const exprt &expr);
   void find_symbols(const typet &type);
   void find_symbols_rec(const typet &type, std::set<irep_idt> &recstack);
-
-  constant_exprt parse_constant(const std::string &s, const typet &type);
-  exprt parse_struct(const std::string &s, const typet &type);
   
   // arrays
   typet array_index_type() const;
@@ -155,9 +133,6 @@ protected:
     identifier_mapt;
 
   identifier_mapt identifier_map;
-
-  typedef std::map<typet, std::string> type_mapt;
-  type_mapt type_map;
   
   unsigned array_index_bits;
   
@@ -169,10 +144,6 @@ protected:
 
   typedef std::map<exprt, irep_idt> defined_expressionst;
   defined_expressionst defined_expressions;
-
-  int num_core_constraints;
-  std::map<std::string, exprt> core_map;
-  std::set<exprt> unsat_core;
 };
 
 #endif

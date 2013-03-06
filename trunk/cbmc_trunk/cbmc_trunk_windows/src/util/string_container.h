@@ -55,9 +55,7 @@ public:
     return get(s);
   }
   
-  // constructor and destructor
-  string_containert();  
-  ~string_containert();
+  string_containert();
   
   const char *c_str(unsigned no) const
   {

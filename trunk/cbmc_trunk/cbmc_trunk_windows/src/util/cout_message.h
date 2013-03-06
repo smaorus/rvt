@@ -10,27 +10,33 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #define CPROVER_COUT_MESSAGE_H
 
+#include <iostream>
 #include <message.h>
 
 class cout_message_handlert:public message_handlert
 {
 public:
-  // all messages go to cout
-  virtual void print(unsigned level, const std::string &message);
+  virtual void print(unsigned level, const std::string &message)
+  { std::cout << message << std::endl; }
 };
  
 class cerr_message_handlert:public message_handlert
 {
 public:
-  // all messages go to cerr
-  virtual void print(unsigned level, const std::string &message);
+  virtual void print(unsigned level, const std::string &message)
+  { std::cerr << message << std::endl; }
 };
  
 class console_message_handlert:public message_handlert
 {
 public:
-  // level 4 and upwards go to cout, level 1-3 to cerr
-  virtual void print(unsigned level, const std::string &message);
+  virtual void print(unsigned level, const std::string &message)
+  { 
+    if(level>1)
+      std::cout << message << std::endl;
+    else
+      std::cerr << message << std::endl;
+  }
 };
  
 #endif

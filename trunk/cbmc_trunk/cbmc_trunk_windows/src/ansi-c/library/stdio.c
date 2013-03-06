@@ -159,7 +159,7 @@ inline int feof(FILE *stream)
 {
   // just return nondet
   int return_value;
-  (void)*stream;
+  *stream;
   return return_value;
 }
 
@@ -174,7 +174,7 @@ inline int ferror(FILE *stream)
 {
   // just return nondet
   int return_value;
-  (void)*stream;
+  *stream;
   return return_value;
 }
 
@@ -189,7 +189,7 @@ inline int fileno(FILE *stream)
 {
   // just return nondet
   int return_value;
-  (void)*stream;
+  *stream;
   return return_value;
 }
 
@@ -207,7 +207,7 @@ int fputs(const char *s, FILE *stream)
   #ifdef __CPROVER_STRING_ABSTRACTION
   __CPROVER_assert(__CPROVER_is_zero_string(s), "fputs zero-termination of 1st argument");
   #endif
-  (void)*stream;
+  *stream;
   return return_value;
 }
 
@@ -222,7 +222,7 @@ int fflush(FILE *stream)
 {
   // just return nondet
   int return_value;
-  (void)*stream;
+  *stream;
   return return_value;
 }
 
@@ -237,7 +237,7 @@ int fpurge(FILE *stream)
 {
   // just return nondet
   int return_value;
-  (void)*stream;
+  *stream;
   return return_value;
 }
 
@@ -275,7 +275,7 @@ inline int fgetc(FILE *stream)
 {
   __CPROVER_HIDE:;
   int return_value;
-  (void)*stream;
+  *stream;
   // it's a byte or EOF (-1)
   __CPROVER_assume(return_value>=-1 && return_value<=255);
   return return_value;
@@ -292,7 +292,7 @@ inline int getc(FILE *stream)
 {
   __CPROVER_HIDE:;
   int return_value;
-  (void)*stream;
+  *stream;
   // it's a byte or EOF
   __CPROVER_assume(return_value>=-1 && return_value<=255);
   return return_value;
@@ -325,7 +325,7 @@ inline int getw(FILE *stream)
 {
   __CPROVER_HIDE:;
   int return_value;
-  (void)*stream;
+  *stream;
   // it's any int, no restriction
   return return_value;
 }
@@ -341,7 +341,7 @@ inline int fseek(FILE *stream, long offset, int whence)
 {
   __CPROVER_HIDE:;
   int return_value;
-  (void)*stream;
+  *stream;
   return return_value;
 }
 
@@ -356,7 +356,7 @@ long ftell(FILE *stream)
 {
   __CPROVER_HIDE:;
   int return_value;
-  (void)*stream;
+  *stream;
   return return_value;
 }
 
@@ -370,7 +370,7 @@ long ftell(FILE *stream)
 void rewind(FILE *stream)
 {
   __CPROVER_HIDE:
-  (void)*stream;
+  *stream;
 }
 
 /* FUNCTION: fwrite */
@@ -387,7 +387,7 @@ size_t fwrite(
   FILE *stream)
 {
   __CPROVER_HIDE:;
-  (void)*stream;
+  *stream;
   size_t nwrite;
   __CPROVER_assume(nwrite<=nitems);
   return nwrite;
@@ -402,7 +402,7 @@ size_t fwrite(
 
 void perror(const char *s)
 {
-  __CPROVER_HIDE:;
+  __CPROVER_hide:;
   if(s!=0)
   {
     #ifdef __CPROVER_STRING_ABSTRACTION
@@ -425,12 +425,11 @@ void perror(const char *s)
 
 int fscanf(FILE *restrict stream, const char *restrict format, ...)
 {
-  __CPOVER_HIDE:;
+  __CPOVER_hide:;
   __builtin_va_list list;
   __builtin_va_start(list, format);
-  int result=vsfcanf(stream, format, list);
+  vsscanf(stream, format, list);
   __builtin_va_end(list);
-  return result;
 }
 
 /* FUNCTION: scanf */
@@ -442,12 +441,11 @@ int fscanf(FILE *restrict stream, const char *restrict format, ...)
 
 int scanf(const char *restrict format, ...)
 {
-  __CPOVER_HIDE:;
+  __CPOVER_hide:;
   __builtin_va_list list;
   __builtin_va_start(list, format);
-  int result=vfscanf(stdin, format, list);
+  vfscanf(stdin, format, list);
   __builtin_va_end(list);
-  return result;
 }
 
 /* FUNCTION: sscanf */
@@ -459,12 +457,11 @@ int scanf(const char *restrict format, ...)
 
 int sscanf(const char *restrict s, const char *restrict format, ...)
 {
-  __CPOVER_HIDE:;
+  __CPOVER_hide:;
   __builtin_va_list list;
   __builtin_va_start(list, format);
-  int result=vsscanf(s, format, list);
+  vsscanf(s, format, list);
   __builtin_va_end(list);
-  return result;
 }
 
 /* FUNCTION: vfscanf */
@@ -481,8 +478,8 @@ int sscanf(const char *restrict s, const char *restrict format, ...)
 
 int vfscanf(FILE *restrict stream, const char *restrict format, va_list arg)
 {
-  __CPROVER_HIDE:;
-  (void)*stream;
+  __CPROVER_hide:;
+  *stream;
   
 }
 
@@ -500,8 +497,8 @@ int vfscanf(FILE *restrict stream, const char *restrict format, va_list arg)
 
 int vscanf(const char *restrict format, va_list arg)
 {
-  __CPROVER_HIDE:;
-  return vfscanf(stdin, format, arg);
+  __CPROVER_hide:;
+  vfscanf(stdin, format, arg);
 }
 
 /* FUNCTION: vsscanf */

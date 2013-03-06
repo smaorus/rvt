@@ -12,6 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "language.h"
 #include "language_file.h"
+#include "strstream2string.h"
   
 /*******************************************************************\
 
@@ -142,14 +143,14 @@ Function: language_filest::typecheck
 
 \*******************************************************************/
 
-bool language_filest::typecheck(symbol_tablet &symbol_table)
+bool language_filest::typecheck(contextt &context)
 {
   // typecheck interfaces
 
   for(filemapt::iterator it=filemap.begin();
       it!=filemap.end(); it++)
   {
-    if(it->second.language->interfaces(symbol_table, get_message_handler()))
+    if(it->second.language->interfaces(context, get_message_handler()))
       return true;
   }
 
@@ -191,7 +192,7 @@ bool language_filest::typecheck(symbol_tablet &symbol_table)
       it!=filemap.end(); it++)
   {
     if(it->second.modules.empty())
-      if(it->second.language->typecheck(symbol_table, "", get_message_handler()))
+      if(it->second.language->typecheck(context, "", get_message_handler()))
         return true;
   }
 
@@ -200,7 +201,7 @@ bool language_filest::typecheck(symbol_tablet &symbol_table)
   for(modulemapt::iterator it=modulemap.begin();
       it!=modulemap.end(); it++)
   {
-    if(typecheck_module(symbol_table, it->second))
+    if(typecheck_module(context, it->second))
       return true;
   }
 
@@ -220,7 +221,7 @@ Function: language_filest::final
 \*******************************************************************/
 
 bool language_filest::final(
-  symbol_tablet &symbol_table)
+  contextt &context)
 {
   std::set<std::string> languages;
 
@@ -228,7 +229,7 @@ bool language_filest::final(
       it!=filemap.end(); it++)
   {
     if(languages.insert(it->second.language->id()).second)
-      if(it->second.language->final(symbol_table, get_message_handler()))
+      if(it->second.language->final(context, get_message_handler()))
         return true;
   }
 
@@ -248,12 +249,12 @@ Function: language_filest::interfaces
 \*******************************************************************/
 
 bool language_filest::interfaces(
-  symbol_tablet &symbol_table)
+  contextt &context)
 {
   for(filemapt::iterator it=filemap.begin();
       it!=filemap.end(); it++)
   {
-    if(it->second.language->interfaces(symbol_table, get_message_handler()))
+    if(it->second.language->interfaces(context, get_message_handler()))
       return true;
   }
 
@@ -273,7 +274,7 @@ Function: language_filest::typecheck_module
 \*******************************************************************/
 
 bool language_filest::typecheck_module(
-  symbol_tablet &symbol_table,
+  contextt &context,
   const std::string &module)
 {
   // check module map
@@ -286,7 +287,7 @@ bool language_filest::typecheck_module(
     return true;
   }
 
-  return typecheck_module(symbol_table, it->second);
+  return typecheck_module(context, it->second);
 }
 
 /*******************************************************************\
@@ -302,7 +303,7 @@ Function: language_filest::typecheck_module
 \*******************************************************************/
 
 bool language_filest::typecheck_module(
-  symbol_tablet &symbol_table,
+  contextt &context,
   language_modulet &module)
 {
   // already typechecked?
@@ -331,7 +332,7 @@ bool language_filest::typecheck_module(
       it!=dependency_set.end();
       it++)
   {
-    if(typecheck_module(symbol_table, *it))
+    if(typecheck_module(context, *it))
     {
       module.in_progress=false;
       return true;
@@ -342,7 +343,7 @@ bool language_filest::typecheck_module(
 
   status("Type-checking "+module.name);
 
-  if(module.file->language->typecheck(symbol_table, module.name, get_message_handler()))
+  if(module.file->language->typecheck(context, module.name, get_message_handler()))
   {
     module.in_progress=false;
     return true;

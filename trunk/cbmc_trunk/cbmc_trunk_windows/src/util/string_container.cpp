@@ -74,22 +74,6 @@ string_containert::string_containert()
 
 /*******************************************************************\
 
-Function: string_containert::~string_containert
-
-  Inputs:
-
- Outputs:
-
- Purpose:
-
-\*******************************************************************/
-
-string_containert::~string_containert()
-{
-}
-
-/*******************************************************************\
-
 Function: string_containert::get
 
   Inputs:

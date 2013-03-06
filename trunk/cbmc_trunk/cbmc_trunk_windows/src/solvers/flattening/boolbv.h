@@ -35,8 +35,8 @@ public:
     propt &_prop):
     arrayst(_ns, _prop),
     unbounded_array(U_NONE),
-    boolbv_width(_ns),
     bv_utils(_prop),
+    boolbv_width(_ns),
     functions(*this),
     map(_prop, _ns, boolbv_width)
   {
@@ -84,10 +84,9 @@ public:
     return map;
   }
 
-  boolbv_widtht boolbv_width;
-
 protected:
   bv_utilst bv_utils;
+  boolbv_widtht boolbv_width;
   
   // uninterpreted functions
   functionst functions;
@@ -105,10 +104,6 @@ protected:
 
   typedef hash_map_cont<const exprt, bvt, irep_hash> bv_cachet;
   bv_cachet bv_cache;
-
-  bool type_conversion(
-    const typet &src_type, const bvt &src,
-    const typet &dest_type, bvt &dest);
   
   virtual literalt convert_bv_rel(const exprt &expr);
   virtual literalt convert_typecast(const exprt &expr);
@@ -127,10 +122,6 @@ protected:
   virtual void convert_if(const exprt &expr, bvt &bv);
   virtual void convert_struct(const exprt &expr, bvt &bv);
   virtual void convert_array(const exprt &expr, bvt &bv);
-  virtual void convert_vector(const exprt &expr, bvt &bv);
-  virtual void convert_complex(const exprt &expr, bvt &bv);
-  virtual void convert_complex_real(const exprt &expr, bvt &bv);
-  virtual void convert_complex_imag(const exprt &expr, bvt &bv);
   virtual void convert_lambda(const exprt &expr, bvt &bv);
   virtual void convert_array_of(const exprt &expr, bvt &bv);
   virtual void convert_union(const exprt &expr, bvt &bv);
@@ -139,7 +130,6 @@ protected:
   virtual void convert_mult(const exprt &expr, bvt &bv);
   virtual void convert_div(const exprt &expr, bvt &bv);
   virtual void convert_mod(const exprt &expr, bvt &bv);
-  virtual void convert_floatbv_op(const exprt &expr, bvt &bv);
   virtual void convert_member(const member_exprt &expr, bvt &bv);
   virtual void convert_with(const exprt &expr, bvt &bv);
   virtual void convert_case(const exprt &expr, bvt &bv);

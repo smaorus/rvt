@@ -66,11 +66,6 @@ Function: xmlt::output
 
 void xmlt::output(std::ostream &out, unsigned indent) const
 {
-  // 'name' needs to be set, or we produce mal-formed
-  // XML.
-  
-  if(name=="") return;
-
   do_indent(out, indent);
 
   out << '<' << name;
@@ -80,8 +75,6 @@ void xmlt::output(std::ostream &out, unsigned indent) const
       it!=attributes.end();
       it++)
   {
-    // it->first needs to be non-empty
-    if(it->first=="") continue;
     out << ' ' << it->first
         << '=' << '"';
     escape_attribute(it->second, out);
@@ -147,7 +140,7 @@ void xmlt::escape(const std::string &s, std::ostream &out)
       break;
 
     default:
-      if((ch>=0 && ch<' ') || ch==127)
+      if(ch<' ' || ch>=127)
         out << "&#"+i2string((unsigned char)ch)+";";
       else
         out << ch;

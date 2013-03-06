@@ -89,7 +89,7 @@ bool cpp_typecheckt::standard_conversion_array_to_pointer(
   assert(expr.type().id()==ID_array);
 
   exprt index(ID_index, expr.type().subtype());
-  index.copy_to_operands(expr, from_integer(0, index_type()));
+  index.copy_to_operands(expr, from_integer(0, int_type()));
   index.set(ID_C_lvalue, true);
 
   pointer_typet pointer;
@@ -826,22 +826,6 @@ bool cpp_typecheckt::standard_conversion_sequence(
 
   curr_expr.swap(new_expr);
 
-  // two enums are the same if the tag is the same,
-  // even if the width differs (enum bit-fields!)
-  if(follow(type).id()==ID_c_enum &&
-     follow(curr_expr.type()).id()==ID_c_enum)
-  {
-    if(follow(type).find(ID_tag)==
-       follow(curr_expr.type()).find(ID_tag))
-      return true;
-    else
-    {
-      // In contrast to C, we simply don't allow implicit conversions
-      // between enums.
-      return false;
-    }
-  }
-
   // need to consider #c_type
   if(follow(curr_expr.type())!=follow(type) ||
      curr_expr.type().get(ID_C_c_type)!=type.get(ID_C_c_type))
@@ -858,7 +842,6 @@ bool cpp_typecheckt::standard_conversion_sequence(
           if(!standard_conversion_floating_integral_conversion(curr_expr, type, new_expr))
             return false;
         }
-
         rank+=3;
       }
       else
@@ -1208,10 +1191,10 @@ bool cpp_typecheckt::user_defined_conversion_sequence(
                                            .get_sub()
                                            .front()
                                            .find(ID_type));
-      this_type.set(ID_C_reference, true);
+      this_type.set("#reference", true);
 
       exprt this_expr(expr);
-      this_type.set(ID_C_this, true);
+      this_type.set("#this", true);
 
       unsigned tmp_rank = 0;
       exprt tmp_expr;
@@ -1261,8 +1244,8 @@ bool cpp_typecheckt::user_defined_conversion_sequence(
 
 Function: reference_related
 
-  Inputs: A typechecked expression 'expr',
-          a reference 'type'.
+  Inputs: A typechecked expression 'expr', a
+          reference 'type'.
 
   Outputs: True iff an the reference 'type' is reference-related
            to 'expr'.
@@ -1294,7 +1277,7 @@ bool cpp_typecheckt::reference_related(
                             to_struct_type(to));
 
   if(from.id()==ID_struct &&
-     type.get_bool(ID_C_this) &&
+     type.get_bool("#this") &&
      type.subtype().id()==ID_empty)
   {
     // virtual-call case
@@ -1402,7 +1385,7 @@ bool cpp_typecheckt::reference_binding(
 
   unsigned backup_rank = rank;
 
-  if(type.get_bool(ID_C_this) &&
+  if(type.get_bool("#this") &&
      !expr.get_bool(ID_C_lvalue))
   {
     // `this' has to be an lvalue
@@ -1479,11 +1462,11 @@ bool cpp_typecheckt::reference_binding(
 
       typet this_type =
         component_type.arguments().front().type();
-      this_type.set(ID_C_reference, true);
+      this_type.set("#reference", true);
 
       exprt this_expr(expr);
 
-      this_type.set(ID_C_this, true);
+      this_type.set("#this", true);
 
       unsigned tmp_rank = 0;
 
@@ -1513,8 +1496,8 @@ bool cpp_typecheckt::reference_binding(
         exprt returned_value = func_expr;
         add_implicit_dereference(returned_value);
 
-        if(returned_value.get_bool(ID_C_lvalue) &&
-           reference_compatible(returned_value,type, rank))
+        if(returned_value.get_bool(ID_C_lvalue)
+           && reference_compatible(returned_value,type, rank))
         {
           // returned values are lvalues in case of references only
           assert(returned_value.id()==ID_dereference &&
@@ -1537,11 +1520,11 @@ bool cpp_typecheckt::reference_binding(
   }
 
   // No temporary allowed for `this'
-  if(type.get_bool(ID_C_this))
+  if(type.get_bool("#this"))
     return false;
 
   if(!type.subtype().get_bool(ID_C_constant) ||
-     type.subtype().get_bool(ID_C_volatile))
+     type.subtype().get_bool("#volatile"))
     return false;
 
   // TODO: hanlde the case for implicit parameters
@@ -1716,11 +1699,7 @@ void cpp_typecheckt::implicit_typecast(exprt &expr, const typet &type)
     err_location(e);
     str << "invalid implicit conversion from `"
         << to_string(e.type()) << "' to `"
-        << to_string(type) << "'";
-    #if 0
-    str << "\n " << follow(e.type()).pretty() << std::endl;
-    str << "\n " << type.pretty() << std::endl;
-    #endif
+        << to_string(type) << "' ";
     throw 0;
   }
 }
@@ -2165,7 +2144,7 @@ bool cpp_typecheckt::static_typecast(
 
   add_implicit_dereference(e);
 
-  if(type.get_bool(ID_C_reference))
+  if(type.get_bool("#reference"))
   {
     unsigned rank=0;
     if(reference_binding(e,type,new_expr,rank))
@@ -2218,16 +2197,16 @@ bool cpp_typecheckt::static_typecast(
     return true;
   }
 
-  if(follow(type).id()==ID_c_enum && (
-                e.type().id()==ID_signedbv
+  if (follow(type).id()==ID_c_enum
+         && (e.type().id()==ID_signedbv
              || e.type().id()==ID_unsignedbv
              || follow(e.type()).id()==ID_c_enum))
   {
-    new_expr = e;
-    new_expr.make_typecast(type);
-    if(new_expr.get_bool(ID_C_lvalue))
-      new_expr.remove(ID_C_lvalue);
-    return true;
+     new_expr = e;
+     new_expr.make_typecast(type);
+     if(new_expr.get_bool(ID_C_lvalue))
+       new_expr.remove(ID_C_lvalue);
+     return true;
   }
 
   if(implicit_conversion_sequence(e, type, new_expr))

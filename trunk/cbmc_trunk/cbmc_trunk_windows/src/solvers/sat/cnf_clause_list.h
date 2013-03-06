@@ -9,8 +9,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_PROP_CNF_CLAUSE_LIST_H
 #define CPROVER_PROP_CNF_CLAUSE_LIST_H
 
-#include <list>
-
 #include <threeval.h>
 
 #include "cnf.h"

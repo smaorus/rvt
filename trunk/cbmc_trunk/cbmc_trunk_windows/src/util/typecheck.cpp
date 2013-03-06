@@ -7,6 +7,7 @@ Author: Daniel Kroening, kroening@kroening.com
 \*******************************************************************/
 
 #include "typecheck.h"
+#include "strstream2string.h"
 
 /*******************************************************************\
 

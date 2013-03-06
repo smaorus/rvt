@@ -190,11 +190,6 @@ exprt smt1_convt::ce_value(
         return array_list;
       }
     }
-    else if(ns.follow(type.subtype()).id()==ID_array) 
-    {
-      // a 2 dimensional array - second dimension is flattened
-      return ce_value(type.subtype(), "", value, true);
-    }
     else
     {
       exprt value_expr=ce_value(type.subtype(), "", value, in_struct);
@@ -425,17 +420,16 @@ void smt1_convt::convert_byte_update(
 
   mp_integer upper, lower; // of the byte
   mp_integer max=w-1;
-  unsigned op_w = boolbv_width(expr.op2().type());
 
   if(expr.id()==ID_byte_update_little_endian)
   {
+    upper = ((i+1)*8)-1;
     lower = i*8;
-    upper = lower+op_w-1;
   }
   else
   {
     upper = max-(i*8);
-    lower = max-(i*8+op_w-1);
+    lower = max-((i+1)*8-1);
   }
 
   if(upper==max)
@@ -1416,9 +1410,7 @@ Function: smt1_convt::convert_typecast
 
 \*******************************************************************/
 
-void smt1_convt::convert_typecast(
-  const typecast_exprt &expr,
-  bool bool_as_bv)
+void smt1_convt::convert_typecast(const typecast_exprt &expr, bool bool_as_bv)
 {
   assert(expr.operands().size()==1);
   const exprt &op=expr.op0();
@@ -1483,13 +1475,13 @@ void smt1_convt::convert_typecast(
         smt1_prop.out << ")";
       }
     }
-    else if(op_type.id()==ID_fixedbv) // from fixedbv to integer
+    else if(op_type.id()==ID_fixedbv) // from fixedbv
     {
-      const fixedbv_typet &fixedbv_op_type=to_fixedbv_type(op_type);
+      const fixedbv_typet &fixedbv_type=to_fixedbv_type(op_type);
 
-      unsigned from_width=fixedbv_op_type.get_width();
-      unsigned from_integer_bits=fixedbv_op_type.get_integer_bits();
-      unsigned from_fraction_bits=fixedbv_op_type.get_fraction_bits();
+      unsigned from_width=fixedbv_type.get_width();
+      unsigned from_integer_bits=fixedbv_type.get_integer_bits();
+      unsigned from_fraction_bits=fixedbv_type.get_fraction_bits();
 
       if(to_width>from_integer_bits)
       {
@@ -1574,24 +1566,20 @@ void smt1_convt::convert_typecast(
        op_type.id()==ID_signedbv ||
        op_type.id()==ID_c_enum)
     {
-      // integer to fixedbv
       unsigned from_width=to_bitvector_type(op_type).get_width();
-      
-      // we just concatenate a zero-valued fractional part
       smt1_prop.out << "(concat";
 
       if(from_width==to_integer_bits)
         convert_expr(op, true);
       else if(from_width>to_integer_bits)
       {
-        // too many integer bits, chop some off
-        smt1_prop.out << " (extract[" << (to_integer_bits-1) << ":0] ";
+        smt1_prop.out << " (extract[" << (to_integer_bits-1) << ":"
+                      << to_fraction_bits << "] ";
         convert_expr(op, true);
         smt1_prop.out << ")";
       }
       else
       {
-        // too few integer bits
         assert(from_width<to_integer_bits);
         if(expr_type.id()==ID_unsignedbv)
         {
@@ -1609,12 +1597,10 @@ void smt1_convt::convert_typecast(
         }
       }
 
-      smt1_prop.out << " bv0[" << to_fraction_bits << "]";
-      smt1_prop.out << ")"; // concat
+      smt1_prop.out << " bv0[" << to_fraction_bits << "])";
     }
     else if(op_type.id()==ID_bool)
     {
-      // bool to fixedbv
       smt1_prop.out << "(concat (concat bv0[" << (to_integer_bits-1) << "]"
                     << " ";
       convert_expr(op, true); // this returns a 1-bit bit-vector
@@ -1624,7 +1610,6 @@ void smt1_convt::convert_typecast(
     }
     else if(op_type.id()==ID_fixedbv)
     {
-      // fixedbv to fixedbv
       const fixedbv_typet &from_fixedbv_type=to_fixedbv_type(op_type);
       unsigned from_fraction_bits=from_fixedbv_type.get_fraction_bits();
       unsigned from_integer_bits=from_fixedbv_type.get_integer_bits();
@@ -1750,14 +1735,7 @@ void smt1_convt::convert_struct(const exprt &expr)
   assert(!components.empty());
 
   if(components.size()==1)
-  {
-    const exprt &op=expr.op0();
-
-    if(op.type().id()==ID_array)
-      flatten_array(op);
-    else
-      convert_expr(op, true);
-  }
+    convert_expr(expr.op0(), true);
   else
   {
     unsigned nr_ops=0;
@@ -1868,7 +1846,7 @@ void smt1_convt::convert_constant(
   {
     fixedbv_spect spec(to_fixedbv_type(expr.type()));
 
-    std::string v_str=expr.get_string(ID_value);
+    std::string v_str=id2string(expr.get(ID_value));
     mp_integer v=binary2integer(v_str, false);
 
     smt1_prop.out << "bv" << v << "[" << spec.width << "]";
@@ -1877,7 +1855,7 @@ void smt1_convt::convert_constant(
   {
     ieee_float_spect spec(to_floatbv_type(expr.type()));
 
-    std::string v_str=expr.get_string(ID_value);
+    std::string v_str=id2string(expr.get(ID_value));
     mp_integer v=binary2integer(v_str, false);
 
     smt1_prop.out << "bv" << v << "[" << spec.width() << "]";
@@ -1915,7 +1893,7 @@ void smt1_convt::convert_constant(
   }
   else if(expr.type().id()==ID_rational)
   {
-    std::string value=expr.get_string(ID_value);
+    std::string value=expr.get(ID_value).as_string();
     size_t pos=value.find("/");
 
     if(pos==std::string::npos)
@@ -1929,7 +1907,7 @@ void smt1_convt::convert_constant(
   else if(expr.type().id()==ID_integer ||
           expr.type().id()==ID_natural)
   {
-    std::string value=expr.get_string(ID_value);
+    std::string value=expr.get(ID_value).as_string();
     
     if(value[0]=='-') 
       smt1_prop.out << "(~ " << value.substr(1) << ")";
@@ -2352,7 +2330,6 @@ void smt1_convt::convert_mult(const mult_exprt &expr)
     fixedbv_spect spec(to_fixedbv_type(expr.type()));
     unsigned fraction_bits=spec.get_fraction_bits();
 
-    // strip away faction_bits off the result
     smt1_prop.out << "(extract[" << spec.width+fraction_bits-1 << ":"
                                  << fraction_bits << "] ";
 
@@ -2366,8 +2343,8 @@ void smt1_convt::convert_mult(const mult_exprt &expr)
     convert_expr(expr.op1(), true);
     smt1_prop.out << ") ";
 
-    smt1_prop.out << ")"; // bvmul, fraction_bits+width wide
-    smt1_prop.out << ")"; // extract, width bits wide
+    smt1_prop.out << ")"; // bvmul
+    smt1_prop.out << ")"; // extract
   }
   else if(expr.type().id()==ID_rational)
   {
@@ -2426,31 +2403,21 @@ void smt1_convt::convert_with(const exprt &expr)
 
     if(array.id()==ID_member)
     {
-      // arrays in structs and unions are flattened!
-
+      // arrays in structs are flattened!
       const typet &array_type=to_array_type(expr.type());
       const typet &elem_type=array_type.subtype();
 
       const member_exprt &member_expr=to_member_expr(array);
       const exprt &struct_op=member_expr.struct_op();
       const irep_idt &name=member_expr.get_component_name();
-      
-      const typet &struct_op_type=ns.follow(struct_op.type());
 
-      unsigned total_width=boolbv_width(struct_op_type);
+      unsigned total_width=boolbv_width(struct_op.type());
       
       if(total_width==0)
         throw "failed to get struct width";
 
-      unsigned offset;
-      
-      if(struct_op_type.id()==ID_struct)
-        offset=boolbv_width.get_member(
-          to_struct_type(struct_op_type), name).offset;
-      else if(struct_op_type.id()==ID_union)
-        offset=0;
-      else
-        assert(false);
+      unsigned offset=boolbv_width.get_member(
+        to_struct_type(struct_op.type()), name).offset;
 
       unsigned width=boolbv_width(expr.type());
 
@@ -2499,73 +2466,6 @@ void smt1_convt::convert_with(const exprt &expr)
 
       // the new value
       smt1_prop.out << " (bvshl (zero_extend[" << array_bits-elem_width << "] ";
-      convert_expr(value, true);
-
-      // shift it to the index
-      smt1_prop.out << ")";
-      if (width>=array_index_bits)
-        smt1_prop.out << " (zero_extend[" << width-array_index_bits << "]";
-      else
-        smt1_prop.out << " (extract[" << width-1 << ":0]";
-      smt1_prop.out << " (bvmul ";
-      convert_expr(index_tc, true);
-      smt1_prop.out << " bv" << elem_width << "[" << array_index_bits << "]";
-      smt1_prop.out << ")))"; // bvmul, bvshl, ze
-
-      smt1_prop.out << ")"; // bvor
-    }
-    else if(array.id()==ID_index)
-    {
-      // arrays in structs are flattened!
-
-      const typet &array_type=to_array_type(expr.type());
-      const typet &elem_type=array_type.subtype();
-
-      const index_exprt &index_expr=to_index_expr(array);
-
-      unsigned width=boolbv_width(expr.type());
-
-      if(width==0)
-        throw "failed to get width of 2nd dimension array";
-
-      unsigned elem_width=boolbv_width(elem_type);
-
-      if(elem_width==0)
-        throw "failed to get array element width";
-
-      assert(expr.operands().size()==3);
-      const exprt &index_2nd=expr.operands()[1];
-      const exprt &value=expr.operands()[2];
-      typecast_exprt index_tc(index_2nd, array_index_type());
-
-      smt1_prop.out << "(bvor ";
-      smt1_prop.out << "(bvand ";
-
-      // this gets us the array
-      convert_expr(index_expr, true);
-
-      // the mask
-      smt1_prop.out << " (bvnot (bvshl";
-
-      smt1_prop.out << " (concat";
-      smt1_prop.out << " (repeat[" << width-elem_width << "] bv0[1])";
-      smt1_prop.out << " (repeat[" << elem_width << "] bv1[1])";
-      smt1_prop.out << ")"; // concat
-
-      // shift it to the index
-      if (width>=array_index_bits)
-        smt1_prop.out << " (zero_extend[" << width-array_index_bits << "]";
-      else
-        smt1_prop.out << " (extract[" << width-1 << ":0]";
-      smt1_prop.out << " (bvmul ";
-      convert_expr(index_tc, true);
-      smt1_prop.out << " bv" << elem_width << "[" << array_index_bits << "]";
-      smt1_prop.out << "))))"; // bvmul, zero_extend, bvshl, bvneg
-
-      smt1_prop.out << ")"; // bvand
-
-      // the new value
-      smt1_prop.out << " (bvshl (zero_extend[" << width-elem_width << "] ";
       convert_expr(value, true);
       // shift it to the index
       smt1_prop.out << ")";
@@ -2747,18 +2647,28 @@ void smt1_convt::convert_index(const index_exprt &expr, bool bool_as_bv)
 {
   assert(expr.operands().size()==2);
 
-  if(expr.array().id()==ID_member ||
-     expr.array().id()==ID_index)
+  if(expr.array().id()==ID_member)
   {
-    // arrays inside structs and 2-dimensional arrays
     // these were flattened
-
     const typet &array_type=to_array_type(expr.array().type());
     const typet &elem_type=array_type.subtype();
 
-    unsigned width=boolbv_width(expr.array().type());
+    const member_exprt &member_expr=to_member_expr(expr.array());
+    const exprt &struct_op=member_expr.struct_op();
+    //const irep_idt &name=member_expr.get_component_name();
+
+    unsigned total_width=boolbv_width(struct_op.type());
+    
+    if(total_width==0)
+      throw "failed to get struct width";
+
+    //unsigned offset=boolbv_width.get_member(
+    //     to_struct_type(struct_op.type()), name).offset;
+
+    unsigned width=boolbv_width(member_expr.type());
+    
     if(width==0)
-      throw "failed to get array width";
+      throw "failed to get struct member width";
 
     unsigned elem_width=boolbv_width(elem_type);
 
@@ -2940,8 +2850,7 @@ Function: smt1_convt::find_symbols
 
 void smt1_convt::find_symbols(const exprt &expr)
 {
-  const typet &type=expr.type();
-  find_symbols(type);
+  find_symbols(expr.type());
 
   if(expr.id()==ID_forall || expr.id()==ID_exists)
   {
@@ -2961,7 +2870,7 @@ void smt1_convt::find_symbols(const exprt &expr)
      expr.id()==ID_nondet_symbol)
   {
     // we don't track function-typed symbols
-    if(type.id()==ID_code)
+    if(expr.type().id()==ID_code)
       return;
 
     irep_idt identifier;
@@ -2969,7 +2878,7 @@ void smt1_convt::find_symbols(const exprt &expr)
     if(expr.id()==ID_symbol)
       identifier=to_symbol_expr(expr).get_identifier();
     else
-      identifier="nondet_"+expr.get_string(ID_identifier);
+      identifier="nondet_"+id2string(expr.get(ID_identifier));
 
     if(quantified_symbols.find(identifier)!=quantified_symbols.end())
       return; // Symbol is quantified, i.e., it doesn't require declaration.
@@ -2978,7 +2887,7 @@ void smt1_convt::find_symbols(const exprt &expr)
 
     if(id.type.is_nil())
     {
-      id.type=type;
+      id.type=expr.type();
 
       if(id.type.id()==ID_bool)
       {
@@ -2991,7 +2900,7 @@ void smt1_convt::find_symbols(const exprt &expr)
         smt1_prop.out << ":extrafuns(("
                       << convert_identifier(identifier)
                       << " ";
-        convert_type(type);
+        convert_type(expr.type());
         smt1_prop.out << "))" << std::endl;
       }
     }
@@ -3005,15 +2914,15 @@ void smt1_convt::find_symbols(const exprt &expr)
       smt1_prop.out << ":extrafuns(("
                     << id
                     << " ";
-      convert_type(type);
+      convert_type(expr.type());
       smt1_prop.out << "))" << std::endl;
 
       // we can initialize array_ofs if they have
       // a constant size and a constant element
-      if(type.find(ID_size)!=get_nil_irep() &&
+      if(expr.type().find(ID_size)!=get_nil_irep() &&
          expr.op0().id()==ID_constant)
       {
-        const array_typet &array_type=to_array_type(type);
+        const array_typet &array_type=to_array_type(expr.type());
         mp_integer size;
 
         if(!to_integer(array_type.size(), size))
@@ -3041,7 +2950,7 @@ void smt1_convt::find_symbols(const exprt &expr)
       smt1_prop.out << ":extrafuns(("
                     << id
                     << " ";
-      convert_type(type);
+      convert_type(expr.type());
       smt1_prop.out << "))" << std::endl;
       array_expr_map[expr]=id;
     }

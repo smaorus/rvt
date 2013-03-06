@@ -19,7 +19,7 @@ ifneq ($(MINISAT2),)
   MINISAT2_INCLUDE=-I $(MINISAT2)
   MINISAT2_LIB=$(MINISAT2)/simp/SimpSolver$(OBJEXT) $(MINISAT2)/core/Solver$(OBJEXT)
   CP_CXXFLAGS += -DHAVE_MINISAT2 -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS
-  override CXXFLAGS := $(filter-out -pedantic, $(CXXFLAGS))
+  CXXFLAGS := $(filter-out -pedantic, $(CXXFLAGS))
 endif
 
 ifneq ($(SMVSAT),)
@@ -42,30 +42,8 @@ ifneq ($(CUDD),)
            -L $(CUDD)/epd -lobj -lcudd -lmtr -lst -lutil -lepd -ldddmp
 endif
 
-ifneq ($(PRECOSAT),)
-  PRECOSAT_SRC=sat/satcheck_precosat.cpp
-  PRECOSAT_INCLUDE=-I $(PRECOSAT)
-  PRECOSAT_LIB=$(PRECOSAT)/precosat$(OBJEXT)
-  CP_CXXFLAGS += -DHAVE_PRECOSAT
-endif
-
-ifneq ($(PICOSAT),)
-  PICOSAT_SRC=sat/satcheck_picosat.cpp
-  PICOSAT_INCLUDE=-I $(PICOSAT)
-  PICOSAT_LIB=$(PICOSAT)/libpicosat$(LIBEXT)
-  CP_CXXFLAGS += -DHAVE_PICOSAT
-endif
-
-ifneq ($(LINGELING),)
-  LINGELING_SRC=sat/satcheck_lingeling.cpp
-  LINGELING_INCLUDE=-I $(LINGELING)
-  LINGELING_LIB=$(LINGELING)/liblgl$(LIBEXT)
-  CP_CXXFLAGS += -DHAVE_LINGELING
-endif
-
 SRC = $(CHAFF_SRC) $(BOOLEFORCE_SRC) $(MINISAT_SRC) $(MINISAT2_SRC) \
       $(SMVSAT_SRC) $(SQUOLEM2_SRC) $(CUDD_SRC) \
-			$(PRECOSAT_SRC) $(PICOSAT_SRC) $(LINGELING_SRC) \
       sat/cnf.cpp sat/dimacs_cnf.cpp sat/cnf_clause_list.cpp \
       sat/pbs_dimacs_cnf.cpp sat/read_dimacs_cnf.cpp \
       sat/resolution_proof.cpp sat/satcheck.cpp \
@@ -74,13 +52,13 @@ SRC = $(CHAFF_SRC) $(BOOLEFORCE_SRC) $(MINISAT_SRC) $(MINISAT2_SRC) \
       qbf/qbf_qube_core.cpp \
       prop/prop.cpp prop/prop_conv.cpp prop/prop_conv_store.cpp \
       prop/aig_formula.cpp prop/cover_goals.cpp \
-      prop/aig.cpp prop/aig_prop.cpp prop/minimize.cpp \
+      prop/aig.cpp prop/aig_prop.cpp \
       cvc/cvc_prop.cpp cvc/cvc_conv.cpp cvc/cvc_dec.cpp \
       smt1/smt1_dec.cpp smt1/smt1_prop.cpp smt1/smt1_conv.cpp \
       smt2/smt2_dec.cpp smt2/smt2_prop.cpp smt2/smt2_conv.cpp \
       dplib/dplib_conv.cpp dplib/dplib_dec.cpp dplib/dplib_prop.cpp \
       flattening/equality.cpp flattening/arrays.cpp \
-      flattening/functions.cpp flattening/bv_minimize.cpp \
+      flattening/functions.cpp flattening/sat_minimizer.cpp \
       flattening/boolbv_width.cpp flattening/boolbv.cpp \
       flattening/boolbv_constraint_select_one.cpp \
       flattening/bv_pointers.cpp flattening/bv_utils.cpp \
@@ -101,15 +79,11 @@ SRC = $(CHAFF_SRC) $(BOOLEFORCE_SRC) $(MINISAT_SRC) $(MINISAT2_SRC) \
       flattening/boolbv_quantifier.cpp flattening/boolbv_struct.cpp \
       flattening/boolbv_byte_update.cpp flattening/boolbv_array_of.cpp \
       flattening/boolbv_map.cpp flattening/boolbv_type.cpp \
-      flattening/boolbv_array.cpp flattening/boolbv_vector.cpp \
-      flattening/boolbv_complex.cpp flattening/boolbv_floatbv_op.cpp \
-      flattening/boolbv_union.cpp flattening/flatten_byte_operators.cpp \
-      floatbv/float_utils.cpp
+      flattening/boolbv_union.cpp flattening/flatten_byte_operators.cpp
 
-INCLUDES= -I .. -I ../util \
+INCLUDES= -I .. \
   $(CHAFF_INCLUDE) $(BOOLEFORCE_INCLUDE) $(MINISAT_INCLUDE) $(MINISAT2_INCLUDE) \
-  $(SMVSAT_INCLUDE) $(SQUOLEM2_INC) $(CUDD_INCLUDE) \
-	$(PRECOSAT_INCLUDE) $(PICOSAT_INCLUDE) $(LINGELING_INCLUDE)
+  $(SMVSAT_INCLUDE) $(SQUOLEM2_INC) $(CUDD_INCLUDE) -I ../util
 
 CLEANFILES = solvers$(LIBEXT)
 
@@ -123,6 +97,11 @@ ifneq ($(CUDD),)
 endif
 endif
 
+ifneq ($(wildcard ../floatbv/Makefile),)
+  CP_CXXFLAGS += -DHAVE_FLOATBV
+  OBJ += ../floatbv/floatbv$(LIBEXT)
+endif
+
 # extra dependencies
 
 -include $(SRC:.cpp=.d)
@@ -130,7 +109,6 @@ endif
 ###############################################################################
 
 solvers$(LIBEXT): $(OBJ) $(CHAFF_LIB) $(BOOLEFORCE_LIB) $(MINISAT_LIB) \
-        $(MINISAT2_LIB) $(SMVSAT_LIB) $(SQUOLEM2_LIB) $(CUDD_LIB) \
-				$(PRECOSAT_LIB) $(PICOSAT_LIB) $(LINGELING_LIB)
+        $(MINISAT2_LIB) $(SMVSAT_LIB) $(SQUOLEM2_LIB) $(CUDD_LIB)
 	$(LINKLIB)
 

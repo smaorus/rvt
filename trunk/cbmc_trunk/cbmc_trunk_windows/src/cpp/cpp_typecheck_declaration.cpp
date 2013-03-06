@@ -87,7 +87,7 @@ void cpp_typecheckt::convert_anonymous_union(
   new_code.move_to_operands(decl_statement);
 
   // do scoping
-  symbolt union_symbol=symbol_table.symbols[follow(symbol.type).get(ID_name)];
+  symbolt union_symbol=context.symbols[follow(symbol.type).get(ID_name)];
   const irept::subt &components=union_symbol.type.add(ID_components).get_sub();
 
   forall_irep(it, components)
@@ -116,7 +116,7 @@ void cpp_typecheckt::convert_anonymous_union(
     id.is_member=true;
   }
 
-  symbol_table.symbols[union_symbol.name].type.set(
+  context.symbols[union_symbol.name].type.set(
     "#unnamed_object", symbol.base_name);
 
   code.swap(new_code);
@@ -179,13 +179,12 @@ void cpp_typecheckt::convert_non_template_declaration(
 
   typecheck_type(type);
   
-  // Elaborate any class template instance _unless_ we do a typedef.
-  // These are only elaborated on usage!
+  // elaborate any class template instance _unless_ we do a typedef
   if(!is_typedef) elaborate_class_template(type);
   
-  // Special treatment for anonymous unions
+  // special treatment for anonymous unions
   if(declaration.declarators().empty() &&
-     follow(declaration.type()).get_bool(ID_C_is_anonymous))
+     follow(declaration.type()).get_bool("#is_anonymous"))
   {
     typet final_type=follow(declaration.type());
 
@@ -225,7 +224,7 @@ void cpp_typecheckt::convert_non_template_declaration(
     it->swap(tmp);
 
     // is there a constructor to be called for the declarator?
-    if(symbol.is_lvalue &&
+    if(symbol.lvalue &&
        declarator.init_args().has_operands())
     {
       symbol.value=

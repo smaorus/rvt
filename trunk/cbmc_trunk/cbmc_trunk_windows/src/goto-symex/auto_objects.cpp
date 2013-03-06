@@ -9,7 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <i2string.h>
 #include <prefix.h>
 #include <cprover_prefix.h>
-#include <symbol_table.h>
+#include <context.h>
 #include <std_expr.h>
 
 #include "goto_symex.h"
@@ -35,11 +35,11 @@ exprt goto_symext::make_auto_object(const typet &type)
 
   symbol.base_name="auto_object"+i2string(dynamic_counter);
   symbol.name="symex::"+id2string(symbol.base_name);
-  symbol.is_lvalue=true;
+  symbol.lvalue=true;
   symbol.type=type;
   symbol.mode=ID_C;
 
-  new_symbol_table.add(symbol);
+  new_context.add(symbol);
 
   return symbol_exprt(symbol.name, symbol.type);
 }

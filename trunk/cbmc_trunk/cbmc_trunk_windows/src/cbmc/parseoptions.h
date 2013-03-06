@@ -31,7 +31,7 @@ class optionst;
   "(partial-loops)" \
   "(xml-ui)(xml-interface)(vcd):" \
   "(cvc)(smt1)(smt2)(boolector)(yices)(z3)(opensmt)(mathsat)(fpa)" \
-  "(no-pretty-names)(beautify)" \
+  "(no-pretty-names)(beautify-greedy)(beautify-pbs)" \
   "(floatbv)(fixedbv)(no-assertions)(no-assumptions)(nan-check)" \
   "(dimacs)(refine)" \
   "(16)(32)(64)(LP64)(ILP64)(LLP64)(ILP32)(LP32)" \
@@ -41,8 +41,7 @@ class optionst;
   "(error-label):(verbosity):(no-library)" \
   "(version)" \
   "(cover-assertions)" \
-  "(memory-model):" \
-  "(i386-linux)(i386-macos)(i386-win32)(win32)(winx64)(gcc)" \
+  "(i386-linux)(i386-macos)(i386-win32)(win32)(winx64)" \
   "(ppc-macos)(unsigned-char)" \
   "(arrays-uf-always)(arrays-uf-never)" \
   "(string-abstraction)(no-arch)" \

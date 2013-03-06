@@ -18,12 +18,12 @@ Date: February 2006
 
 void race_check(
   value_setst &value_sets,
-  class symbol_tablet &symbol_table,
+  class contextt &context,
   goto_programt &goto_program);
 
 void race_check(
   value_setst &value_sets,
-  class symbol_tablet &symbol_table,
+  class contextt &context,
   goto_functionst &goto_functions);
 
 #endif

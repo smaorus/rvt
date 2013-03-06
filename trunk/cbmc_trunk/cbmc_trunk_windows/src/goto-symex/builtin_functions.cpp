@@ -15,7 +15,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <cprover_prefix.h>
 #include <std_types.h>
 #include <pointer_offset_size.h>
-#include <symbol_table.h>
+#include <context.h>
 #include <std_expr.h>
 #include <std_code.h>
 #include <simplify_expr.h>
@@ -24,12 +24,12 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <ansi-c/c_types.h>
 
-#include "goto_symex.h"
+#include "basic_symex.h"
 #include "goto_symex_state.h"
 
 /*******************************************************************\
 
-Function: goto_symext::symex_malloc
+Function: basic_symext::symex_malloc
 
   Inputs:
 
@@ -59,7 +59,7 @@ inline static typet c_sizeof_type_rec(const exprt &expr)
   return nil_typet();
 }
 
-void goto_symext::symex_malloc(
+void basic_symext::symex_malloc(
   statet &state,
   const exprt &lhs,
   const side_effect_exprt &code)
@@ -116,7 +116,7 @@ void goto_symext::symex_malloc(
     }
     
     if(object_type.is_nil())
-      object_type=array_typet(unsigned_char_type(), tmp_size);
+      object_type=array_typet(uchar_type(), tmp_size);
 
     // we introduce a fresh symbol for the size
     // to prevent any issues of the size getting ever changed
@@ -130,11 +130,11 @@ void goto_symext::symex_malloc(
 
       size_symbol.base_name="dynamic_object_size"+i2string(dynamic_counter);
       size_symbol.name="symex_dynamic::"+id2string(size_symbol.base_name);
-      size_symbol.is_lvalue=true;
+      size_symbol.lvalue=true;
       size_symbol.type=tmp_size.type();
       size_symbol.mode=ID_C;
 
-      new_symbol_table.add(size_symbol);
+      new_context.add(size_symbol);
 
       guardt guard;
       symex_assign_rec(state, symbol_expr(size_symbol), nil_exprt(), size, guard, VISIBLE);
@@ -148,12 +148,12 @@ void goto_symext::symex_malloc(
 
   value_symbol.base_name="dynamic_object"+i2string(dynamic_counter);
   value_symbol.name="symex_dynamic::"+id2string(value_symbol.base_name);
-  value_symbol.is_lvalue=true;
+  value_symbol.lvalue=true;
   value_symbol.type=object_type;
   value_symbol.type.set("#dynamic", true);
   value_symbol.mode=ID_C;
 
-  new_symbol_table.add(value_symbol);
+  new_context.add(value_symbol);
   
   address_of_exprt rhs;
   
@@ -182,7 +182,7 @@ void goto_symext::symex_malloc(
 
 /*******************************************************************\
 
-Function: goto_symext::symex_gcc_builtin_va_arg_next
+Function: basic_symext::symex_gcc_builtin_va_arg_next
 
   Inputs:
 
@@ -208,7 +208,7 @@ irep_idt get_symbol(const exprt &src)
     return irep_idt();
 }
 
-void goto_symext::symex_gcc_builtin_va_arg_next(
+void basic_symext::symex_gcc_builtin_va_arg_next(
   statet &state,
   const exprt &lhs,
   const side_effect_exprt &code)
@@ -258,7 +258,7 @@ void goto_symext::symex_gcc_builtin_va_arg_next(
 
 /*******************************************************************\
 
-Function: goto_symext::get_string_argument_rec
+Function: basic_symext::get_string_argument_rec
 
   Inputs:
 
@@ -296,7 +296,7 @@ irep_idt get_string_argument_rec(const exprt &src)
 
 /*******************************************************************\
 
-Function: goto_symext::get_string_argument
+Function: basic_symext::get_string_argument
 
   Inputs:
 
@@ -315,7 +315,7 @@ irep_idt get_string_argument(const exprt &src, const namespacet &ns)
 
 /*******************************************************************\
 
-Function: goto_symext::symex_printf
+Function: basic_symext::symex_printf
 
   Inputs:
 
@@ -325,7 +325,7 @@ Function: goto_symext::symex_printf
 
 \*******************************************************************/
 
-void goto_symext::symex_printf(
+void basic_symext::symex_printf(
   statet &state,
   const exprt &lhs,
   const exprt &rhs)
@@ -351,7 +351,7 @@ void goto_symext::symex_printf(
 
 /*******************************************************************\
 
-Function: goto_symext::symex_input
+Function: basic_symext::symex_input
 
   Inputs:
 
@@ -361,7 +361,7 @@ Function: goto_symext::symex_input
 
 \*******************************************************************/
 
-void goto_symext::symex_input(
+void basic_symext::symex_input(
   statet &state,
   const codet &code)
 {
@@ -387,7 +387,7 @@ void goto_symext::symex_input(
 
 /*******************************************************************\
 
-Function: goto_symext::symex_output
+Function: basic_symext::symex_output
 
   Inputs:
 
@@ -397,7 +397,7 @@ Function: goto_symext::symex_output
 
 \*******************************************************************/
 
-void goto_symext::symex_output(
+void basic_symext::symex_output(
   statet &state,
   const codet &code)
 {
@@ -423,7 +423,7 @@ void goto_symext::symex_output(
 
 /*******************************************************************\
 
-Function: goto_symext::symex_cpp_new
+Function: basic_symext::symex_cpp_new
 
   Inputs:
 
@@ -433,7 +433,7 @@ Function: goto_symext::symex_cpp_new
 
 \*******************************************************************/
 
-void goto_symext::symex_cpp_new(
+void basic_symext::symex_cpp_new(
   statet &state,
   const exprt &lhs,
   const side_effect_exprt &code)
@@ -455,7 +455,7 @@ void goto_symext::symex_cpp_new(
     do_array?"dynamic_"+count_string+"_array":
              "dynamic_"+count_string+"_value";
   symbol.name="symex_dynamic::"+id2string(symbol.base_name);
-  symbol.is_lvalue=true;
+  symbol.lvalue=true;
   symbol.mode="cpp";
   
   if(do_array)
@@ -470,7 +470,7 @@ void goto_symext::symex_cpp_new(
   //symbol.type.set("#active", symbol_expr(active_symbol));
   symbol.type.set("#dynamic", true);
   
-  new_symbol_table.add(symbol);
+  new_context.add(symbol);
 
   // make symbol expression
 
@@ -494,7 +494,7 @@ void goto_symext::symex_cpp_new(
 
 /*******************************************************************\
 
-Function: goto_symext::symex_cpp_delete
+Function: basic_symext::symex_cpp_delete
 
   Inputs:
 
@@ -504,7 +504,7 @@ Function: goto_symext::symex_cpp_delete
 
 \*******************************************************************/
 
-void goto_symext::symex_cpp_delete(
+void basic_symext::symex_cpp_delete(
   statet &state,
   const codet &code)
 {
@@ -513,7 +513,7 @@ void goto_symext::symex_cpp_delete(
 
 /*******************************************************************\
 
-Function: goto_symext::symex_trace
+Function: basic_symext::symex_trace
 
   Inputs:
 
@@ -523,7 +523,7 @@ Function: goto_symext::symex_trace
 
 \*******************************************************************/
 
-void goto_symext::symex_trace(
+void basic_symext::symex_trace(
   statet &state,
   const code_function_callt &code)
 {
@@ -561,7 +561,7 @@ void goto_symext::symex_trace(
 
 /*******************************************************************\
 
-Function: goto_symext::symex_fkt
+Function: basic_symext::symex_fkt
 
   Inputs:
 
@@ -571,7 +571,7 @@ Function: goto_symext::symex_fkt
 
 \*******************************************************************/
 
-void goto_symext::symex_fkt(
+void basic_symext::symex_fkt(
   statet &state,
   const code_function_callt &code)
 {
@@ -593,7 +593,7 @@ void goto_symext::symex_fkt(
 
 /*******************************************************************\
 
-Function: goto_symext::symex_macro
+Function: basic_symext::symex_macro
 
   Inputs:
 
@@ -603,7 +603,7 @@ Function: goto_symext::symex_macro
 
 \*******************************************************************/
 
-void goto_symext::symex_macro(
+void basic_symext::symex_macro(
   statet &state,
   const code_function_callt &code)
 {

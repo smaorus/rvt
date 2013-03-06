@@ -17,27 +17,31 @@ Date: June 2006
 #include <tempdir.h>
 #include <replace_symbol.h>
 #include <base_type.h>
+#include <xml.h>
 #include <i2string.h>
 #include <cmdline.h>
 #include <file_util.h>
-#include <unicode.h>
 
 #include <ansi-c/ansi_c_language.h>
-#include <linking/linking_class.h>
-#include <linking/entry_point.h>
+#include <ansi-c/c_link_class.h>
 
 #include <goto-programs/goto_convert.h>
 #include <goto-programs/goto_convert_functions.h>
 #include <goto-programs/goto_inline.h>
 #include <goto-programs/goto_check.h>
 #include <goto-programs/goto_function_serialization.h>
-#include <goto-programs/read_goto_binary.h>
+#include <goto-programs/read_bin_goto_object.h>
 #include <goto-programs/write_goto_binary.h>
 
 #include <langapi/mode.h>
 
 #include <irep_serialization.h>
 #include <symbol_serialization.h>
+
+#include "xml_binaries/xml_irep_hashing.h"
+#include "xml_binaries/xml_symbol_hashing.h"
+#include "xml_binaries/xml_goto_function_hashing.h"
+#include "xml_binaries/read_goto_object.h"
 
 #include "get_base_name.h"
 #include "compile.h"
@@ -49,6 +53,8 @@ Date: June 2006
                           "compound=true;"\
                           "size=\"30,40\";"\
                           "ratio=compress;"
+
+unsigned compilet::subgraphscount;
 
 // the following are for chdir
 
@@ -91,6 +97,22 @@ Function: compilet::doit
 
 bool compilet::doit()
 {
+  std::string error_label;
+
+  options.set_option("bounds-check", !cmdline.isset("no-bounds-check"));
+  options.set_option("div-by-zero-check", !cmdline.isset("no-div-by-zero-check"));
+  options.set_option("pointer-check", !cmdline.isset("no-pointer-check"));
+  options.set_option("assertions", !cmdline.isset("no-assertions"));
+  options.set_option("assumptions", !cmdline.isset("no-assumptions"));
+  options.set_option("simplify", !cmdline.isset("no-simplify"));
+  options.set_option("overflow-check", cmdline.isset("overflow-check"));
+
+  // we do want the assertions
+  optionst options;
+  options.set_option("assertions", true);
+  options.set_option("assumptions", true);
+  options.set_option("error-label", error_label);
+
   compiled_functions.clear();
 
   add_compiler_specific_defines(config);
@@ -121,13 +143,13 @@ bool compilet::doit()
     return true;
   }
 
-  if(mode==LINK_LIBRARY && source_files.size()>0)
+  if(act_as_ld && source_files.size()>0)
   {
-    error("cannot link source files");
+    error("ld cannot link source files");
     return true;
   }
 
-  if(mode==PREPROCESS_ONLY && object_files.size()>0)
+  if(only_preprocess && object_files.size()>0)
   {
     error("cannot preprocess object files");
     return true;
@@ -136,12 +158,9 @@ bool compilet::doit()
   if(source_files.size()>0)
     if(compile()) return true;
 
-  if(mode==PREPROCESS_ONLY)
-    return false; // we are done
+  if(only_preprocess) return false;
 
-  if(mode==LINK_LIBRARY ||
-     mode==COMPILE_LINK ||
-     mode==COMPILE_LINK_EXECUTABLE)
+  if(doLink)
   {
     if(link()) return true;
   }
@@ -170,19 +189,7 @@ bool compilet::add_input_file(const std::string &file_name)
   {
     std::string ext = file_name.substr(r+1, file_name.length());
 
-    if(ext=="c" ||
-       ext=="cc" ||
-       ext=="cp" ||
-       ext=="cpp" ||
-       ext=="CPP" ||
-       ext=="c++" ||
-       ext=="C" ||
-       ext=="i" ||
-       ext=="ii")
-    {
-      source_files.push_back(file_name);
-    }
-    else if(ext=="a")
+    if(ext=="a")
     {
       #ifdef _WIN32
       char td[MAX_PATH+1];
@@ -205,35 +212,7 @@ bool compilet::add_input_file(const std::string &file_name)
         error("Cannot switch to temporary directory");
         return true;
       }
-
-      // unpack now
-      #ifdef _WIN32
-      if(file_name[0]!='/' && file_name[1]!=':')
-      #else
-      if(file_name[0]!='/')
-      #endif
-      {
-        cmd << "ar x " <<
-        #ifdef _WIN32
-          working_directory << "\\" << file_name;
-        #else
-          working_directory << "/" << file_name;
-        #endif
-      }
-      else
-      {
-        cmd << "ar x " << file_name;
-      }
       
-      FILE *stream;
-
-      stream=popen(cmd.str().c_str(), "r");
-      pclose(stream);
-      
-      cmd.clear();
-      cmd.str("");
-      
-      // add the files from "ar t"
       #ifdef _WIN32
       if(file_name[0]!='/' && file_name[1]!=':')
       #else
@@ -252,7 +231,7 @@ bool compilet::add_input_file(const std::string &file_name)
         cmd << "ar t " << file_name;
       }
 
-      stream=popen(cmd.str().c_str(), "r");
+      FILE *stream = popen(cmd.str().c_str(), "r");
       if(stream!=NULL)
       {
         std::string line;
@@ -271,9 +250,7 @@ bool compilet::add_input_file(const std::string &file_name)
             #else
             t = tmp_dirs.back() + '/' + line;
             #endif
-
-            if(is_goto_binary(t))
-              object_files.push_back(t);
+            object_files.push_back(t);
             line = "";
           }
         }
@@ -281,19 +258,53 @@ bool compilet::add_input_file(const std::string &file_name)
       pclose(stream);
       cmd.str("");
 
+      #ifdef _WIN32
+      if(file_name[0]!='/' && file_name[1]!=':')
+      #else
+      if(file_name[0]!='/')
+      #endif
+      {
+        cmd << "ar x " <<
+        #ifdef _WIN32
+          working_directory << "\\" << file_name;
+        #else
+          working_directory << "/" << file_name;
+        #endif
+      }
+      else
+      {
+        cmd << "ar x " << file_name;
+      }
+
+      stream=popen(cmd.str().c_str(), "r");
+      pclose(stream);
+
       if(chdir(working_directory.c_str())!=0)
         error("Could not change back to working directory.");
     }
-    else if(is_goto_binary(file_name))
-      object_files.push_back(file_name);
-    else
+    else if(ext=="so")
     {
-      // unknown extension, not a goto binary, will ignore
+      if(cmdline.isset("xml"))
+      {
+        if(is_xml_file(file_name))
+          object_files.push_back(file_name);
+      }
+      else
+      {
+        if(is_binary_file(file_name))
+          object_files.push_back(file_name);
+      }
     }
+    else if(ext==object_file_extension ||
+            ext=="la" || ext=="lo") // Object file recognized
+      object_files.push_back(file_name);
+    else // assume source file
+      source_files.push_back(file_name);
   }
   else
   {
     // don't care about no extensions
+    source_files.push_back(file_name);
   }
 
   return false;
@@ -333,19 +344,91 @@ bool compilet::find_library(const std::string &name)
       add_input_file(tmp+name+".a");
     else
     {
-      std::string libname=tmp+name+".so";
+      std::string libname = tmp+name+".so";
 
-      if(is_goto_binary(libname))
-        add_input_file(libname);
-      else if(is_elf_file(libname))
-        std::cout << "Warning: Cannot read ELF library " << libname
-                  << std::endl;
+      if(is_elf_file(libname))
+          std::cout << "Warning: Cannot read ELF library " << libname << "."
+                    << std::endl;
+
+      if(cmdline.isset("xml"))
+      {
+        if(is_xml_file(libname))
+          add_input_file(libname);
+        else
+          return false;
+      }
       else
-        return false;
+      {
+        if(is_binary_file(libname))
+          add_input_file(libname);
+        else
+          return false;
+      }
     }
   }
   
   return true;
+}
+
+/*******************************************************************\
+
+Function: compilet::is_xml_file
+
+  Inputs: file name
+
+ Outputs: true if the given file name exists and is an xml file,
+          false otherwise
+
+ Purpose: checking if we can load an object file
+
+\*******************************************************************/
+
+bool compilet::is_xml_file(const std::string &file_name)
+{
+  std::fstream in;
+  in.open(file_name.c_str(), std::ios::in);
+
+  if(in.is_open())
+  {
+    char buf[5];
+    for (unsigned i=0; i<5; i++)
+      buf[i] = in.get();
+    if(buf[0]=='<' && buf[1]=='?' &&
+        buf[2]=='x' && buf[3]=='m' && buf[4]=='l')
+      return true;
+  }
+
+  return false;
+}
+
+/*******************************************************************\
+
+Function: compilet::is_binary_file
+
+  Inputs: file name
+
+ Outputs: true if the given file name exists and is a (goto-)binary file,
+          false otherwise
+
+ Purpose: checking if we can load an object file
+
+\*******************************************************************/
+
+bool compilet::is_binary_file(const std::string &file_name)
+{
+  std::fstream in;
+  in.open(file_name.c_str(), std::ios::in);
+
+  if(in.is_open())
+  {
+    char buf[3];
+    for (unsigned i=0; i<3; i++)
+      buf[i] = in.get();
+    if(buf[0]=='G' && buf[1]=='B' && buf[2]=='F')
+      return true;
+  }
+  
+  return false;
 }
 
 /*******************************************************************\
@@ -397,6 +480,18 @@ bool compilet::link()
   print(8, "Compiling functions");
   convert_symbols(compiled_functions);
 
+  if(cmdline.isset("partial-inlining"))
+  {
+    // inline those functions marked as "inlined"
+    // we no longer do partial inlining by default -- can just as
+    // well be done in the backend
+    print(8, "Partial inlining");
+    goto_partial_inline(
+      compiled_functions,
+      ns,
+      get_message_handler());
+  }
+
   // parse object files
   while(object_files.size()>0)
   {
@@ -407,18 +502,90 @@ bool compilet::link()
       return true;
   }
 
-  // produce entry point?
-  
-  if(mode==COMPILE_LINK_EXECUTABLE)
+  if(cmdline.isset("show-symbol-table"))
   {
-    if(entry_point(symbol_table, "c::main", ui_message_handler))
-      return true;
+    show_symbol_table();
+    return true;
+  }
 
-    // entry_point may (should) add some more functions.
+  if(cmdline.isset("show-function-table"))
+  {
+    show_function_table();
+    return true;
+  }
+
+  // finalize
+  contextt::symbolst::iterator it_main=
+    context.symbols.find(config.main.empty()?"c::main":"c::"+config.main);
+
+  if((!act_as_ld || it_main!=context.symbols.end()) &&
+     !cmdline.isset("static") && !cmdline.isset("shared"))
+  {
+    print(8, "Finalizing");
+
+    forall_symbols(it, context.symbols)
+    {
+      const symbolt &symbol = it->second;
+      if(symbol.mode!="" &&
+            find(seen_modes.begin(), seen_modes.end(), symbol.mode)
+            == seen_modes.end())
+      {
+        seen_modes.push_back(symbol.mode);
+      }
+    }
+    
+    if(seen_modes.empty())
+    {
+      if(!source_files.empty())
+      {
+        error("no modes found!");
+        return true;
+      }
+    }
+    else
+    {
+      // Hackfix for C++
+      std::list<irep_idt>::iterator cpp =
+        find(seen_modes.begin(), seen_modes.end(), "cpp");
+
+      std::list<irep_idt>::iterator c =
+        find(seen_modes.begin(), seen_modes.end(), "C");
+
+      if(c!=seen_modes.end() && cpp!=seen_modes.end())
+        seen_modes.erase(c);
+
+      std::list<irep_idt>::iterator it = seen_modes.begin();
+      for(; it!=seen_modes.end(); it++)
+      {
+        languaget *language=get_language_from_mode(*it);
+        if(language)
+        {
+          if(language->final(context, ui_message_handler))
+            return true;
+        }
+        else
+        {
+          error("unknown language mode '" +id2string(*it)+ "'");
+          return true;
+        }
+      }
+    }
+
+    // check for main
+    contextt::symbolst::iterator i=
+      context.symbols.find("main");
+
+    if(i==context.symbols.end())
+    {
+      error("'main' symbol not found");
+      return true;
+    }
+
+    // final may add some more functions.
     convert_symbols(compiled_functions);
   }
 
-  if(write_object_file(output_file_executable, symbol_table, compiled_functions))
+  if(write_object_file(output_file_executable, context, compiled_functions))
     return true;
 
   return false;
@@ -433,7 +600,7 @@ Function: compilet::compile
  Outputs: true on error, false otherwise
 
  Purpose: parses source files and writes object files, or keeps the
-          symbols in the symbol_table depending on the doLink flag.
+          symbols in the context depending on the doLink flag.
 
 \*******************************************************************/
 
@@ -450,28 +617,47 @@ bool compilet::compile()
 
     bool r=parse_source(file_name); // don't break the program!
 
-    if(r) return true; // parser/typecheck error
-
-    if(mode==COMPILE_ONLY || mode==ASSEMBLE_ONLY)
+    if(!r && !doLink && !only_preprocess)
     {
       // output an object file for every source file
 
       // "compile" functions
       convert_symbols(compiled_functions);
 
+      if(cmdline.isset("show-symbol-table"))
+      {
+        show_symbol_table();
+        return true;
+      }
+
+      if(cmdline.isset("show-function-table"))
+      {
+        show_function_table();
+        return true;
+      }
+
       std::string cfn;
       
       if(output_file_object=="")
-        cfn=get_base_name(file_name) + "." + object_file_extension;
+      {
+        if(cmdline.isset('S')) // compile, but don't assemble
+          cfn=get_base_name(file_name) + ".s";
+        else
+          cfn=get_base_name(file_name) + "." + object_file_extension;
+      }
       else
+      {
         cfn=output_file_object;
+      }
 
-      if(write_object_file(cfn, symbol_table, compiled_functions))
+      if(write_object_file(cfn, context, compiled_functions))
         return true;
 
-      symbol_table.clear(); // clean symbol table for next source file.
+      context.clear(); // clean symbol table for next source file.
       compiled_functions.clear();
     }
+    
+    if(r) return true; // parser/typecheck error
   }
   
   return false;
@@ -493,11 +679,7 @@ bool compilet::parse(const std::string &file_name)
 {
   if(file_name=="-") return parse_stdin();
 
-  #ifdef _MSC_VER
-  std::ifstream infile(widen(file_name).c_str());
-  #else
   std::ifstream infile(file_name.c_str());
-  #endif
 
   if(!infile)
   {
@@ -505,20 +687,7 @@ bool compilet::parse(const std::string &file_name)
     return true;
   }
 
-  languaget *languagep;
-  
-  // Using '-x', the type of a file can be overridden;
-  // otherwise, it's guessed from the extension.
-  
-  if(override_language!="")
-  {
-    if(override_language=="c++" || override_language=="c++-header")
-      languagep=get_language_from_mode("cpp");
-    else
-      languagep=get_language_from_mode("C");
-  }
-  else
-    languagep=get_language_from_filename(file_name);
+  languaget *languagep=get_language_from_filename(file_name);
 
   if(languagep==NULL)
   {
@@ -537,10 +706,10 @@ bool compilet::parse(const std::string &file_name)
   lf.filename=file_name;
   lf.language=languagep;
 
-  if(mode==PREPROCESS_ONLY)
-  {
-    print(8, "Preprocessing: "+file_name);
+  print(8, "Parsing: "+file_name);
 
+  if(only_preprocess)
+  {
     std::ostream *os = &std::cout;
     std::ofstream ofs;
 
@@ -561,8 +730,6 @@ bool compilet::parse(const std::string &file_name)
   }
   else
   {
-    print(8, "Parsing: "+file_name);
-
     if(language.parse(infile, file_name, get_message_handler()))
     {
       if(get_ui()==ui_message_handlert::PLAIN)
@@ -593,7 +760,7 @@ bool compilet::parse_stdin()
 
   print(8, "Parsing: (stdin)");
 
-  if(mode==PREPROCESS_ONLY)
+  if(only_preprocess)
   {
     std::ostream *os = &std::cout;
     std::ofstream ofs;
@@ -641,10 +808,13 @@ Function: compilet::write_object_file
 
 bool compilet::write_object_file(
   const std::string &file_name,
-  const symbol_tablet &lsymbol_table,
+  const contextt &lcontext,
   goto_functionst &functions)
 {
-  return write_bin_object_file(file_name, lsymbol_table, functions);
+  if(cmdline.isset("xml"))
+    return write_xml_object_file(file_name, lcontext, functions);
+  else
+    return write_bin_object_file(file_name, lcontext, functions);
 }
 
 /*******************************************************************\
@@ -662,14 +832,14 @@ Function: compilet::write_bin_object_file
 
 bool compilet::write_bin_object_file(
   const std::string &file_name,
-  const symbol_tablet &lsymbol_table,
+  const contextt &lcontext,
   goto_functionst &functions)
 {
   print(8, "Writing binary format object `" + file_name + "'");
 
   // symbols
   print(8, "Symbols in table: "+
-           i2string((unsigned long)lsymbol_table.symbols.size()));
+           i2string((unsigned long)lcontext.symbols.size()));
 
   std::ofstream outfile(file_name.c_str(), std::ios::binary);
 
@@ -679,7 +849,7 @@ bool compilet::write_bin_object_file(
     return true;
   }
 
-  if(write_goto_binary(outfile, lsymbol_table, functions))
+  if(write_goto_binary(outfile, lcontext, functions))
     return true;
 
   unsigned cnt=function_body_count(functions);
@@ -689,7 +859,433 @@ bool compilet::write_bin_object_file(
 
   outfile.close();
 
+  if(cmdline.isset("dot"))
+  {
+    std::ofstream dgf;
+    write_dot_header(file_name, dgf);
+
+    for(goto_functionst::function_mapt::iterator
+        it=functions.function_map.begin();
+        it!=functions.function_map.end();
+        it++)
+    {
+      if(it->second.body_available)
+        write_dot_subgraph(dgf, id2string(it->first), it->second.body);
+    }
+
+    do_dot_function_calls(dgf);
+    dgf << "}" << std::endl;
+    dgf.close();
+  }
+
   return false;
+}
+
+/*******************************************************************\
+
+Function: compilet::write_xml_object_file
+
+  Inputs: file_name, functions table
+
+ Outputs: true on error, false otherwise
+
+ Purpose: writes the goto functions in the function table to an xml
+          object file
+
+\*******************************************************************/
+
+bool compilet::write_xml_object_file(
+  const std::string &file_name,
+  const contextt &lcontext,
+  goto_functionst &functions)
+{
+  print(8, "Writing xml format object " + file_name);
+
+  std::ofstream f(file_name.c_str());
+  if(!f.is_open())
+  {
+    error("Error opening file " + file_name);
+    return true;
+  }
+
+  f << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << std::endl;
+  f << "<goto-object version=\"" << XML_VERSION << "\">" << std::endl;
+  f << " <irep_hash_map>" << std::endl;
+
+  xml_irep_convertt::ireps_containert irepc;
+  xml_irep_convertt irepconverter(irepc);
+  xml_symbol_convertt symbolconverter(irepc);
+  xml_goto_function_convertt gfconverter(irepc);
+
+  xmlt syms("symbols");
+  print(8, "Symbols in table: " + i2string((unsigned long) lcontext.symbols.size()));
+  forall_symbols(it, lcontext.symbols)
+  {
+    const symbolt &sym = it->second;
+    symbolconverter.convert(sym, syms);
+  }
+
+  xmlt funs("functions");
+  if(verbosity>=9)
+  {
+    std::cout << "Functions: " << functions.function_map.size() << "; ";
+    std::cout << function_body_count(functions) << " have a body." << std::endl;
+  }
+
+  std::ofstream dgf;
+
+  if(cmdline.isset("dot"))
+    write_dot_header(file_name, dgf);
+
+  for(goto_functionst::function_mapt::iterator it=functions.function_map.begin();
+      it != functions.function_map.end();
+      it++)
+  {
+    if(it->second.body_available)
+    {
+      xmlt &fun = funs.new_element("function");
+      fun.set_attribute("name", id2string(it->first));
+      gfconverter.convert(it->second, fun);
+      if(dgf.is_open())
+        write_dot_subgraph(dgf, id2string(it->first), it->second.body);
+    }
+  }
+
+  if(dgf.is_open())
+  {
+    do_dot_function_calls(dgf);
+    dgf << "}" << std::endl;
+    dgf.close();
+  }
+
+  irepconverter.output_map(f, 2);
+  f << " </irep_hash_map>" << std::endl;
+  syms.output(f, 1);
+  funs.output(f, 1);
+  f << "</goto-object>";
+  f.close();
+  return false;
+}
+
+/*******************************************************************\
+
+Function: compilet::write_dot_subgraph
+
+  Inputs: output stream, name and goto program
+
+ Outputs: true on error, false otherwise
+
+ Purpose: writes the dot graph that corresponds to the goto program
+          to the output stream.
+
+\*******************************************************************/
+
+void compilet::write_dot_subgraph(
+  std::ostream &out,
+  const std::string &name,
+  goto_programt &goto_program)
+{
+  clusters.push_back(exprt("cluster"));
+  clusters.back().set("name", name);
+  clusters.back().set("nr", subgraphscount);
+
+  out << "subgraph \"cluster_" << name << "\" {" << std::endl;
+  out << "label=\"" << name << "\";" << std::endl;
+
+  const goto_programt::instructionst& instructions =
+    goto_program.instructions;  
+  
+  if(instructions.size()==0)
+  {
+    out << "Node_" << subgraphscount << "_0 " <<
+      "[shape=Mrecord,fontsize=22,label=\"?\"];" << std::endl;
+  }
+  else
+  {
+    std::set<goto_programt::const_targett> seen;
+    goto_programt::const_targetst worklist;
+    worklist.push_back(instructions.begin());
+    
+    while(!worklist.empty())
+    {
+      goto_programt::const_targett it=worklist.front();
+      worklist.pop_front();
+      
+      if(it==instructions.end() ||
+         seen.find(it)!=seen.end()) continue;
+          
+      std::stringstream tmp("");
+      if(it->is_goto())
+      {
+        if(it->guard.is_true())
+          tmp.str("Goto");
+        else
+        {
+          std::string t = from_expr(ns, "", it->guard);
+          while (t[ t.size()-1 ]=='\n')
+            t = t.substr(0,t.size()-1);
+          tmp << escape(t) << "?";
+        }
+      }
+      else if(it->is_assume())
+      {
+        std::string t = from_expr(ns, "", it->guard);
+        while (t[ t.size()-1 ]=='\n')
+          t = t.substr(0,t.size()-1);
+        tmp << "Assume\\n(" << escape(t) << ")";
+      }
+      else if(it->is_assert())
+      {
+        std::string t = from_expr(ns, "", it->guard);
+        while (t[ t.size()-1 ]=='\n')
+          t = t.substr(0,t.size()-1);
+        tmp << "Assert\\n(" << escape(t) << ")";
+      }
+      else if(it->is_skip())
+        tmp.str("Skip");
+      else if(it->is_end_function())            
+        tmp.str("End of Function");      
+      else if(it->is_location())
+        tmp.str("Location");
+      else if(it->is_dead())
+        tmp.str("Dead");
+      else if(it->is_atomic_begin())
+        tmp.str("Atomic Begin");
+      else if(it->is_atomic_end())
+        tmp.str("Atomic End");
+      else if(it->is_function_call())
+      {
+        std::string t = from_expr(ns, "", it->code);
+        while (t[ t.size()-1 ]=='\n')
+          t = t.substr(0,t.size()-1);
+        tmp.str(escape(t));
+        
+        exprt fc;
+        std::stringstream ss;
+        ss << "Node_" << subgraphscount << "_" << it->location_number;
+        fc.operands().push_back(exprt(ss.str()));
+        fc.operands().push_back(it->code.op1());  
+        function_calls.push_back(fc);
+      }
+      else if(it->is_assign() ||
+               it->is_return() ||
+               it->is_other())      
+      {
+        std::string t = from_expr(ns, "", it->code);
+        while (t[ t.size()-1 ]=='\n')
+          t = t.substr(0,t.size()-1);
+        tmp.str(escape(t));
+      }
+      else if(it->is_start_thread())
+        tmp.str("Start of Thread");
+      else if(it->is_end_thread())
+        tmp.str("End of Thread");
+      else if(it->is_throw())
+        tmp.str("THROW");
+      else if(it->is_catch())
+        tmp.str("CATCH");
+      else
+        tmp.str("UNKNOWN");
+
+      out << "Node_" << subgraphscount << "_" << it->location_number;
+      out << " [shape="; 
+      if(it->is_goto() && !it->guard.is_true() && !it->guard.is_false())
+        out << "diamond";
+      else
+        out <<"Mrecord";
+      out << ",fontsize=22,label=\"";
+      out << tmp.str();
+      out << "\"];" << std::endl;
+
+      std::set<goto_programt::const_targett> tres;
+      std::set<goto_programt::const_targett> fres;          
+      find_next(instructions, it, tres, fres);
+
+      std::string tlabel="true";
+      std::string flabel="false";
+      if(fres.size()==0 || tres.size()==0)
+      {
+        tlabel="";
+        flabel="";
+      }
+            
+      typedef std::set<goto_programt::const_targett> t;          
+      
+      for (t::iterator trit=tres.begin();
+           trit!=tres.end();
+           trit++)
+        write_edge(out, *it, **trit, tlabel);
+      for (t::iterator frit=fres.begin();
+          frit!=fres.end();
+          frit++)
+        write_edge(out, *it, **frit, flabel);
+    
+      seen.insert(it);
+      goto_programt::const_targetst temp;
+      goto_program.get_successors(it, temp);
+      worklist.insert(worklist.end(), temp.begin(), temp.end());
+    }
+  }
+  
+  out << "}" << std::endl;
+  subgraphscount++;
+}
+
+/*******************************************************************\
+
+Function: compilet::do_dot_function_calls
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+void compilet::do_dot_function_calls(std::ostream &out)
+{
+  for (std::list<exprt>::const_iterator it=function_calls.begin();
+       it!=function_calls.end();
+       it++)
+  {
+    std::list<exprt>::const_iterator cit=clusters.begin();
+    for (;cit!=clusters.end();cit++)
+      if(cit->get("name")==it->op1().get(ID_identifier))
+        break;
+
+    if(cit!=clusters.end())
+    {
+      out << it->op0().id() <<
+        " -> " "Node_" << cit->get("nr") << "_0" <<
+        " [lhead=\"cluster_" << it->op1().get(ID_identifier) << "\"," <<
+        "color=blue];" << std::endl;
+    }
+    else
+    {
+      out << "subgraph \"cluster_" << it->op1().get(ID_identifier) <<
+        "\" {" << std::endl;
+      out << "rank=sink;"<<std::endl;
+      out << "label=\"" << it->op1().get(ID_identifier) << "\";" << std::endl;
+      out << "Node_" << subgraphscount << "_0 " <<
+        "[shape=Mrecord,fontsize=22,label=\"?\"];"
+          << std::endl;
+      out << "}" << std::endl;
+      clusters.push_back(exprt("cluster"));
+      clusters.back().set("name", it->op1().get(ID_identifier));
+      clusters.back().set("nr", subgraphscount);
+      out << it->op0().id() <<
+        " -> " "Node_" << subgraphscount << "_0" <<
+        " [lhead=\"cluster_" << it->op1().get("identifier") << "\"," <<
+        "color=blue];" << std::endl;
+      subgraphscount++;
+    }
+  }
+}
+
+/*******************************************************************\
+
+Function: compilet::find_next
+
+  Inputs: instructions, instruction iterator, true results and
+          false results
+
+ Outputs: none
+
+ Purpose: finds an instructions successors (for goto graphs)
+
+\*******************************************************************/
+
+void compilet::find_next(
+  const goto_programt::instructionst &instructions,
+  const goto_programt::const_targett &it,
+  std::set<goto_programt::const_targett> &tres,
+  std::set<goto_programt::const_targett> &fres)
+{
+  if(it->is_goto() && !it->guard.is_false())
+  {
+    goto_programt::targetst::const_iterator gtit = it->targets.begin();
+    for (; gtit!=it->targets.end(); gtit++)
+      tres.insert((*gtit));
+  }
+
+  if(it->is_goto() && it->guard.is_true())
+    return;
+  
+  goto_programt::const_targett next = it; next++;
+  if(next!=instructions.end())
+    fres.insert(next);
+}
+
+/*******************************************************************\
+
+Function: compilet::write_edge
+
+  Inputs: output stream, from, to and a label
+
+ Outputs: none
+
+ Purpose: writes an edge from the from node to the to node and with
+          the given label to the output stream (dot format)
+
+\*******************************************************************/
+
+void compilet::write_edge(
+  std::ostream &out,
+  const goto_programt::instructiont &from,
+  const goto_programt::instructiont &to,
+  const std::string &label)
+{
+  out << "Node_" << subgraphscount << "_" << from.location_number;
+  out << " -> ";
+  out << "Node_" << subgraphscount << "_" << to.location_number << " ";
+  if(label!="")
+    {
+      out << "[fontsize=20,label=\"" << label << "\"";
+      if(from.is_backwards_goto() &&
+          from.location_number > to.location_number)
+        out << ",color=red";
+      out << "]";
+    }
+  out << ";" << std::endl;
+}
+
+/*******************************************************************\
+
+Function: compilet::escape
+
+  Inputs: a string
+
+ Outputs: the escaped string
+
+ Purpose: escapes a string. beware, this might not work for all
+          kinds of strings.
+
+\*******************************************************************/
+
+std::string &compilet::escape(std::string &str)
+{
+  for(unsigned i=0; i<str.size(); i++)
+  {
+    if(str[i]=='\n')
+    {
+      str[i] = 'n';
+      str.insert(i, "\\");
+    }
+    else if(str[i]=='\"' ||
+            str[i]=='|' ||
+            str[i]=='\\' ||
+            str[i]=='>' ||
+            str[i]=='<' ||
+            str[i]=='{' ||
+            str[i]=='}')
+    {
+      str.insert(i, "\\");
+      i++;
+    }
+  }
+
+  return str;
 }
 
 /*******************************************************************\
@@ -733,20 +1329,43 @@ bool compilet::read_object(
   const std::string &file_name,
   goto_functionst &functions)
 {
-  print(8, "Reading: " + file_name);
+  std::ifstream infile;
 
-  // we read into a temporary symbol_table
-  symbol_tablet temp_symbol_table;
+  if(cmdline.isset("xml"))
+    infile.open(file_name.c_str());
+  else
+    infile.open(file_name.c_str(), std::ios::binary);
+
+  if(!infile)
+  {
+    error("failed to open input file", file_name);
+    return true;
+  }
+
+  print(8, "Parsing: " + file_name);
+
+  // we parse to a temporary context
+  contextt temp_context;
   goto_functionst temp_functions;
 
-  if(read_goto_binary(file_name, temp_symbol_table, temp_functions, *message_handler))
-    return true;
+  if(cmdline.isset("xml"))
+  {
+    if(read_goto_object(infile, file_name, temp_context,
+                         temp_functions, *message_handler))
+      return true;
+  }
+  else
+  {
+    if(read_bin_goto_object(infile, file_name, temp_context,
+                             temp_functions, *message_handler))
+      return true;
+  }
   
   std::set<irep_idt> seen_modes;
 
-  for(symbol_tablet::symbolst::const_iterator
-      it=temp_symbol_table.symbols.begin();
-      it!=temp_symbol_table.symbols.end();
+  for(contextt::symbolst::const_iterator
+      it=temp_context.symbols.begin();
+      it!=temp_context.symbols.end();
       it++)
   {
     if(it->second.mode!="")
@@ -764,19 +1383,40 @@ bool compilet::read_object(
 
   // hardwired to C-style linking
 
-  linkingt linking(symbol_table, temp_symbol_table, ui_message_handler);
-  
-  linking.set_verbosity(verbosity);
+  c_linkt c_link(context, temp_context, ui_message_handler);
 
-  if(linking.typecheck_main())
+  if(c_link.typecheck_main())
     return true;
     
-  if(link_functions(symbol_table, functions,
-                    temp_symbol_table, temp_functions,
-                    linking.replace_symbol))
+  if(link_functions(context, functions,
+                    temp_context, temp_functions,
+                    c_link.replace_symbol))
     return true;
 
   return false;
+}
+
+/*******************************************************************\
+
+Function: compilet::show_function_table
+
+  Inputs: none
+
+ Outputs: nothing
+
+ Purpose: prints the function table to stdout
+
+\*******************************************************************/
+
+void compilet::show_function_table()
+{
+  for(goto_functionst::function_mapt::const_iterator
+      i=compiled_functions.function_map.begin();
+      i!=compiled_functions.function_map.end();
+      i++)
+  {
+    std::cout << i->first << std::endl;
+  }
 }
 
 /*******************************************************************\
@@ -793,11 +1433,14 @@ Function: compilet::compilet
 
 compilet::compilet(cmdlinet &_cmdline):
   language_uit("goto-cc " GOTOCC_VERSION, _cmdline),
-  ns(symbol_table),
+  ns(context),
   cmdline(_cmdline)
 {
-  mode=COMPILE_LINK_EXECUTABLE;
+  doLink=false;
+  act_as_ld=false;
+  only_preprocess=false;
   echo_file_name=false;
+  subgraphscount=0;
   working_directory=get_current_working_directory();
 }
 
@@ -821,6 +1464,36 @@ compilet::~compilet()
       it!=tmp_dirs.end();
       it++)
     delete_directory(*it);
+}
+
+/*******************************************************************\
+
+Function: compilet::write_dot_file
+
+  Inputs:
+
+ Outputs:
+
+ Purpose:
+
+\*******************************************************************/
+
+bool compilet::write_dot_header(
+  const std::string &file_name,
+  std::ofstream &dgf)
+{
+  std::string dgfilename = file_name + ".dot";
+  if(verbosity>=9)
+    status("Writing dot graph to " + dgfilename);
+  dgf.open(dgfilename.c_str());
+  if(!dgf.is_open())
+  {
+    error("Error opening file: " + dgfilename);
+    return true;
+  }
+  dgf << "digraph G {" << std::endl;
+  dgf << DOTGRAPHSETTINGS << std::endl;
+  return false;
 }
 
 /*******************************************************************\
@@ -862,9 +1535,9 @@ Function: compilet::link_functions
 \*******************************************************************/
 
 bool compilet::link_functions(
-  symbol_tablet &dest_symbol_table,
+  contextt &dest_context,
   goto_functionst &dest_functions,
-  symbol_tablet &src_symbol_table,
+  contextt &src_context,
   goto_functionst &src_functions,
   const replace_symbolt &replace_symbol)
 {
@@ -890,45 +1563,45 @@ bool compilet::link_functions(
     {
       replace_symbols_in_function(src_it->second, replace_symbol);
 
-      goto_functionst::goto_functiont &in_dest_symbol_table=
+      goto_functionst::goto_functiont &in_dest_context=
         dest_functions.function_map[final_id];
 
-      in_dest_symbol_table.body.swap(src_it->second.body);
-      in_dest_symbol_table.body_available=src_it->second.body_available;
-      in_dest_symbol_table.type=src_it->second.type;
+      in_dest_context.body.swap(src_it->second.body);
+      in_dest_context.body_available=src_it->second.body_available;
+      in_dest_context.type=src_it->second.type;
     }
     else // collision!
     {
-      goto_functionst::goto_functiont &in_dest_symbol_table=
+      goto_functionst::goto_functiont &in_dest_context=
         dest_functions.function_map[final_id];
 
       goto_functionst::goto_functiont &src_func=src_it->second;
 
-      if(in_dest_symbol_table.body.instructions.empty())
+      if(in_dest_context.body.instructions.empty())
       {
         // the one with body wins!
         replace_symbols_in_function(src_func, replace_symbol);
         
-        in_dest_symbol_table.body.swap(src_func.body);
-        in_dest_symbol_table.body_available=src_func.body_available;
-        in_dest_symbol_table.type=src_func.type;
+        in_dest_context.body.swap(src_func.body);
+        in_dest_context.body_available=src_func.body_available;
+        in_dest_context.type=src_func.type;
       }
       else if(src_func.body.instructions.empty())
       {
         // just keep the old one in dest
       }
-      else if(in_dest_symbol_table.type.get_bool(ID_C_inlined))
+      else if(in_dest_context.type.get_bool(ID_C_inlined))
       {
         // ok, we silently ignore
       }
-      else if(base_type_eq(in_dest_symbol_table.type, src_func.type, ns))
+      else if(base_type_eq(in_dest_context.type, src_func.type, ns))
       {
-        // keep the one in in_symbol_table -- libraries come last!
+        // keep the one in in_context -- libraries come last!
         std::stringstream str;
         str << "warning: function `" << final_id << "' in module `"
-            << src_symbol_table.symbols.begin()->second.module
+            << src_context.symbols.begin()->second.module
             << "' is shadowed by a definition in module `"
-            << symbol_table.symbols.begin()->second.module << "'";
+            << context.symbols.begin()->second.module << "'";
         warning(str.str());
       }
       else
@@ -938,9 +1611,9 @@ bool compilet::link_functions(
             << final_id
             << "'" << std::endl;
         str << "In module `" 
-            << symbol_table.symbols.begin()->second.module
+            << context.symbols.begin()->second.module
             << "' and module `"
-            << src_symbol_table.symbols.begin()->second.module << "'";
+            << src_context.symbols.begin()->second.module << "'";
         error(str.str());
         return true;
       }
@@ -1007,20 +1680,21 @@ Function: compilet::convert_symbols
 
 void compilet::convert_symbols(goto_functionst &dest)
 {
-  goto_convert_functionst converter(symbol_table, dest, ui_message_handler);
+  goto_convert_functionst converter(context, options, dest,
+                                    ui_message_handler);
 
   // the compilation may add symbols!
 
-  symbol_tablet::symbolst::size_type before=0;
+  contextt::symbolst::size_type before=0;
   
-  while(before!=symbol_table.symbols.size())
+  while(before!=context.symbols.size())
   {
-    before=symbol_table.symbols.size();
+    before=context.symbols.size();
 
     typedef std::set<irep_idt> symbols_sett;
     symbols_sett symbols;
   
-    Forall_symbols(it, symbol_table.symbols)
+    Forall_symbols(it, context.symbols)
       symbols.insert(it->first);
 
     // the symbol table itertors aren't stable
@@ -1029,8 +1703,8 @@ void compilet::convert_symbols(goto_functionst &dest)
         it!=symbols.end();
         ++it)
     {
-      symbol_tablet::symbolst::iterator s_it=symbol_table.symbols.find(*it);
-      assert(s_it!=symbol_table.symbols.end());
+      contextt::symbolst::iterator s_it=context.symbols.find(*it);
+      assert(s_it!=context.symbols.end());
 
       if(s_it->second.type.id()==ID_code &&
           s_it->second.value.id()!="compiled" &&

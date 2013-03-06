@@ -11,7 +11,7 @@ Author: Daniel Kroening, kroening@cs.cmu.edu
 
 #include <message.h>
 #include <language_file.h>
-#include <symbol_table.h>
+#include <context.h>
 #include <ui_message.h>
 
 class cmdlinet;
@@ -20,7 +20,7 @@ class language_uit:public messaget
 {
 public:
   language_filest language_files;
-  symbol_tablet symbol_table;
+  contextt context;
   
   language_uit(
     const std::string &program,

@@ -8,11 +8,11 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <string>
 
-class symbol_tablet;
+class contextt;
 class message_handlert;
 class symbolt;
 
 const symbolt &get_module(
-  const symbol_tablet &symbol_table,
+  const contextt &context,
   const std::string &module,
   message_handlert &message_handler);

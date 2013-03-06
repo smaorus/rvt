@@ -8,22 +8,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <stdlib.h>
 
-#ifdef __linux__
-#include <unistd.h>
-#endif
-
-#ifdef __FreeBSD_kernel__
-#include <unistd.h>
-#endif
-
-#ifdef __GNU__
-#include <unistd.h>
-#endif
-
-#ifdef __MACH__
-#include <unistd.h>
-#endif
-
+#include <str_getline.h>
 #include <std_expr.h>
 #include <std_types.h>
 #include <tempfile.h>
@@ -155,7 +140,7 @@ decision_proceduret::resultt smt2_dect::dec_solve()
     break;
 
   case Z3:
-    command = "z3 -smt2 "
+    command = "z3 -m "
             + temp_out_filename
             + " > "
             + temp_result_filename;
@@ -165,7 +150,7 @@ decision_proceduret::resultt smt2_dect::dec_solve()
     assert(false);
   }
 
-  #if defined(__linux__) || defined(__APPLE__)
+  #if defined(__LINUX__) || defined(__APPLE__)
   command+=" 2>&1";
   #endif
 
@@ -211,7 +196,7 @@ decision_proceduret::resultt smt2_dect::read_result_boolector(std::istream &in)
 {
   std::string line;
 
-  std::getline(in, line);
+  str_getline(in, line);
 
   if(line=="sat")
   {
@@ -220,7 +205,7 @@ decision_proceduret::resultt smt2_dect::read_result_boolector(std::istream &in)
     typedef hash_map_cont<std::string, std::string, string_hash> valuest;
     valuest values;
 
-    while(std::getline(in, line))
+    while(str_getline(in, line))
     {
       std::size_t pos=line.find(' ');
       if(pos!=std::string::npos)
@@ -277,7 +262,7 @@ decision_proceduret::resultt smt2_dect::read_result_yices(std::istream &in)
 {
   std::string line;
 
-  while(std::getline(in, line))
+  while(str_getline(in, line))
   {
   }
 
@@ -308,7 +293,7 @@ decision_proceduret::resultt smt2_dect::read_result_mathsat(std::istream &in)
   typedef hash_map_cont<std::string, std::string, string_hash> valuest;
   valuest values;
 
-  while(std::getline(in, line))
+  while(str_getline(in, line))
   {
     if(line=="sat")
       res=D_SATISFIABLE;
@@ -386,55 +371,18 @@ decision_proceduret::resultt smt2_dect::read_result_z3(std::istream &in)
   typedef hash_map_cont<std::string, std::string, string_hash> valuest;
   valuest values;
 
-  while(std::getline(in, line))
+  while(str_getline(in, line))
   {
     if(line=="sat")
       res = D_SATISFIABLE;
     else if(line=="unsat")
       res = D_UNSATISFIABLE;
-    // XXX -- this is a really nasty hack.  It'll disappear when I write a
-    // proper parser (Matt).
-    else if(line.substr(0, 11) == "(core_expr_")
-    {
-      // This is the unsat core.  It looks like
-      //
-      // (core_expr_N1 core_expr_N2 ... core_expr_Nk)
-      //
-      // where each Ni is an integer.
-      size_t start, end;
-
-      // Start scanning from the 2nd character, so we skip over the leading
-      // '('.
-      start = 1;
-
-      while (start < line.size()) {
-        for (end = start; line[end] != ' ' && line[end] != ')'; end++);
-
-        std::string core_name = line.substr(start, end-start);
-        exprt &core_expr = core_map[core_name];
-        unsat_core.insert(core_expr);
-
-        start = end+1;
-      }
-    }
     else
     {
-      // Values look like:
-      //
-      // ((identifer value))
-      size_t start, mid, end;
-
-      for (start = 0; start < line.size() && line[start] == '('; start++);
-      for (mid = start; mid < line.size() && line[mid] != ' '; mid++);
-      for (end = mid; end < line.size() && line[end] != ')'; end++);
-
-      if (start < line.size() && mid < line.size() && end < line.size())
-      {
-        std::string identifier = line.substr(start, mid-start);
-        std::string value = line.substr(mid+1, end-(mid+1));
-
-        values[identifier] = value;
-      }
+      std::size_t pos=line.find(" -> ");
+      if(pos!=std::string::npos)
+        values[std::string(line, 0, pos)]=
+          std::string(line, pos+4, std::string::npos);
     }
   }
 
@@ -619,7 +567,7 @@ decision_proceduret::resultt smt2_dect::read_result_cvc3(std::istream &in)
   typedef hash_map_cont<std::string, std::string, string_hash> valuest;
   valuest values;
 
-  while(std::getline(in, line))
+  while(str_getline(in, line))
   {
     if(line=="sat")
       res = D_SATISFIABLE;

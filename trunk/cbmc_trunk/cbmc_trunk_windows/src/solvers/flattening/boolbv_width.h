@@ -11,7 +11,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <std_types.h>
 #include <namespace.h>
-#include <hash_cont.h>
 
 class boolbv_widtht
 {

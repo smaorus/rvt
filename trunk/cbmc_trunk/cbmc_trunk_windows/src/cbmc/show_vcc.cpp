@@ -33,6 +33,7 @@ void bmct::show_vcc(std::ostream &out)
 {
   switch(ui)
   {
+  case ui_message_handlert::OLD_GUI:
   case ui_message_handlert::XML_UI:
     error("not supported");
     return;
@@ -60,6 +61,8 @@ void bmct::show_vcc(std::ostream &out)
     if(it->comment!="")
       out << it->comment << std::endl;
       
+    out << "Priority " << it->priority << std::endl;
+
     symex_target_equationt::SSA_stepst::const_iterator
       p_it=equation.SSA_steps.begin();
       

@@ -267,7 +267,8 @@ public:
 extern inline const struct_union_typet &to_struct_union_type(const typet &type)
 {
   assert(type.id()==ID_struct ||
-         type.id()==ID_union);
+         type.id()==ID_union ||
+         type.id()==ID_class);
   return static_cast<const struct_union_typet &>(type);
 }
 
@@ -277,7 +278,8 @@ extern inline const struct_union_typet &to_struct_union_type(const typet &type)
 extern inline struct_union_typet &to_struct_union_type(typet &type)
 {
   assert(type.id()==ID_struct ||
-         type.id()==ID_union);
+         type.id()==ID_union ||
+         type.id()==ID_class);
   return static_cast<struct_union_typet &>(type);
 }
 
@@ -290,7 +292,7 @@ public:
   {
   }
 
-  // returns true if the object is a prefix of \a other    
+  /// returns true if the object is a prefix of \a other    
   bool is_prefix_of(const struct_typet &other) const;
 };
 
@@ -306,7 +308,9 @@ public:
 */
 extern inline const struct_typet &to_struct_type(const typet &type)
 {
-  assert(type.id()==ID_struct);
+  assert(type.id()==ID_struct ||
+         type.id()==ID_union ||
+         type.id()==ID_class);
   return static_cast<const struct_typet &>(type);
 }
 
@@ -315,83 +319,10 @@ extern inline const struct_typet &to_struct_type(const typet &type)
 */
 extern inline struct_typet &to_struct_type(typet &type)
 {
-  assert(type.id()==ID_struct);
+  assert(type.id()==ID_struct ||
+         type.id()==ID_union ||
+         type.id()==ID_class);
   return static_cast<struct_typet &>(type);
-}
-
-/*! \brief C++ class type
-*/
-class class_typet:public struct_typet
-{
-public:
-  class_typet():struct_typet()
-  {
-  }
-
-  inline const componentst &methods() const
-  {
-    return (const componentst &)(find(ID_methods).get_sub());
-  }
-  
-  inline componentst &methods()
-  {
-    return (componentst &)(add(ID_methods).get_sub());
-  }
-
-  inline bool is_class() const
-  {
-    return get_bool(ID_C_class);    
-  }
-  
-  inline irep_idt default_access() const
-  {
-    return is_class()?ID_private:ID_public;
-  }
-
-  inline const irept::subt &bases() const  
-  {
-    return find(ID_bases).get_sub();
-  }
-  
-  bool has_base(const irep_idt &id) const
-  {
-    const irept::subt &b=bases();
-    forall_irep(it, b)
-    {
-      assert(it->id()==ID_base);
-      const irept &type=it->find(ID_type);
-      assert(type.id()==ID_symbol);
-      if(type.get(ID_identifier)==id) return true;
-    }
-    
-    return false;
-  }
-
-};
-
-/*! \brief Cast a generic typet to a \ref class_typet
- *
- * This is an unchecked conversion. \a type must be known to be \ref
- * class_typet.
- *
- * \param type Source type
- * \return Object of type \ref class_typet
- *
- * \ingroup gr_std_types
-*/
-extern inline const class_typet &to_class_type(const typet &type)
-{
-  assert(type.id()==ID_struct);
-  return static_cast<const class_typet &>(type);
-}
-
-/*! \copydoc to_class_type(const typet &)
- * \ingroup gr_std_types
-*/
-extern inline class_typet &to_class_type(typet &type)
-{
-  assert(type.id()==ID_struct);
-  return static_cast<class_typet &>(type);
 }
 
 /*! \brief The union type
@@ -445,7 +376,7 @@ public:
     {
     }
     
-    explicit inline argumentt(const typet &type):exprt(ID_argument, type)
+    inline argumentt(const typet &type):exprt(ID_argument, type)
     {
     }
     
@@ -962,19 +893,13 @@ public:
 */
 const string_typet &to_string_type(const typet &type);
 
-/*! \brief A type for subranges of integers
+/*! \brief TO_BE_DOCUMENTED
 */
 class range_typet:public typet
 {
 public:
   range_typet():typet(ID_range)
   {
-  }
-  
-  range_typet(const mp_integer &_from, const mp_integer &_to)
-  {
-    set_from(_from);
-    set_to(_to);
   }
 
   friend const range_typet &to_range_type(const typet &type)
@@ -1002,7 +927,7 @@ public:
 */
 const range_typet &to_range_type(const typet &type);
 
-/*! \brief A constant-size array type
+/*! \brief TO_BE_DOCUMENTED
 */
 class vector_typet:public typet
 {
@@ -1053,46 +978,6 @@ extern inline vector_typet &to_vector_type(typet &type)
 {
   assert(type.id()==ID_vector);
   return static_cast<vector_typet &>(type);
-}
-
-/*! \brief Complex numbers made of pair of given subtype
-*/
-class complex_typet:public typet
-{
-public:
-  complex_typet():typet(ID_complex)
-  {
-  }
-  
-  complex_typet(const typet &_subtype):typet(ID_complex)
-  {
-    subtype()=_subtype;
-  }
-};
-
-/*! \brief Cast a generic typet to a \ref complex_typet
- *
- * This is an unchecked conversion. \a type must be known to be \ref
- * complex_typet.
- *
- * \param type Source type
- * \return Object of type \ref complex_typet
- *
- * \ingroup gr_std_types
-*/
-extern inline const complex_typet &to_complex_type(const typet &type)
-{
-  assert(type.id()==ID_complex);
-  return static_cast<const complex_typet &>(type);
-}
-
-/*! \copydoc to_complex_type(const typet &)
- * \ingroup gr_std_types
-*/
-extern inline complex_typet &to_complex_type(typet &type)
-{
-  assert(type.id()==ID_complex);
-  return static_cast<complex_typet &>(type);
 }
 
 #endif

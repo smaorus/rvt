@@ -6,8 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#ifndef CPROVER_ANSI_C_PARSER_H
-#define CPROVER_ANSI_C_PARSER_H
+#ifndef CPROVER_SPECC_PARSER_H
+#define CPROVER_SPECC_PARSER_H
 
 #include <assert.h>
 
@@ -29,9 +29,7 @@ class ansi_c_parsert:public parsert
 public:
   ansi_c_parse_treet parse_tree;
   
-  ansi_c_parsert():
-    cpp(false),
-    for_has_scope(false)
+  ansi_c_parsert():cpp(false)
   {
   }
   
@@ -45,11 +43,11 @@ public:
     parsert::clear();
     parse_tree.clear();
     
-    // scanner state
+    // scanner
+    string_literal.clear();
     tag_following=false;
     asm_block_following=false;
     parenthesis_counter=0;
-    string_literal.clear();
     
     // setup global scope
     scopes.clear();
@@ -59,10 +57,10 @@ public:
   }
 
   // internal state of the scanner
+  std::string string_literal;
   bool tag_following;
   bool asm_block_following;
   unsigned parenthesis_counter;
-  std::string string_literal;
   
   enum { LANGUAGE, EXPRESSION } grammar;
 
@@ -76,9 +74,6 @@ public:
 
   // recognize C++ keywords  
   bool cpp;
-  
-  // in C99 and upwards, for(;;) has a scope
-  bool for_has_scope;
 
   class identifiert
   {

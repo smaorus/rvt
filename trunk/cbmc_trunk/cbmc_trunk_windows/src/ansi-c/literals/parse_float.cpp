@@ -6,8 +6,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
-#include <cctype>
-
 #include "parse_float.h"
 
 /*******************************************************************\
@@ -27,7 +25,7 @@ void parse_float(
   mp_integer &significand,
   mp_integer &exponent,
   unsigned &exponent_base,
-  bool &is_float, bool &is_long, bool &is_imaginary)
+  bool &is_float, bool &is_long)
 {
   // {digits}{dot}{digits}{exponent}?{floatsuffix}?
   // {digits}{dot}{exponent}?{floatsuffix}?
@@ -48,7 +46,7 @@ void parse_float(
   
   // is this hex?
   
-  if(src.size()>=2 && src[0]=='0' && tolower(src[1])=='x')
+  if(src.size()>=2 && src[0]=='0' && src[1]=='x')
   {
     // skip the 0x
     p+=2;
@@ -90,20 +88,16 @@ void parse_float(
 
     std::string str_number=str_whole_number+
                            str_fraction_part;
-                           
-    // The significand part is interpreted as a (decimal or hexadecimal)
-    // rational number; the digit sequence in the exponent part is
-    // interpreted as a decimal integer.
 
     if(str_number.empty())
       significand=0;
     else
-      significand=string2integer(str_number, 16); // hex
+      significand=string2integer(str_number, 16);
 
     if(str_exponent.empty())
       exponent=0;
     else
-      exponent=string2integer(str_exponent, 10); // decimal
+      exponent=string2integer(str_exponent, 16);
 
     // adjust exponent
     exponent-=str_fraction_part.size()*4; // each digit has 4 bits
@@ -112,8 +106,7 @@ void parse_float(
   {
     // get whole number part
     while(*p!='.' && *p!=0 && *p!='e' && *p!='E' &&
-          *p!='f' && *p!='F' && *p!='l' && *p!='L' &&
-          *p!='i' && *p!='I' && *p!='j' && *p!='J')
+          *p!='f' && *p!='F' && *p!='l' && *p!='L')
     {
       str_whole_number+=*p;
       p++;
@@ -125,8 +118,7 @@ void parse_float(
 
     // get fraction part
     while(*p!=0 && *p!='e' && *p!='E' &&
-          *p!='f' && *p!='F' && *p!='l' && *p!='L' &&
-          *p!='i' && *p!='I' && *p!='j' && *p!='J')
+           *p!='f' && *p!='F' && *p!='l' && *p!='L')
     {
       str_fraction_part+=*p;
       p++;
@@ -141,8 +133,7 @@ void parse_float(
       p++;
 
     // get exponent
-    while(*p!=0 && *p!='f' && *p!='F' && *p!='l' && *p!='L' &&
-          *p!='i' && *p!='I' && *p!='j' && *p!='J')
+    while(*p!=0 && *p!='f' && *p!='F' && *p!='l' && *p!='L')
     {
       str_exponent+=*p;
       p++;
@@ -166,7 +157,7 @@ void parse_float(
   }
 
   // get flags
-  is_float=is_long=is_imaginary=false;
+  is_float=is_long=false;
 
   while(*p!=0)
   {
@@ -174,8 +165,6 @@ void parse_float(
       is_float=true;
     else if(*p=='l' || *p=='L')
       is_long=true;
-    else if(*p=='i' || *p=='I' || *p=='j' || *p=='J')
-      is_imaginary=true;
 
     p++;
   }

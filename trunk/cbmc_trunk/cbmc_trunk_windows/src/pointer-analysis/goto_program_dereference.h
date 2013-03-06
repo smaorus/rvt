@@ -20,13 +20,13 @@ class goto_program_dereferencet:protected dereference_callbackt
 public:
   goto_program_dereferencet(
     const namespacet &_ns,
-    symbol_tablet &_new_symbol_table,
+    contextt &_new_context,
     const optionst &_options,
     value_setst &_value_sets):
     options(_options),
     ns(_ns),
     value_sets(_value_sets),
-    dereference(_ns, _new_symbol_table, _options, *this) { }
+    dereference(_ns, _new_context, _options, *this) { }
 
   void dereference_program(
     goto_programt &goto_program,
@@ -90,23 +90,23 @@ void dereference(
 
 void remove_pointers(
   goto_programt &goto_program,
-  symbol_tablet &symbol_table,
+  contextt &context,
   value_setst &value_sets);
 
 void remove_pointers(
   goto_functionst &goto_functions,
-  symbol_tablet &symbol_table,
+  contextt &context,
   value_setst &value_sets);
 
 void pointer_checks(
   goto_programt &goto_program,
-  symbol_tablet &symbol_table,
+  contextt &context,
   const optionst &options,
   value_setst &value_sets);
 
 void pointer_checks(
   goto_functionst &goto_functions,
-  symbol_tablet &symbol_table,
+  contextt &context,
   const optionst &options,
   value_setst &value_sets);
 

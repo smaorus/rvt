@@ -13,7 +13,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <ieee_float.h>
 #include <std_types.h>
 #include <string2int.h>
-#include <expr_util.h>
 
 #include "../c_types.h"
 #include "parse_float.h"
@@ -35,11 +34,10 @@ exprt convert_float_literal(const std::string &src)
 {
   mp_integer significand;
   mp_integer exponent;
-  bool is_float, is_long, is_imaginary;
+  bool is_float, is_long;
   unsigned base;
   
-  parse_float(src, significand, exponent, base,
-              is_float, is_long, is_imaginary);
+  parse_float(src, significand, exponent, base, is_float, is_long);
 
   exprt result=exprt(ID_constant);
   
@@ -47,15 +45,23 @@ exprt convert_float_literal(const std::string &src)
   
   // In ANSI-C, float literals are double by default
   // unless marked with 'f'.
-  // All of these can be complex as well.
 
   if(is_float)
+  {
     result.type()=float_type();
+    result.type().set(ID_C_c_type, ID_float);
+  }
   else if(is_long)
+  {
     result.type()=long_double_type();
+    result.type().set(ID_C_c_type, ID_long_double);
+  }
   else
+  {
     result.type()=double_type(); // default
-  
+    result.type().set(ID_C_c_type, ID_double);
+  }
+
   if(config.ansi_c.use_fixed_for_float)
   {
     unsigned width=result.type().get_int(ID_width);
@@ -110,17 +116,6 @@ exprt convert_float_literal(const std::string &src)
 
     result.set(ID_value,
       integer2binary(a.pack(), a.spec.width()));  
-  }
-
-  if(is_imaginary)
-  {
-    complex_typet complex_type;
-    complex_type.subtype()=result.type();
-    exprt complex_expr(ID_complex, complex_type);
-    complex_expr.operands().resize(2);
-    complex_expr.op0()=gen_zero(result.type());
-    complex_expr.op1()=result;
-    return complex_expr;
   }
   
   return result;

@@ -12,11 +12,10 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "mp_arith.h"
 
 class exprt;
-class constant_exprt;
 class typet;
 
 bool to_integer(const exprt &expr, mp_integer &int_value);
-constant_exprt from_integer(const mp_integer &int_value, const typet &type);
+exprt from_integer(const mp_integer &int_value, const typet &type);
 
 // ceil(log2(size))
 mp_integer address_bits(const mp_integer &size);

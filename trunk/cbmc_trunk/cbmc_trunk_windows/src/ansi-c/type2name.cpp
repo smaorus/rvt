@@ -28,25 +28,14 @@ Function: type2name
 std::string type2name(const typet &type)
 {
   std::string result;
-  
-  // qualifiers first
-  if(type.get_bool(ID_C_constant))
-    result+="c";
-
-  if(type.get_bool(ID_C_restricted))
-    result+="r";
-
-  if(type.get_bool(ID_C_volatile))
-    result+="v";
-
   if(type.id()==irep_idt())
     throw "Empty type encountered.";
   else if(type.id()==ID_empty)
     result+="V";   
   else if(type.id()==ID_signedbv)
-    result+="S" + type.get_string(ID_width);
+    result+="S" + type.get(ID_width).as_string(); 
   else if(type.id()==ID_unsignedbv)
-    result+="U" + type.get_string(ID_width);
+    result+="U" + type.get(ID_width).as_string(); 
   else if(type.id()==ID_bool) 
     result+="B";
   else if(type.id()==ID_integer) 
@@ -56,9 +45,9 @@ std::string type2name(const typet &type)
   else if(type.id()==ID_complex) 
     result+="C";
   else if(type.id()==ID_floatbv) 
-    result+="F" + type.get_string(ID_width);
+    result+="F" + type.get(ID_width).as_string();
   else if(type.id()==ID_fixedbv) 
-    result+="X" + type.get_string(ID_width);
+    result+="X" + type.get(ID_width).as_string(); 
   else if(type.id()==ID_natural)
     result+="N";
   else if(type.id()==ID_pointer)
@@ -67,27 +56,18 @@ std::string type2name(const typet &type)
     result+="&";
   else if(type.id()==ID_code)
   {
-    const code_typet &t=to_code_type(type);
-    const code_typet::argumentst arguments=t.arguments();
+    const code_typet &t = to_code_type(type);
+    const code_typet::argumentst arguments = t.arguments();
     result+="P(";
-
-    for(code_typet::argumentst::const_iterator
-        it=arguments.begin();
-        it!=arguments.end();
-        it++)
+    for (code_typet::argumentst::const_iterator it = arguments.begin();
+         it!=arguments.end();
+         it++)
     {      
-      if(it!=arguments.begin()) result+="|";
       result+=type2name(it->type());
+      result+="'" + it->get_identifier().as_string() + "'|";
     }
-
-    if(t.has_ellipsis())
-    {
-      if(!arguments.empty()) result+="|";
-      result+="...";
-    }
-
-    result+=")->";
-    result+=type2name(t.return_type());
+    result.resize(result.size()-1);
+    result+=")";
   }
   else if(type.id()==ID_array)
   {
@@ -95,29 +75,28 @@ std::string type2name(const typet &type)
     if(t.size().is_nil())
       result+="ARR?";
     else
-      result+="ARR"+t.size().get_string(ID_value);
+      result+="ARR" + t.size().get(ID_value).as_string();
   }
   else if(type.id()==ID_symbol)
   {
-    result+="SYM#"+type.get_string(ID_identifier)+"#";
+    result+="SYM#" + type.get(ID_identifier).as_string() + "#";
   }
   else if(type.id()==ID_struct || 
           type.id()==ID_union)
   {
-    if(type.id()==ID_struct) result+="ST";
-    if(type.id()==ID_union) result+="UN";
-    const struct_union_typet &t=to_struct_union_type(type);
-    const struct_union_typet::componentst &components = t.components();
+    if(type.id()==ID_struct) result +="ST";
+    if(type.id()==ID_union) result +="UN";
+    const struct_typet &t = to_struct_type(type);
+    const struct_typet::componentst &components = t.components();
     result+="[";
-    for(struct_union_typet::componentst::const_iterator
-        it=components.begin();
+    for(struct_typet::componentst::const_iterator it = components.begin();
         it!=components.end();
         it++)
     {            
-      if(it!=components.begin()) result+="|";
       result+=type2name(it->type());
-      result+="'"+it->get_string(ID_name)+"'|";
+      result+="'" + it->get(ID_name).as_string() + "'|";
     }
+    result.resize(result.size()-1);
     result+="]";
   }
   else if(type.id()==ID_incomplete_struct)
@@ -125,16 +104,16 @@ std::string type2name(const typet &type)
   else if(type.id()==ID_incomplete_union)
     result +="UN?";
   else if(type.id()==ID_c_enum)
-    result +="EN"+type.get_string(ID_width);
+    result +="EN" + type.get(ID_width).as_string();
   else if(type.id()==ID_incomplete_c_enum)
     result +="EN?";
   else if(type.id()==ID_c_bitfield)
-    result+="BF"+type.get_string(ID_size);
+    result+="BF"+type.get(ID_size).as_string(); 
   else if(type.id()==ID_vector)
-    result+="VEC"+type.get_string(ID_size);
+    result+="VEC"+type.get(ID_size).as_string(); 
   else
     throw (std::string("Unknown type '") + 
-           type.id_string() + 
+           type.id().as_string() + 
            "' encountered."); 
     
   if(type.has_subtype())

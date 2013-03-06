@@ -26,7 +26,7 @@ Date: June 2006
  
 Function: read_goto_object
  
-  Inputs: input stream, symbol_table, functions
+  Inputs: input stream, context, functions
  
  Outputs: true on error, false otherwise
  
@@ -38,7 +38,7 @@ Function: read_goto_object
 bool read_goto_object(
   std::istream &in,
   const std::string &filename,
-  symbol_tablet &symbol_table,
+  contextt &context,
   goto_functionst &functions,
   message_handlert &message_handler)
 { 
@@ -107,7 +107,7 @@ bool read_goto_object(
             functions.function_map[symbol.name].type=
               to_code_type(symbol.type);
           }
-          symbol_table.add(symbol);          
+          context.add(symbol);          
         }
       }
       else if (sec.name=="functions")

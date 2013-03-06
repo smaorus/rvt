@@ -10,7 +10,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "boolbv.h"
 
+#ifdef HAVE_FLOATBV
 #include "../floatbv/float_utils.h"
+#endif
 
 /*******************************************************************\
 
@@ -80,6 +82,7 @@ void boolbvt::convert_mult(const exprt &expr, bvt &bv)
   }
   else if(expr.type().id()==ID_floatbv)
   {
+    #ifdef HAVE_FLOATBV
     if(op0.type()!=expr.type())
       throw "multiplication with mixed types";
     
@@ -106,6 +109,7 @@ void boolbvt::convert_mult(const exprt &expr, bvt &bv)
     }
     
     return;
+    #endif
   }
   else if(expr.type().id()==ID_unsignedbv ||
           expr.type().id()==ID_signedbv)

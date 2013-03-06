@@ -153,7 +153,7 @@ static void copy_array(
   exprt &block)
 {
   // Build the index expression
-  exprt constant=from_integer(i, index_type());
+  exprt constant=from_integer(i, int_type());
 
   block.operands().push_back(exprt(ID_code));
   exprt& code = block.operands().back();
@@ -354,11 +354,10 @@ void cpp_typecheckt::default_cpctor(
       cppname.move_to_sub(name);
 
       const symbolt &virtual_table_symbol_type = 
-        namespacet(symbol_table).lookup(mem_it->type().subtype().get(ID_identifier));
+        namespacet(context).lookup(mem_it->type().subtype().get(ID_identifier));
 
       const symbolt &virtual_table_symbol_var  =
-        namespacet(symbol_table).lookup(id2string(virtual_table_symbol_type.name) + "@" +
-        id2string(symbol.name));
+        namespacet(context).lookup(virtual_table_symbol_type.name.as_string() + "@" + symbol.name.as_string());
 
       exprt var = symbol_expr(virtual_table_symbol_var);
       address_of_exprt address(var);
@@ -925,8 +924,8 @@ void cpp_typecheckt::full_member_initialization(
         lookup(mem_it->type().subtype().get(ID_identifier));
 
       const symbolt& virtual_table_symbol_var  =
-        lookup(id2string(virtual_table_symbol_type.name) + "@" + 
-            id2string(struct_type.get(ID_name)));
+        lookup(virtual_table_symbol_type.name.as_string() + "@" + 
+            struct_type.get(ID_name).as_string());
 
       exprt var =symbol_expr(virtual_table_symbol_var);
       address_of_exprt address(var);
@@ -1240,12 +1239,12 @@ codet cpp_typecheckt::dtor(const symbolt &symb)
       cppname.move_to_sub(name);
 
       const symbolt &virtual_table_symbol_type = 
-        namespacet(symbol_table).lookup(
+        namespacet(context).lookup(
           cit->type().subtype().get(ID_identifier));
 
       const symbolt &virtual_table_symbol_var  =
-        namespacet(symbol_table).lookup(
-          id2string(virtual_table_symbol_type.name) + "@" + id2string(symb.name));
+        namespacet(context).lookup(
+          virtual_table_symbol_type.name.as_string() + "@" + symb.name.as_string());
 
       exprt var=symbol_expr(virtual_table_symbol_var);
       address_of_exprt address(var);

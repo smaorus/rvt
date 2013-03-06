@@ -8,7 +8,7 @@ Date: November 2011
 
 \*******************************************************************/
 
-#include <symbol_table.h>
+#include <context.h>
 #include <std_expr.h>
 #include <std_types.h>
 #include <arith_tools.h>
@@ -31,7 +31,7 @@ Function: add_stack_depth_symbol
 
 \*******************************************************************/
 
-symbol_exprt add_stack_depth_symbol(symbol_tablet &symbol_table)
+symbol_exprt add_stack_depth_symbol(contextt &context)
 {
   const irep_idt identifier="$stack_depth";
   signedbv_typet type(sizeof(int)*8);
@@ -41,13 +41,13 @@ symbol_exprt add_stack_depth_symbol(symbol_tablet &symbol_table)
   new_symbol.base_name=identifier;
   new_symbol.pretty_name=identifier;
   new_symbol.type=type;
-  new_symbol.is_static_lifetime=true;
+  new_symbol.static_lifetime=true;
   new_symbol.value=from_integer(0, type);
   new_symbol.mode=ID_C;
-  new_symbol.is_thread_local=true;
-  new_symbol.is_lvalue=true;
+  new_symbol.thread_local=true;
+  new_symbol.lvalue=true;
 
-  symbol_table.move(new_symbol);
+  context.move(new_symbol);
 
   return symbol_exprt(identifier, type);
 }
@@ -82,6 +82,7 @@ void stack_depth(
 
   assert_ins->location.set_comment("Stack depth exceeds "+i2string(i_depth));
   assert_ins->location.set_property("stack-depth");
+  assert_ins->location.set_priority(2); // relatively low
 
   goto_programt::targett plus_ins=goto_program.insert_before(first);
   plus_ins->make_assignment();
@@ -116,11 +117,11 @@ Function: stack_depth
 \*******************************************************************/
 
 void stack_depth(
-  symbol_tablet &symbol_table,
+  contextt &context,
   goto_functionst &goto_functions,
   const int depth)
 {
-  const symbol_exprt sym=add_stack_depth_symbol(symbol_table);
+  const symbol_exprt sym=add_stack_depth_symbol(context);
   const exprt depth_expr(from_integer(depth, sym.type()));
 
   Forall_goto_functions(f_it, goto_functions)

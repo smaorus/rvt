@@ -7,11 +7,11 @@ Author: Daniel Kroening, kroening@kroening.com
 \*******************************************************************/
 
 #include <cassert>
+#include <cstdlib>
 
 #include <std_expr.h>
 #include <rename.h>
-#include <symbol_table.h>
-#include <replace_symbol.h>
+#include <context.h>
 
 #include "goto_symex.h"
 
@@ -30,7 +30,7 @@ Function: goto_symext::new_name
 void goto_symext::new_name(symbolt &symbol)
 {
   get_new_name(symbol, ns);
-  new_symbol_table.add(symbol);
+  new_context.add(symbol);
 }
 
 /*******************************************************************\
@@ -48,36 +48,28 @@ Function: goto_symext::claim
 void goto_symext::claim(
   const exprt &claim_expr,
   const std::string &msg,
+  unsigned priority,
   statet &state)
 {
   total_claims++;
 
   exprt expr=claim_expr;
-
-  // we are willing to re-write some quantified expressions
-  rewrite_quantifiers(expr, state);
-
-  // now rename, enables propagation    
   state.rename(expr, ns);
   
-  // now try simplifier on it
+  // first try simplifier on it
   do_simplify(expr);
 
   if(expr.is_true()) return;
-
-  // the simplifier might have produced new symbols,
-  // rename again.
-  state.rename(expr, ns);
-  
+    
   state.guard.guard_expr(expr);
   
   remaining_claims++;
-  target.assertion(state.guard, expr, msg, state.source);
+  target.assertion(state.guard, expr, msg, priority, state.source);
 }
 
 /*******************************************************************\
 
-Function: goto_symext::rewrite_quantifiers
+Function: goto_symext::operator()
 
   Inputs:
 
@@ -87,60 +79,24 @@ Function: goto_symext::rewrite_quantifiers
 
 \*******************************************************************/
 
-void goto_symext::rewrite_quantifiers(exprt &expr, statet &state)
-{
-  if(expr.id()==ID_forall)
-  {
-    // forall X. P -> P
-    // we keep the quantified variable unique by means of L2 renaming
-    assert(expr.operands().size()==2);
-    assert(expr.op0().id()==ID_symbol);
-    irep_idt identifier=to_symbol_expr(expr.op0()).get_identifier();
-    state.level2.increase_counter(state.level1(identifier));
-    exprt tmp=expr.op1();
-    expr.swap(tmp);
-  }
-}
-
-/*******************************************************************\
-
-Function: goto_symext::operator()
-
-  Inputs:
-
- Outputs:
-
- Purpose: symex from given state
-
-\*******************************************************************/
-
 void goto_symext::operator()(
-  statet &state,
+  statet& state,
   const goto_functionst &goto_functions,
   const goto_programt &goto_program)
 {
-  assert(!goto_program.instructions.empty());
-
-  state.source=symex_targett::sourcet(goto_program);
-  assert(!state.threads.empty());
-  assert(!state.call_stack().empty());
+  state.source.is_set=true;
+  state.source.pc=goto_program.instructions.begin();
+  state.source.thread_nr=0;
   state.top().end_of_function=--goto_program.instructions.end();
-  state.top().calling_location.pc=state.top().end_of_function;
-  
-  assert(state.top().end_of_function->is_end_function());
+  state.top().calling_location=state.top().end_of_function;
 
-  while(!state.call_stack().empty())
+  while(state.source.pc!=goto_program.instructions.end())
   {
+    #if 0
+    goto_program.output_instruction(ns, "", std::cout, state.source.pc);
+    #endif
+
     symex_step(goto_functions, state);
-    
-    // is there another thread to execute?
-    if(state.call_stack().empty() &&
-       state.source.thread_nr+1<state.threads.size())
-    {
-      unsigned t=state.source.thread_nr+1;
-      //std::cout << "********* Now executing thread " << t << std::endl;
-      state.switch_to_thread(t);
-    }
   }
 }
 
@@ -152,7 +108,7 @@ Function: goto_symext::operator()
 
  Outputs:
 
- Purpose: symex starting from given program
+ Purpose:
 
 \*******************************************************************/
 
@@ -172,7 +128,7 @@ Function: goto_symext::operator()
 
  Outputs:
 
- Purpose: symex from entry point
+ Purpose:
 
 \*******************************************************************/
 
@@ -186,7 +142,11 @@ void goto_symext::operator()(const goto_functionst &goto_functions)
 
   const goto_programt &body=it->second.body;
 
-  operator()(goto_functions, body);
+  statet state;
+  state.initialize(goto_functions);
+
+  while(state.source.pc!=body.instructions.end())
+    symex_step(goto_functions, state);
 }
 
 /*******************************************************************\
@@ -197,7 +157,7 @@ Function: goto_symext::symex_step
 
  Outputs:
 
- Purpose: do just one step
+ Purpose:
 
 \*******************************************************************/
 
@@ -207,13 +167,10 @@ void goto_symext::symex_step(
 {
   #if 0
   std::cout << "\ninstruction type is " << state.source.pc->type << std::endl;
-  std::cout << "Location: " << state.source.pc->location << std::endl;
-  std::cout << "Guard: " << from_expr(state.guard.as_expr()) << std::endl;
-  // std::cout << state.source.pc->code.pretty(0, 100) << std::endl;
+  std::cout << state.source.pc->code.pretty(0, 100) << std::endl;
   #endif
 
-  assert(!state.threads.empty());
-  assert(!state.call_stack().empty());
+  assert(!state.call_stack.empty());
 
   const goto_programt::instructiont &instruction=*state.source.pc;
 
@@ -221,7 +178,7 @@ void goto_symext::symex_step(
 
   // depth exceeded?
   {
-    unsigned max_depth=options.get_int_option("depth");
+    unsigned max_depth=atoi(options.get_option("depth").c_str());
     if(max_depth!=0 && state.depth>max_depth)
       state.guard.add(false_exprt());
     state.depth++;
@@ -280,9 +237,10 @@ void goto_symext::symex_step(
       {
         std::string msg=id2string(state.source.pc->location.get_comment());
         if(msg=="") msg="assertion";
+        unsigned priority=state.source.pc->location.get_priority();
         exprt tmp(instruction.guard);
         clean_expr(tmp, state, false);
-        claim(tmp, msg, state);
+        claim(tmp, msg, priority, state);
       }
 
     state.source.pc++;
@@ -303,7 +261,7 @@ void goto_symext::symex_step(
       clean_expr(deref_code.lhs(), state, true);
       clean_expr(deref_code.rhs(), state, false);
 
-      symex_assign(state, deref_code);
+      basic_symext::symex_assign(state, deref_code);
     }
 
     state.source.pc++;
@@ -349,24 +307,21 @@ void goto_symext::symex_step(
     break;
 
   case START_THREAD:
-    symex_start_thread(state);
-    state.source.pc++;
-    break;
+    throw "START_THREAD not yet implemented";
   
   case END_THREAD:
-    // behaves like assume(0);
-    if(!state.guard.is_false())
+    {
+      // behaves like assume(0);
       state.guard.add(false_exprt());
+      exprt tmp=state.guard.as_expr();
+      target.assumption(state.guard, tmp, state.source);
+    }
     state.source.pc++;
     break;
   
   case ATOMIC_BEGIN:
-    symex_atomic_begin(state);
-    state.source.pc++;
-    break;
-    
   case ATOMIC_END:
-    symex_atomic_end(state);
+    // these don't have path semantics
     state.source.pc++;
     break;
     
@@ -379,11 +334,8 @@ void goto_symext::symex_step(
     symex_throw(state);
     state.source.pc++;
     break;
-    
-  case NO_INSTRUCTION_TYPE:
-    throw "symex got NO_INSTRUCTION";
   
   default:
-    throw "symex got unexpected instruction";
+    assert(false);
   }
 }

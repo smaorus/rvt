@@ -28,7 +28,7 @@ public:
 
     if(result.second) // inserted?
     {
-      this->push_back(a);
+      push_back(a);
       assert(this->size()==numbers.size());
     }
     
@@ -46,15 +46,7 @@ public:
     return false;
   }
 
-  void clear()
-  {
-    subt::clear();
-    numbers.clear();
-  }
-
 protected:
-  typedef std::vector<T> subt;
-
   typedef std::map<T, unsigned> numberst;
   numberst numbers;  
 };
@@ -72,7 +64,7 @@ public:
 
     if(result.second) // inserted?
     {
-      this->push_back(a);
+      push_back(a);
       assert(this->size()==numbers.size());
     }
     
@@ -90,15 +82,7 @@ public:
     return false;
   }
 
-  void clear()
-  {
-    subt::clear();
-    numbers.clear();
-  }
-
 protected:
-  typedef std::vector<T> subt;
-
   typedef hash_map_cont<T, unsigned, hash_fkt> numberst;
   numberst numbers;  
 };

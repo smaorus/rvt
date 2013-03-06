@@ -15,6 +15,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <replace_expr.h>
 #include <guard.h>
 #include <std_code.h>
+#include <options.h>
 #include <message_stream.h>
 
 #include "goto_program.h"
@@ -25,11 +26,13 @@ public:
   void goto_convert(const codet &code, goto_programt &dest);
 
   goto_convertt(
-    symbol_tablet &_symbol_table,
+    contextt &_context,
+    const optionst &_options,
     message_handlert &_message_handler):
     message_streamt(_message_handler),
-    symbol_table(_symbol_table),
-    ns(_symbol_table),
+    context(_context),
+    options(_options),
+    ns(_context),
     temporary_counter(0),
     tmp_symbol_prefix("goto_convertt::")
   {
@@ -40,7 +43,8 @@ public:
   }
   
 protected:
-  symbol_tablet &symbol_table;
+  contextt &context;
+  const optionst &options;
   namespacet ns;
   unsigned temporary_counter;
   std::string tmp_symbol_prefix;
@@ -58,11 +62,6 @@ protected:
     const std::string &suffix,
     goto_programt &dest,
     const locationt &location);
-  
-  symbol_exprt make_static_symbol(
-    const exprt &expr,
-    const std::string &suffix,
-    goto_programt &dest);
   
   typedef std::list<irep_idt> tmp_symbolst;
   tmp_symbolst tmp_symbols;
@@ -94,7 +93,7 @@ protected:
   static bool has_function_call(const exprt &expr);
   
   void remove_side_effect(side_effect_exprt &expr, goto_programt &dest, bool result_is_used);
-  void remove_assignment(side_effect_exprt &expr, goto_programt &dest, bool result_is_used);
+  void remove_assignment(side_effect_exprt &expr, goto_programt &dest);
   void remove_pre(side_effect_exprt &expr, goto_programt &dest);
   void remove_post(side_effect_exprt &expr, goto_programt &dest, bool result_is_used);
   void remove_function_call(side_effect_exprt &expr, goto_programt &dest, bool result_is_used);
@@ -160,16 +159,16 @@ protected:
   void convert_expression(const code_expressiont &code, goto_programt &dest);
   void convert_assign(const code_assignt &code, goto_programt &dest);
   void convert_cpp_delete(const codet &code, goto_programt &dest);
-  void convert_for(const code_fort &code, goto_programt &dest);
-  void convert_while(const code_whilet &code, goto_programt &dest);
+  void convert_for(const codet &code, goto_programt &dest);
+  void convert_while(const codet &code, goto_programt &dest);
   void convert_dowhile(const codet &code, goto_programt &dest);
   void convert_assume(const code_assumet &code, goto_programt &dest);
   void convert_assert(const code_assertt &code, goto_programt &dest);
-  void convert_switch(const code_switcht &code, goto_programt &dest);
+  void convert_switch(const codet &code, goto_programt &dest);
   void convert_break(const code_breakt &code, goto_programt &dest);
   void convert_return(const code_returnt &code, goto_programt &dest);
   void convert_continue(const code_continuet &code, goto_programt &dest);
-  void convert_ifthenelse(const code_ifthenelset &code, goto_programt &dest);
+  void convert_ifthenelse(const codet &code, goto_programt &dest);
   void convert_init(const codet &code, goto_programt &dest);
   void convert_goto(const codet &code, goto_programt &dest);
   void convert_computed_goto(const codet &code, goto_programt &dest);
@@ -193,7 +192,6 @@ protected:
   void convert_msc_try_except(const codet &code, goto_programt &dest);
   void convert_msc_leave(const codet &code, goto_programt &dest);
   void convert_catch(const codet &code, goto_programt &dest);
-  void convert_asm(const codet &code, goto_programt &dest);
   void convert(const codet &code, goto_programt &dest);
   void copy(const codet &code, goto_program_instruction_typet type, goto_programt &dest);
 
@@ -269,16 +267,15 @@ protected:
 
   struct targetst:public break_continue_switch_targetst
   {
-    bool return_is_set;
-    bool has_return_value;
+    bool return_set;
+    bool return_value;
 
     labelst labels;
     gotost gotos;
     computed_gotost computed_gotos;
 
     targetst():
-      return_is_set(false),
-      has_return_value(false)
+      return_set(false)
     {
     }
     
@@ -290,8 +287,8 @@ protected:
       std::swap(targets.continue_target, continue_target);
       std::swap(targets.continue_set, continue_set);
 
-      std::swap(targets.has_return_value, has_return_value);
-      std::swap(targets.return_is_set, return_is_set);   
+      std::swap(targets.return_value, return_value);
+      std::swap(targets.return_set, return_set);   
       
       std::swap(targets.default_target, default_target);
       std::swap(targets.default_set, default_set);
@@ -341,7 +338,6 @@ protected:
   // misc
   //
   const irep_idt get_string_constant(const exprt &expr);
-  exprt get_constant(const exprt &expr);
 
   // some built-in functions    
   void do_atomic_begin  (const exprt &lhs, const exprt &rhs, const exprt::operandst &arguments, goto_programt &dest);

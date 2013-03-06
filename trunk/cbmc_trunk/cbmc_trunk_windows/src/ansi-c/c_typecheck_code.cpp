@@ -9,8 +9,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <i2string.h>
 #include <expr_util.h>
 
-#include <linking/zero_initializer.h>
-
 #include "c_typecheck_base.h"
 
 /*******************************************************************\
@@ -111,12 +109,6 @@ void c_typecheck_baset::typecheck_code(codet &code)
   {
     // fine as is, but should check that we
     // are in a 'try' block
-  }
-  else if(statement==ID_static_assert)
-  {
-    assert(code.operands().size()==2);
-    typecheck_expr(code.op0());
-    typecheck_expr(code.op1());
   }
   else
   {
@@ -423,12 +415,12 @@ void c_typecheck_baset::typecheck_decl(
   // look it up
   const irep_idt &identifier=to_symbol_expr(code.op0()).get_identifier();
 
-  symbol_tablet::symbolst::iterator s_it=symbol_table.symbols.find(identifier);
+  contextt::symbolst::iterator s_it=context.symbols.find(identifier);
 
-  if(s_it==symbol_table.symbols.end())
+  if(s_it==context.symbols.end())
   {
     err_location(code);
-    str << "failed to find decl symbol `" << identifier << "' in symbol table";
+    str << "failed to find decl symbol `" << identifier << "' in context";
     throw 0;
   }
 
@@ -443,7 +435,7 @@ void c_typecheck_baset::typecheck_decl(
   // or static
   if(symbol.is_type ||
      symbol.type.id()==ID_code ||
-     symbol.is_static_lifetime)
+     symbol.static_lifetime)
   {
     locationt location=code.location();
     code=code_skipt();
@@ -536,9 +528,6 @@ void c_typecheck_baset::typecheck_expression(codet &code)
   exprt &op=code.op0();
   typecheck_expr(op);
 
-  #if 0
-  // Goes away since stuff like x=({y=1;});
-  // needs the inner side-effect.
   if(op.id()==ID_sideeffect)
   {
     const irep_idt &statement=op.get(ID_statement);
@@ -552,7 +541,6 @@ void c_typecheck_baset::typecheck_expression(codet &code)
       operands.swap(op.operands());
       code.set_statement(ID_assign);
       code.operands().swap(operands);
-      code.location()=op.location();
       
       if(code.op1().id()==ID_sideeffect &&
          code.op1().get(ID_statement)==ID_function_call)
@@ -579,7 +567,6 @@ void c_typecheck_baset::typecheck_expression(codet &code)
       code.swap(function_call);
     }
   }
-  #endif
 }
 
 /*******************************************************************\
@@ -784,8 +771,9 @@ Function: c_typecheck_baset::typecheck_ifthenelse
 
 void c_typecheck_baset::typecheck_ifthenelse(code_ifthenelset &code)
 {
-  if(code.operands().size()!=3)
-    throw "ifthenelse expected to have three operands";
+  if(code.operands().size()!=2 &&
+     code.operands().size()!=3)
+    throw "ifthenelse expected to have two or three operands";
 
   exprt &cond=code.cond();
 
@@ -804,7 +792,8 @@ void c_typecheck_baset::typecheck_ifthenelse(code_ifthenelset &code)
 
   typecheck_code(to_code(code.then_case()));
 
-  if(!code.else_case().is_nil())
+  if(code.operands().size()==3 &&
+     !code.else_case().is_nil())
     typecheck_code(to_code(code.else_case()));
 }
 
@@ -847,8 +836,8 @@ void c_typecheck_baset::typecheck_return(codet &code)
     if(follow(return_type).id()!=ID_empty)
     {
       // gcc doesn't actually complain, it just warns!
-      // We'll put a zero here, which is dubious.
-      exprt zero=zero_initializer(return_type, code.location(), *this, get_message_handler());
+      // We'll put a zero here.
+      exprt zero=zero_initializer(return_type, code.location());
       code.copy_to_operands(zero);
     }
   }

@@ -37,10 +37,10 @@ Function: mmio
 
 void mmio(
   value_setst &value_sets,
-  const symbol_tablet &symbol_table,
+  const contextt &context,
   goto_programt &goto_program)
 {
-  namespacet ns(symbol_table);
+  namespacet ns(context);
 
   Forall_goto_program_instructions(i_it, goto_program)
   {
@@ -146,7 +146,7 @@ Function: mmio
 
 void mmio(
   value_setst &value_sets,
-  class symbol_tablet &symbol_table,
+  class contextt &context,
   goto_functionst &goto_functions)
 {
   // we first figure out which objects are read/written by the ISR
@@ -158,7 +158,7 @@ void mmio(
   Forall_goto_functions(f_it, goto_functions)
     if(f_it->first!=CPROVER_PREFIX "initialize" &&
        f_it->first!=ID_main)
-      mmio(value_sets, symbol_table, f_it->second.body);
+      mmio(value_sets, context, f_it->second.body);
 
   goto_functions.update();
 }

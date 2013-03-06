@@ -12,11 +12,11 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <goto-programs/goto_functions.h>
 
 bool is_volatile(
-  const symbol_tablet &symbol_table,
+  const contextt &context,
   const typet &type);
 
 void nondet_volatile(
-  symbol_tablet &symbol_table,
+  contextt &context,
   goto_functionst &goto_functions);
 
 #endif

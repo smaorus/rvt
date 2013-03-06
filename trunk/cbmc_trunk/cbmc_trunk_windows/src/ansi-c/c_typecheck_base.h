@@ -9,7 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_C_TYPECHECK_BASE_H
 #define CPROVER_C_TYPECHECK_BASE_H
 
-#include <symbol_table.h>
+#include <context.h>
 #include <typecheck.h>
 #include <namespace.h>
 #include <std_code.h>
@@ -24,12 +24,12 @@ class c_typecheck_baset:
 {
 public:
   c_typecheck_baset(
-    symbol_tablet &_symbol_table,
+    contextt &_context,
     const std::string &_module,
     message_handlert &_message_handler):
     typecheckt(_message_handler),
-    namespacet(_symbol_table),
-    symbol_table(_symbol_table),
+    namespacet(_context),
+    context(_context),
     module(_module),
     mode("C"),
     language_prefix("c::")
@@ -37,13 +37,13 @@ public:
   }
 
   c_typecheck_baset(
-    symbol_tablet &_symbol_table1,
-    const symbol_tablet &_symbol_table2,
+    contextt &_context1,
+    const contextt &_context2,
     const std::string &_module,
     message_handlert &_message_handler):
     typecheckt(_message_handler),
-    namespacet(_symbol_table1, _symbol_table2),
-    symbol_table(_symbol_table1),
+    namespacet(_context1, _context2),
+    context(_context1),
     module(_module),
     mode("C"),
     language_prefix("c::")
@@ -56,11 +56,11 @@ public:
   virtual void typecheck_expr(exprt &expr);
 
 protected:
-  symbol_tablet &symbol_table;
+  contextt &context;
   const irep_idt module;
   const irep_idt mode;
   const std::string language_prefix;
-  irep_idt current_symbol_id;
+  unsigned tmp_counter;
 
   typedef hash_map_cont<irep_idt, irep_idt, irep_id_hash> id_replace_mapt;
   id_replace_mapt id_replace_map;
@@ -115,6 +115,10 @@ protected:
     }
   };
   
+  virtual exprt zero_initializer(
+    const typet &type,
+    const locationt &location);
+
   virtual void do_initializer(
     exprt &initializer,
     const typet &type,
@@ -195,7 +199,6 @@ protected:
   virtual void typecheck_expr_unary_arithmetic(exprt &expr);
   virtual void typecheck_expr_unary_boolean(exprt &expr);
   virtual void typecheck_expr_binary_arithmetic(exprt &expr);
-  virtual void typecheck_expr_shifts(shift_exprt &expr);
   virtual void typecheck_expr_pointer_arithmetic(exprt &expr);
   virtual void typecheck_arithmetic_pointer(const exprt &expr);
   virtual void typecheck_expr_binary_boolean(exprt &expr);
@@ -223,8 +226,6 @@ protected:
   virtual void make_constant_index(exprt &expr);
   virtual void make_constant_rec(exprt &expr);
   
-  virtual bool gcc_types_compatible_p(const typet &type1, const typet &type2);
-  
   // types
   virtual void typecheck_type(typet &type);
   virtual void typecheck_compound_type(struct_union_typet &type);
@@ -251,7 +252,7 @@ protected:
   // environment
   void add_argc_argv(const symbolt &main_symbol);
 
-  // symbol table management
+  // context management
   void move_symbol(symbolt &symbol, symbolt *&new_symbol);
   void move_symbol(symbolt &symbol)
   { symbolt *new_symbol; move_symbol(symbol, new_symbol); }

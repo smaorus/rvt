@@ -61,10 +61,6 @@ protected:
     resolve_identifierst &identifiers,
     const cpp_typecheck_fargst &fargs);
 
-  void exact_match_functions(
-    resolve_identifierst &identifiers,
-    const cpp_typecheck_fargst &fargs);
-
   void filter(
     resolve_identifierst &identifiers,
     const wantt want);

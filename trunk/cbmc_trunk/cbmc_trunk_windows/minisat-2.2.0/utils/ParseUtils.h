@@ -24,7 +24,7 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "../../zlib-1.2.5/zlib.h"
+#include <zlib.h>
 
 namespace Minisat {
 

@@ -8,22 +8,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <stdlib.h>
 
-#ifdef __linux__
-#include <unistd.h>
-#endif
-
-#ifdef __FreeBSD_kernel__
-#include <unistd.h>
-#endif
-
-#ifdef __GNU__
-#include <unistd.h>
-#endif
-
-#ifdef __MACH__
-#include <unistd.h>
-#endif
-
+#include <str_getline.h>
 #include <std_expr.h>
 #include <std_types.h>
 #include <tempfile.h>
@@ -142,11 +127,11 @@ decision_proceduret::resultt smt1_dect::dec_solve()
     break;
 
   case BOOLECTOR:
-    // -rwl0 disables rewriting, which makes things slower,
+    // –rwl0 disables rewriting, which makes things slower,
     // but in return values for arrays appear
     command = "boolector -rwl0 --smt "
             + temp_out_filename
-            + " -m --output "
+            + " -fm --output "
             + temp_result_filename;
     break;
 
@@ -181,7 +166,7 @@ decision_proceduret::resultt smt1_dect::dec_solve()
     assert(false);
   }
 
-  #if defined(__linux__) || defined(__APPLE__)
+  #if defined(__LINUX__) || defined(__APPLE__)
   command+=" 2>&1";
   #endif
 
@@ -230,7 +215,7 @@ decision_proceduret::resultt smt1_dect::read_result_boolector(std::istream &in)
 {
   std::string line;
 
-  std::getline(in, line);
+  str_getline(in, line);
 
   if(line=="sat")
   {
@@ -239,7 +224,7 @@ decision_proceduret::resultt smt1_dect::read_result_boolector(std::istream &in)
     typedef hash_map_cont<std::string, valuet, string_hash> valuest;
     valuest values;
 
-    while(std::getline(in, line))
+    while(str_getline(in, line))
     {
       std::size_t pos=line.find(' ');
       if(pos!=std::string::npos && pos!=0)
@@ -339,7 +324,7 @@ decision_proceduret::resultt smt1_dect::read_result_yices(std::istream &in)
 {
   std::string line;
 
-  while(std::getline(in, line))
+  while(str_getline(in, line))
   {
     if (line=="sat")
     {
@@ -405,7 +390,7 @@ decision_proceduret::resultt smt1_dect::read_result_mathsat(std::istream &in)
   typedef hash_map_cont<std::string, valuet, string_hash> valuest;
   valuest values;
 
-  while(std::getline(in, line))
+  while(str_getline(in, line))
   {
     if(line=="sat")
       res=D_SATISFIABLE;
@@ -484,7 +469,7 @@ decision_proceduret::resultt smt1_dect::read_result_z3(std::istream &in)
   typedef hash_map_cont<std::string, std::string, string_hash> valuest;
   valuest values;
 
-  while(std::getline(in, line))
+  while(str_getline(in, line))
   {
     if(line=="sat")
       res = D_SATISFIABLE;
@@ -672,7 +657,7 @@ decision_proceduret::resultt smt1_dect::read_result_cvc3(std::istream &in)
   typedef hash_map_cont<std::string, std::string, string_hash> valuest;
   valuest values;
 
-  while(std::getline(in, line))
+  while(str_getline(in, line))
   {
     if(line=="sat")
       res = D_SATISFIABLE;
