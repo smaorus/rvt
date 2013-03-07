@@ -1,6 +1,0 @@
-#include "mmintrin.h"
-
-int main()
-{
-  return 0;
-}
