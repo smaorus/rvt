@@ -359,7 +359,8 @@ sub get_test_names {
 sub parse_command_line_options {
     while (@_ > 0) {
         my $option = shift;
-        if ($option            if ($option == '-args') {
+        if ($option =~ /^-/) {
+            if ($option == '-args') {
                 my $add_args = shift;
                 $value{"global_rvt_args"} .= $add_args." ";
                 print "Additional options ".$add_args." will be enforced on the tests.\n";
@@ -374,7 +375,6 @@ sub parse_command_line_options {
                 print "Illegal option ".$option."\n"; 
                 print_help_and_exit(); 
             } 
-           
         } 
         else {
             unshift(@_, $option);
