@@ -1,0 +1,240 @@
+9b67685c0de4 		
+Object properties can now hold function pointers
+	Jun 30, 2011 	
+cenanozen <cenan.ozen>
+d6adbf6e9ef2 		
+Made parentheses optional in function definition when parameter list is empty
+	Jun 30, 2011 	
+cenanozen <cenan.ozen>
+d1fd9898e2a9 		
+object properties
+	Jun 28, 2011 	
+cenanozen <cenan.ozen>
+de76b3954d8b 		
+added example scripts
+	Jun 28, 2011 	
+cenanozen <cenan.ozen>
+0200fa817619 		
+removed set function
+	Jun 28, 2011 	
+cenanozen <cenan.ozen>
+1ec45e6d4749 		
+list operations
+	Jun 20, 2011 	
+cenan ozen <cenan.ozen>
+08fd7f2c1de2 		
+lists
+	Jun 19, 2011 	
+cenanozen <cenan.ozen>
+d027c8379921 		
+added env function for environment variables
+	Jun 18, 2011 	
+cenanozen <cenan.ozen>
+bf8f2edc52d6 		
+assignment operator precedence
+	Jun 18, 2011 	
+cenan ozen <cenan.ozen>
+3663aa117ddd 		
+interpreter: if and while blocks return value. token.h: fixed operator constant values
+	Jun 18, 2011 	
+cenan ozen <cenan.ozen>
+d6299e0f10a2 		
+lte and gte operators
+	Jun 17, 2011 	
+cenan ozen <cenan.ozen>
+ea93cced3536 		
+added equal operator, renamed old one to assignment operator
+	Jun 17, 2011 	
+cenan ozen <cenan.ozen>
+d92197f2dd2f 		
+print statement
+	Jun 17, 2011 	
+cenanozen <cenan.ozen>
+cdac1ae8c5d7 		
+Added + operator for strings
+	Jun 17, 2011 	
+cenanozen <cenan.ozen>
+06c625a125e9 		
+fixed changing scopes while calling a function
+	Jun 16, 2011 	
+cenanozen <cenan.ozen>
+3d2c9be68474 		
+inline functions merges scope with the parent scope when defined
+	Jun 16, 2011 	
+cenanozen <cenan.ozen>
+5018d531103e 		
+added missing runtime files
+	Jun 16, 2011 	
+cenanozen <cenan.ozen>
+b065ae617bac 		
+return statement
+	Jun 16, 2011 	
+cenan ozen <cenan.ozen>
+6004d713e944 		
+fixed header
+	Jun 15, 2011 	
+cenanozen <cenan.ozen>
+5813e0428e22 		
+inline functions
+	Jun 15, 2011 	
+cenanozen <cenan.ozen>
+8db0351570c0 		
+Assigning function names to variables
+	Jun 15, 2011 	
+cenanozen <cenan.ozen>
+7aad3c08bdd9 		
+Switched c99 in build file
+	Jun 15, 2011 	
+cenanozen <cenan.ozen>
+be5561ea210b 		
+Broke up interpreter.c, added runtime.c
+	Jun 15, 2011 	
+cenanozen <cenan.ozen>
+549f74496ea9 		
+string type for print function
+	Jun 14, 2011 	
+cenan ozen <cenan.ozen>
+bd1a889897ea 		
+local functions
+	Jun 14, 2011 	
+cenan ozen <cenan.ozen>
+ce106f860efb 		
+interpreter: scope stack, lib: stack size
+	Jun 13, 2011 	
+cenan ozen <cenan.ozen>
+d64aec7b6428 		
+interpret if statement
+	Jun 13, 2011 	
+cenanozen <cenan.ozen>
+f46102094260 		
+cleanup+interpret while loop
+	Jun 13, 2011 	
+cenanozen <cenan.ozen>
+8255f987c69a 		
+interpret assignment
+	Jun 11, 2011 	
+cenanozen <cenan.ozen>
+602d28595d52 		
+added object variables etc...
+	Jun 11, 2011 	
+cenanozen <cenan.ozen>
+04d2085a1a91 		
+removed garbage
+	Jun 11, 2011 	
+cenanozen <cenan.ozen>
+268281aeb10c 		
+Handled division by zero on interpreter.c, added line numbers to expressions
+	Jun 11, 2011 	
+cenanozen <cenan.ozen>
+1b28592683ec 		
+* interpret compound expressions * interpret multiplication and division operators
+	Jun 11, 2011 	
+cenanozen <cenan.ozen>
+b19a8ea33e4f 		
+Added null pointer at the end of the input file
+	Jun 11, 2011 	
+cenanozen <cenan.ozen>
+ba905935ecc3 		
+Added unittest build option, reading file argument contents
+	Jun 11, 2011 	
+cenanozen <cenan.ozen>
+2cb56184eb77 		
+started interpreter
+	Jun 11, 2011 	
+cenanozen <cenan.ozen>
+5a6027d53adf 		
+parse value types
+	Jun 7, 2011 	
+cenanozen <cenan.ozen>
+f2185859028f 		
+parse function calls
+	Jun 7, 2011 	
+cenanozen <cenan.ozen>
+b34c3bee175a 		
+global function list
+	Jun 7, 2011 	
+cenanozen <cenan.ozen>
+61739949045f 		
+implemented assignment expression parsing, but don't know how to use it
+	Jun 6, 2011 	
+cenanozen <cenan.ozen>
+71bb8ff16a36 		
+re-ordered functions in parser.c
+	Jun 6, 2011 	
+cenanozen <cenan.ozen>
+a1b89fd9bf9f 		
+proper if and while parsing
+	Jun 6, 2011 	
+cenanozen <cenan.ozen>
+d936f5b27642 		
+function definitions
+	Jun 6, 2011 	
+cenanozen <cenan.ozen>
+d88951978c81 		
+fixed tokenizer number parsing and added a unit test to parser which actually tests the value of an arithmetic expression
+	Jun 4, 2011 	
+cenanozen <cenan.ozen>
+d46e70dff386 		
+partial expression and value parsing
+	Jun 4, 2011 	
+Cenan Özen <cenan.ozen>
+1044106bd33c 		
+unit tests for common lib
+	Jun 4, 2011 	
+Cenan Özen <cenan.ozen>
+3cf086ec14cc 		
+added list functions to common lib
+	Jun 4, 2011 	
+Cenan Özen <cenan.ozen>
+5459f56c8eb5 		
+playing with parser, need lists
+	Jun 4, 2011 	
+Cenan Özen <cenan.ozen>
+3cad33e090af 		
+updated seatest
+	Jun 2, 2011 	
+cenanozen <cenan.ozen>
+b492fa394aa8 		
+block,while,if etc...
+	Jun 2, 2011 	
+cenanozen <cenan.ozen>
+224ff719382f 		
+clean up
+	Mar 11, 2011 	
+cenan ozen <cenan.ozen>
+620d9b5cd1bc 		
+added operators to tokenizer
+	Mar 11, 2011 	
+cenan ozen <cenan.ozen>
+e0c5b4de2e13 		
+replaced conio.h and getch
+	Feb 25, 2011 	
+Cenan Özen <cenan.ozen>
+70ca2ab148ad 		
+Added scons build script
+	Oct 18, 2010 	
+cenan ozen <cenan.ozen>
+c8c2dbd3026b 		
+started parser
+	Oct 18, 2010 	
+cenan ozen <cenan.ozen>
+84a83dcf8765 		
+cleaned up tokenizer added unget_token
+	Oct 16, 2010 	
+cenan ozen <cenan.ozen>
+d9ba725486d0 		
+Added unittest library and unit tests for tokenizer
+	Oct 15, 2010 	
+cenan ozen <cenan.ozen>
+aad19277dcbf 		
+added is_digit,is_alpha etc to token.c
+	Oct 12, 2010 	
+cenan ozen <cenan.ozen>
+ebe652c87770 		
+began working on tokenizer and added common.c for helper functions
+	Oct 11, 2010 	
+cenan ozen <cenan.ozen>
+5cfed96d599a 		
+Initial commit
+	Oct 11, 2010 	
+cenan ozen <cenan.ozen>
