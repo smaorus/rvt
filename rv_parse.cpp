@@ -1053,8 +1053,8 @@ int RVRename::copy_with_prefix(const char* symbol, int symbol_len, char* buf, in
 	if( !se->IsComponentDecl() &&  /* don't prefix components */
 		(!exclude_vars || !(se->IsVarDecl() || se->IsParamDecl())) ) 
 	  {
-		pref = current_side.get_side_prefix(); // ofer: we can change here and next line to _ufprefix but this oly works if it is the same length of buffer, because we are called from covert_ids which sends buffer and buffer length
-		pref_len = RV_PREFIX_LEN;  /* needs to add side prefix. */
+		//pref = current_side.get_side_prefix(); // ofer: we can change here and next line to _ufprefix but this oly works if it is the same length of buffer, because we are called from covert_ids which sends buffer and buffer length
+		//pref_len = RV_PREFIX_LEN;  /* needs to add side prefix. */
 	  }
 
   if( symbol_len + pref_len +1 > buf_len ) {
@@ -1064,8 +1064,8 @@ int RVRename::copy_with_prefix(const char* symbol, int symbol_len, char* buf, in
 	return 0;
   }
 
-  if( pref )
-	strcpy( buf, pref );
+  //if( pref )
+	//strcpy( buf, pref );
 
   strncpy( &buf[pref_len], symbol, symbol_len);
   buf[ symbol_len + pref_len ] = 0;

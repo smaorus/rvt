@@ -54,7 +54,7 @@ class RVGenCtx : public RVCtool
   protected:
 	std::vector<Lane> lanes;
 	bool input;
-
+	bool m_unitrv;
 	RVGenCtx* my_parent; // ofer: if we expand a (possibly recursive) structure, then the root is NULL and the others are the contexts of their parents in this structure.  seems to be NULL unless the context is a field in a struct. 
 
 	int 
@@ -109,7 +109,10 @@ class RVGenCtx : public RVCtool
 
 	/* to add a UF action pair: */
 	void init_uf_ctx(Symbol *sym,Type* item_tp, const std::string& item, const std::string& item_pref, Type* var_tp, const std::string& var, const RVSide& var_side, bool in, bool global, const char *_where);
-	
+
+	const char* get_prefix( bool global, Symbol * sym, const RVSide &var_side );
+
+
 	void add_lane(Symbol *sym, Type* tp, const std::string& name, const RVSide& side = NO_SIDE, const std::string& prefix = std::string(""));
 
 	unsigned var_lane() const;
@@ -158,6 +161,10 @@ class RVGenCtx : public RVCtool
 	bool check_out_arg(unsigned lane) const;
 
 	static void reset_local_var_count() { local_var_count = 0; }
+	
+	void set_unitrv( bool unitrv );
+	bool was_variable_declared_globally_for_both_sides( Symbol* sym );
+
 };
 
 #endif

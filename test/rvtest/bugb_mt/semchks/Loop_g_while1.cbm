@@ -1,0 +1,429 @@
+Loop_g_while1.rv.c
+Adding CPROVER library
+Depth of struct B: 1
+
+initing this guy ("symbol" "type" ("pointer" "subtype" ("pointer" "subtype" ("symbol" "identifier" ("c::tag-B") "#location" ("" "file" ("Loop_g_while1.rv.c") "line" ("5") "function" (""))) "#location" ("" "file" ("Loop_g_while1.rv.c") "line" ("36") "function" (""))) "#location" ("" "file" ("Loop_g_while1.rv.c") "line" ("36") "function" (""))) "identifier" ("unitrv::rvp_cur$argument_input"))
+
+initing this guy ("symbol" "type" ("pointer" "subtype" ("pointer" "subtype" ("symbol" "identifier" ("c::tag-B") "#location" ("" "file" ("Loop_g_while1.rv.c") "line" ("5") "function" (""))) "#location" ("" "file" ("Loop_g_while1.rv.c") "line" ("36") "function" (""))) "#location" ("" "file" ("Loop_g_while1.rv.c") "line" ("36") "function" (""))) "identifier" ("unitrv::rvp_pb$argument_input"))
+First symex 1
+First symex 2
+Modified: unitrv::$return_value
+
+initing this guy ("symbol" "type" ("pointer" "subtype" ("pointer" "subtype" ("symbol" "identifier" ("c::tag-B") "#location" ("" "file" ("Loop_g_while1.rv.c") "line" ("5") "function" (""))) "#location" ("" "file" ("Loop_g_while1.rv.c") "line" ("36") "function" (""))) "#location" ("" "file" ("Loop_g_while1.rv.c") "line" ("36") "function" (""))) "identifier" ("unitrv::rvp_cur$argument_input"))
+
+initing this guy ("symbol" "type" ("pointer" "subtype" ("pointer" "subtype" ("symbol" "identifier" ("c::tag-B") "#location" ("" "file" ("Loop_g_while1.rv.c") "line" ("5") "function" (""))) "#location" ("" "file" ("Loop_g_while1.rv.c") "line" ("36") "function" (""))) "#location" ("" "file" ("Loop_g_while1.rv.c") "line" ("36") "function" (""))) "identifier" ("unitrv::rvp_pb$argument_input"))
+Global input: c::__CPROVER_malloc_size
+Global input: c::__CPROVER_malloc_object
+Global input: c::__CPROVER_deallocated
+Global input: c::__CPROVER_dead_object
+Harness:
+        // 0 file from pointer to array
+        rvp_cur$argument_input = myarray2;
+        // 1 file from pointer to array
+        rvp_pb$argument_input = myarray3;
+        // 2 no location
+        $return_value=chk0_Loop_g_while1(rvp_cur$argument_input, rvp_pb$argument_input);
+        // 3 file harness-save-outputs
+        $return_value$f1_output = $return_value;
+        // 4 no location
+        $return_value=chk1_Loop_g_while1(rvp_cur$argument_input, rvp_pb$argument_input);
+        // 5 file harness-assertions
+        ASSERT $return_value$f1_output == $return_value
+        // 6 no location
+        END_FUNCTION
+Symex on harness
+
+Thread 0 file from pointer to array
+ASSIGNMENT (STATE)
+rvp_cur$argument_input!0#1 == myarray2
+Guard: TRUE
+--------------
+Thread 0 file from pointer to array
+ASSIGNMENT (STATE)
+rvp_pb$argument_input!0#1 == myarray3
+Guard: TRUE
+--------------
+Thread 0
+LOCATION
+Guard: TRUE
+--------------
+Thread 0
+FUNCTION_CALL
+Guard: TRUE
+--------------
+Thread 0
+ASSIGNMENT (STATE)
+rvp_cur!0@1#1 == myarray2
+Guard: TRUE
+--------------
+Thread 0
+ASSIGNMENT (STATE)
+rvp_pb!0@1#1 == myarray3
+Guard: TRUE
+--------------
+Thread 0 file Loop_g_while1.rv.c line 40 function chk0_Loop_g_while1
+ASSUME
+!(POINTER_OBJECT(&myarray2) == POINTER_OBJECT(__CPROVER_deallocated#0))
+Guard: TRUE
+--------------
+Thread 0 file Loop_g_while1.rv.c line 40 function chk0_Loop_g_while1
+ASSUME
+!(POINTER_OBJECT(&myarray2) == POINTER_OBJECT(__CPROVER_dead_object#0))
+Guard: TRUE
+--------------
+Thread 0 file Loop_g_while1.rv.c line 40 function chk0_Loop_g_while1
+ASSUME
+!(__CPROVER_malloc_size#0 < 4) || !(POINTER_OBJECT(&myarray2) == POINTER_OBJECT(__CPROVER_malloc_object#0))
+Guard: TRUE
+--------------
+Thread 0 file Loop_g_while1.rv.c line 40 function chk0_Loop_g_while1
+ASSUME
+!(4 * INFINITY() < 4)
+Guard: TRUE
+--------------
+Thread 0 file Loop_g_while1.rv.c line 40 function chk0_Loop_g_while1
+ASSUME
+!(myarray2#0[0] == ((struct B *)NULL))
+Guard: TRUE
+--------------
+Thread 0 file Loop_g_while1.rv.c line 40 function chk0_Loop_g_while1
+ASSUME
+!INVALID-POINTER(myarray2#0[0])
+Guard: TRUE
+--------------
+Thread 0 file Loop_g_while1.rv.c line 40 function chk0_Loop_g_while1
+ASSUME
+!(POINTER_OBJECT(myarray2#0[0]) == POINTER_OBJECT(__CPROVER_deallocated#0))
+Guard: TRUE
+--------------
+Thread 0 file Loop_g_while1.rv.c line 40 function chk0_Loop_g_while1
+ASSUME
+!(POINTER_OBJECT(myarray2#0[0]) == POINTER_OBJECT(__CPROVER_dead_object#0))
+Guard: TRUE
+--------------
+Thread 0 file Loop_g_while1.rv.c line 40 function chk0_Loop_g_while1
+ASSUME
+!(POINTER_OFFSET(myarray2#0[0]) < 0) && __CPROVER_malloc_size#0 >= 16 + (unsigned int)POINTER_OFFSET(myarray2#0[0]) || !(POINTER_OBJECT(myarray2#0[0]) == POINTER_OBJECT(__CPROVER_malloc_object#0))
+Guard: TRUE
+--------------
+Thread 0 file Loop_g_while1.rv.c line 40 function chk0_Loop_g_while1
+ASSUME
+!(POINTER_OFFSET(myarray2#0[0]) < 0) && OBJECT_SIZE(myarray2#0[0]) >= 16 + POINTER_OFFSET(myarray2#0[0]) || DYNAMIC_OBJECT(myarray2#0[0])
+Guard: TRUE
+--------------
+Thread 0 file Loop_g_while1.rv.c line 40 function chk0_Loop_g_while1
+LOCATION
+Guard: TRUE
+--------------
+Thread 0 file Loop_g_while1.rv.c line 42 function chk0_Loop_g_while1
+ASSIGNMENT (GUARD)
+\guard#1 == (invalid_object4#0.next == ((struct B *)NULL))
+Guard: TRUE
+--------------
+Thread 0 file Loop_g_while1.rv.c line 42 function chk0_Loop_g_while1
+LOCATION
+Guard: \guard#1
+--------------
+Thread 0 file Loop_g_while1.rv.c line 42 function chk0_Loop_g_while1
+SHARED WRITE
+$return_value#1
+Guard: \guard#1
+--------------
+Thread 0 file Loop_g_while1.rv.c line 42 function chk0_Loop_g_while1
+ASSIGNMENT (STATE)
+$return_value#1 == 0
+Guard: \guard#1
+--------------
+Thread 0 file Loop_g_while1.rv.c line 46 function chk0_Loop_g_while1
+ASSIGNMENT (PHI)
+$return_value#2 == $return_value#0
+Guard: TRUE
+--------------
+Thread 0 file Loop_g_while1.rv.c line 46 function chk0_Loop_g_while1
+ASSUME
+!\guard#1 ==> !(POINTER_OBJECT(&myarray3) == POINTER_OBJECT(__CPROVER_deallocated#0))
+Guard: !\guard#1
+--------------
+Thread 0 file Loop_g_while1.rv.c line 46 function chk0_Loop_g_while1
+ASSUME
+!\guard#1 ==> !(POINTER_OBJECT(&myarray3) == POINTER_OBJECT(__CPROVER_dead_object#0))
+Guard: !\guard#1
+--------------
+Thread 0 file Loop_g_while1.rv.c line 46 function chk0_Loop_g_while1
+ASSUME
+!\guard#1 ==> !(__CPROVER_malloc_size#0 < 4) || !(POINTER_OBJECT(&myarray3) == POINTER_OBJECT(__CPROVER_malloc_object#0))
+Guard: !\guard#1
+--------------
+Thread 0 file Loop_g_while1.rv.c line 46 function chk0_Loop_g_while1
+ASSUME
+!\guard#1 ==> !(4 * INFINITY() < 4)
+Guard: !\guard#1
+--------------
+Thread 0 file Loop_g_while1.rv.c line 46 function chk0_Loop_g_while1
+ASSUME
+!\guard#1 ==> !(myarray3#0[0] == ((struct B *)NULL))
+Guard: !\guard#1
+--------------
+Thread 0 file Loop_g_while1.rv.c line 46 function chk0_Loop_g_while1
+ASSUME
+!\guard#1 ==> !INVALID-POINTER(myarray3#0[0])
+Guard: !\guard#1
+--------------
+Thread 0 file Loop_g_while1.rv.c line 46 function chk0_Loop_g_while1
+ASSUME
+!\guard#1 ==> !(POINTER_OBJECT(myarray3#0[0]) == POINTER_OBJECT(__CPROVER_deallocated#0))
+Guard: !\guard#1
+--------------
+Thread 0 file Loop_g_while1.rv.c line 46 function chk0_Loop_g_while1
+ASSUME
+!\guard#1 ==> !(POINTER_OBJECT(myarray3#0[0]) == POINTER_OBJECT(__CPROVER_dead_object#0))
+Guard: !\guard#1
+--------------
+Thread 0 file Loop_g_while1.rv.c line 46 function chk0_Loop_g_while1
+ASSUME
+!\guard#1 ==> !(POINTER_OFFSET(myarray3#0[0]) < 0) && __CPROVER_malloc_size#0 >= 16 + (unsigned int)POINTER_OFFSET(myarray3#0[0]) || !(POINTER_OBJECT(myarray3#0[0]) == POINTER_OBJECT(__CPROVER_malloc_object#0))
+Guard: !\guard#1
+--------------
+Thread 0 file Loop_g_while1.rv.c line 46 function chk0_Loop_g_while1
+ASSUME
+!\guard#1 ==> !(POINTER_OFFSET(myarray3#0[0]) < 0) && OBJECT_SIZE(myarray3#0[0]) >= 16 + POINTER_OFFSET(myarray3#0[0]) || DYNAMIC_OBJECT(myarray3#0[0])
+Guard: !\guard#1
+--------------
+Thread 0 file Loop_g_while1.rv.c line 46 function chk0_Loop_g_while1
+SHARED WRITE
+invalid_object5#1
+Guard: !\guard#1
+--------------
+Thread 0 file Loop_g_while1.rv.c line 46 function chk0_Loop_g_while1
+ASSIGNMENT (STATE)
+invalid_object5#1 == invalid_object5#0 WITH [.b:=0]
+Guard: !\guard#1
+--------------
+Thread 0 file Loop_g_while1.rv.c line 49 function chk0_Loop_g_while1
+LOCATION
+Guard: !\guard#1
+--------------
+Thread 0 file Loop_g_while1.rv.c line 49 function chk0_Loop_g_while1
+SHARED WRITE
+$return_value#3
+Guard: !\guard#1
+--------------
+Thread 0 file Loop_g_while1.rv.c line 49 function chk0_Loop_g_while1
+ASSIGNMENT (STATE)
+$return_value#3 == 0
+Guard: !\guard#1
+--------------
+Thread 0 file Loop_g_while1.rv.c line 50 function chk0_Loop_g_while1
+ASSIGNMENT (PHI)
+$return_value#4 == 0
+Guard: TRUE
+--------------
+Thread 0 file Loop_g_while1.rv.c line 50 function chk0_Loop_g_while1
+ASSIGNMENT (PHI)
+invalid_object5#2 == (\guard#1 ? invalid_object5#0 : invalid_object5#1)
+Guard: TRUE
+--------------
+Thread 0 file Loop_g_while1.rv.c line 50 function chk0_Loop_g_while1
+FUNCTION_RETURN
+Guard: TRUE
+--------------
+Thread 0 file harness-save-outputs
+SHARED WRITE
+$return_value$f1_output#1
+Guard: TRUE
+--------------
+Thread 0 file harness-save-outputs
+ASSIGNMENT (STATE)
+$return_value$f1_output#1 == 0
+Guard: TRUE
+--------------
+Thread 0
+LOCATION
+Guard: TRUE
+--------------
+Thread 0
+FUNCTION_CALL
+Guard: TRUE
+--------------
+Thread 0
+ASSIGNMENT (STATE)
+rvp_cur!0@1#1 == myarray2
+Guard: TRUE
+--------------
+Thread 0
+ASSIGNMENT (STATE)
+rvp_pb!0@1#1 == myarray3
+Guard: TRUE
+--------------
+Thread 0 file Loop_g_while1.rv.c line 58 function chk1_Loop_g_while1
+ASSUME
+!(POINTER_OBJECT(&myarray2) == POINTER_OBJECT(__CPROVER_deallocated#0))
+Guard: TRUE
+--------------
+Thread 0 file Loop_g_while1.rv.c line 58 function chk1_Loop_g_while1
+ASSUME
+!(POINTER_OBJECT(&myarray2) == POINTER_OBJECT(__CPROVER_dead_object#0))
+Guard: TRUE
+--------------
+Thread 0 file Loop_g_while1.rv.c line 58 function chk1_Loop_g_while1
+ASSUME
+!(__CPROVER_malloc_size#0 < 4) || !(POINTER_OBJECT(&myarray2) == POINTER_OBJECT(__CPROVER_malloc_object#0))
+Guard: TRUE
+--------------
+Thread 0 file Loop_g_while1.rv.c line 58 function chk1_Loop_g_while1
+ASSUME
+!(4 * INFINITY() < 4)
+Guard: TRUE
+--------------
+Thread 0 file Loop_g_while1.rv.c line 58 function chk1_Loop_g_while1
+ASSUME
+!(myarray2#0[0] == ((struct B *)NULL))
+Guard: TRUE
+--------------
+Thread 0 file Loop_g_while1.rv.c line 58 function chk1_Loop_g_while1
+ASSUME
+!INVALID-POINTER(myarray2#0[0])
+Guard: TRUE
+--------------
+Thread 0 file Loop_g_while1.rv.c line 58 function chk1_Loop_g_while1
+ASSUME
+!(POINTER_OBJECT(myarray2#0[0]) == POINTER_OBJECT(__CPROVER_deallocated#0))
+Guard: TRUE
+--------------
+Thread 0 file Loop_g_while1.rv.c line 58 function chk1_Loop_g_while1
+ASSUME
+!(POINTER_OBJECT(myarray2#0[0]) == POINTER_OBJECT(__CPROVER_dead_object#0))
+Guard: TRUE
+--------------
+Thread 0 file Loop_g_while1.rv.c line 58 function chk1_Loop_g_while1
+ASSUME
+!(POINTER_OFFSET(myarray2#0[0]) < 0) && __CPROVER_malloc_size#0 >= 16 + (unsigned int)POINTER_OFFSET(myarray2#0[0]) || !(POINTER_OBJECT(myarray2#0[0]) == POINTER_OBJECT(__CPROVER_malloc_object#0))
+Guard: TRUE
+--------------
+Thread 0 file Loop_g_while1.rv.c line 58 function chk1_Loop_g_while1
+ASSUME
+!(POINTER_OFFSET(myarray2#0[0]) < 0) && OBJECT_SIZE(myarray2#0[0]) >= 16 + POINTER_OFFSET(myarray2#0[0]) || DYNAMIC_OBJECT(myarray2#0[0])
+Guard: TRUE
+--------------
+Thread 0 file Loop_g_while1.rv.c line 58 function chk1_Loop_g_while1
+LOCATION
+Guard: TRUE
+--------------
+Thread 0 file Loop_g_while1.rv.c line 60 function chk1_Loop_g_while1
+ASSIGNMENT (GUARD)
+\guard#2 == (invalid_object6#0.next == ((struct B *)NULL))
+Guard: TRUE
+--------------
+Thread 0 file Loop_g_while1.rv.c line 60 function chk1_Loop_g_while1
+LOCATION
+Guard: \guard#2
+--------------
+Thread 0 file Loop_g_while1.rv.c line 60 function chk1_Loop_g_while1
+SHARED WRITE
+$return_value#5
+Guard: \guard#2
+--------------
+Thread 0 file Loop_g_while1.rv.c line 60 function chk1_Loop_g_while1
+ASSIGNMENT (STATE)
+$return_value#5 == 0
+Guard: \guard#2
+--------------
+Thread 0 file Loop_g_while1.rv.c line 64 function chk1_Loop_g_while1
+ASSIGNMENT (PHI)
+$return_value#6 == 0
+Guard: TRUE
+--------------
+Thread 0 file Loop_g_while1.rv.c line 64 function chk1_Loop_g_while1
+ASSUME
+!\guard#2 ==> !(POINTER_OBJECT(&myarray3) == POINTER_OBJECT(__CPROVER_deallocated#0))
+Guard: !\guard#2
+--------------
+Thread 0 file Loop_g_while1.rv.c line 64 function chk1_Loop_g_while1
+ASSUME
+!\guard#2 ==> !(POINTER_OBJECT(&myarray3) == POINTER_OBJECT(__CPROVER_dead_object#0))
+Guard: !\guard#2
+--------------
+Thread 0 file Loop_g_while1.rv.c line 64 function chk1_Loop_g_while1
+ASSUME
+!\guard#2 ==> !(__CPROVER_malloc_size#0 < 4) || !(POINTER_OBJECT(&myarray3) == POINTER_OBJECT(__CPROVER_malloc_object#0))
+Guard: !\guard#2
+--------------
+Thread 0 file Loop_g_while1.rv.c line 64 function chk1_Loop_g_while1
+ASSUME
+!\guard#2 ==> !(4 * INFINITY() < 4)
+Guard: !\guard#2
+--------------
+Thread 0 file Loop_g_while1.rv.c line 64 function chk1_Loop_g_while1
+ASSUME
+!\guard#2 ==> !(myarray3#0[0] == ((struct B *)NULL))
+Guard: !\guard#2
+--------------
+Thread 0 file Loop_g_while1.rv.c line 64 function chk1_Loop_g_while1
+ASSUME
+!\guard#2 ==> !INVALID-POINTER(myarray3#0[0])
+Guard: !\guard#2
+--------------
+Thread 0 file Loop_g_while1.rv.c line 64 function chk1_Loop_g_while1
+ASSUME
+!\guard#2 ==> !(POINTER_OBJECT(myarray3#0[0]) == POINTER_OBJECT(__CPROVER_deallocated#0))
+Guard: !\guard#2
+--------------
+Thread 0 file Loop_g_while1.rv.c line 64 function chk1_Loop_g_while1
+ASSUME
+!\guard#2 ==> !(POINTER_OBJECT(myarray3#0[0]) == POINTER_OBJECT(__CPROVER_dead_object#0))
+Guard: !\guard#2
+--------------
+Thread 0 file Loop_g_while1.rv.c line 64 function chk1_Loop_g_while1
+ASSUME
+!\guard#2 ==> !(POINTER_OFFSET(myarray3#0[0]) < 0) && __CPROVER_malloc_size#0 >= 16 + (unsigned int)POINTER_OFFSET(myarray3#0[0]) || !(POINTER_OBJECT(myarray3#0[0]) == POINTER_OBJECT(__CPROVER_malloc_object#0))
+Guard: !\guard#2
+--------------
+Thread 0 file Loop_g_while1.rv.c line 64 function chk1_Loop_g_while1
+ASSUME
+!\guard#2 ==> !(POINTER_OFFSET(myarray3#0[0]) < 0) && OBJECT_SIZE(myarray3#0[0]) >= 16 + POINTER_OFFSET(myarray3#0[0]) || DYNAMIC_OBJECT(myarray3#0[0])
+Guard: !\guard#2
+--------------
+Thread 0 file Loop_g_while1.rv.c line 64 function chk1_Loop_g_while1
+SHARED WRITE
+invalid_object7#1
+Guard: !\guard#2
+--------------
+Thread 0 file Loop_g_while1.rv.c line 64 function chk1_Loop_g_while1
+ASSIGNMENT (STATE)
+invalid_object7#1 == invalid_object7#0 WITH [.b:=2]
+Guard: !\guard#2
+--------------
+Thread 0 file Loop_g_while1.rv.c line 67 function chk1_Loop_g_while1
+LOCATION
+Guard: !\guard#2
+--------------
+Thread 0 file Loop_g_while1.rv.c line 67 function chk1_Loop_g_while1
+SHARED WRITE
+$return_value#7
+Guard: !\guard#2
+--------------
+Thread 0 file Loop_g_while1.rv.c line 67 function chk1_Loop_g_while1
+ASSIGNMENT (STATE)
+$return_value#7 == 0
+Guard: !\guard#2
+--------------
+Thread 0 file Loop_g_while1.rv.c line 68 function chk1_Loop_g_while1
+ASSIGNMENT (PHI)
+$return_value#8 == 0
+Guard: TRUE
+--------------
+Thread 0 file Loop_g_while1.rv.c line 68 function chk1_Loop_g_while1
+ASSIGNMENT (PHI)
+invalid_object7#2 == (\guard#2 ? invalid_object7#0 : invalid_object7#1)
+Guard: TRUE
+--------------
+Thread 0 file Loop_g_while1.rv.c line 68 function chk1_Loop_g_while1
+FUNCTION_RETURN
+Guard: TRUE
+--------------
+Thread 0
+FUNCTION_RETURN
+Guard: TRUE
+--------------
+
+PROGRAMS ARE EQUIVALENT

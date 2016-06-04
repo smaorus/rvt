@@ -1,0 +1,48 @@
+# $1 is the dir where the check is performed and all the result files are written.
+# $2 is the base name of the file to be checked by CBMC
+# $3 is the name of the first check function
+# $4 is the name of the second check function
+# $5 whether to print debug info
+# $6 whether it is mutual termination check (empty if not mutual)
+# $7 whether unwind is required (empty if not)
+# $8 how much unwinding is required (empty if not required)
+setenv RVT_PLATFORM cygwin
+if ( $5 == 1 ) then 
+    echo -- Begin semantic check \(semchk\) \( $1 $2 $3 $4 $5 $6\)
+endif
+# source "$0:h"/rv_set
+
+cd "$1"
+
+\rm -f $2.gcc $2.cbm $2.res $2.ass
+
+gcc -fsyntax-only $2.rv.c 
+#  -Wall
+@ gcc_ret = $?
+if ( $gcc_ret ) then
+#  echo "UNCOMPILABLE" > $2.res
+#  cd -
+  exit $gcc_ret
+endif
+
+
+#/cygdrive/c/Documents\ and\ Settings/Ofer/My\ Documents/Visual\ Studio\ 2010/Projects/rv/tools/external/
+
+#/cygdrive/c/rv/tools/external/windows/
+ #$CBMCFLAGS  >& $2.cbm  
+# END OF NEW VERSION
+
+
+# which cbmc
+# cbmc /cygdrive/c/NewRvt/semchks/Loop_gcd_while1.rv.c  >& $2.cbm  
+# /cygdrive/c/NewRvt/tools/external/cygwin/cbmc /cygdrive/c/NewRvt/semchks/Loop_gcd_while1.rv.c  >& $2.cbm  
+
+echo running vcvars64
+"/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/vcvarsall.bat"
+
+echo running unitrv  
+# which unitrv
+# unitrv $2.rv.c $3 $4 >& $2.cbm 
+/cygdrive/c/NewRvt/tools/scripts/generated/cbmc_trunk_windows/unitrv/src/unitrv.exe $2.rv.c $3 $4 $6 $7 $8 >& $2.cbm  
+
+grep "\(PROGRAMS ARE EQUIVALENT\)\|\(PROGRAMS ARE NOT EQUIVALENT\)\|\(PROGRAMS ARE MUTUALLY TERMINATING\)\|\(PROGRAMS ARE NOT MUTUALLY TERMINATING\)" $2.cbm > $2.res

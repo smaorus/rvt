@@ -1,0 +1,4 @@
+`P0              P1               Result
+`--------------- ---------------- ------
+Loop_main_while1 Loop_main_while1 partially-equivalent
+main             main             partially-equivalent

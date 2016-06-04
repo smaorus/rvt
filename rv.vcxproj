@@ -1,0 +1,169 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{7A3EFA11-C129-4C43-8B28-63CC6099BEAB}</ProjectGuid>
+    <RootNamespace>rv</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup />
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)\ctool\include\;$(ProjectDir)\ctool\include\ctool</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>kernel32.lib;C:\cygwin\lib\libfl.a;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)\ctool\include\;$(ProjectDir)\ctool\include\ctool</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>C:\NewRVT\ctool\src;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="ctool\src\context.cpp" />
+    <ClCompile Include="ctool\src\decl.cpp" />
+    <ClCompile Include="ctool\src\express.cpp" />
+    <ClCompile Include="ctool\src\location.cpp" />
+    <ClCompile Include="ctool\src\parseenv.cpp" />
+    <ClCompile Include="ctool\src\PrintTraversal.cpp" />
+    <ClCompile Include="ctool\src\project.cpp" />
+    <ClCompile Include="ctool\src\stemnt.cpp" />
+    <ClCompile Include="ctool\src\symbol.cpp" />
+    <ClCompile Include="ctool\src\token.cpp" />
+    <ClCompile Include="generated\rv_gram.cpp" />
+    <ClCompile Include="generated\rv_lexer.cpp" />
+    <ClCompile Include="RVArithConverter.cpp" />
+    <ClCompile Include="RVTextualUnroller.cpp" />
+    <ClCompile Include="rv_arrays.cpp" />
+    <ClCompile Include="rv_array_assume.cpp" />
+    <ClCompile Include="rv_collect.cpp" />
+    <ClCompile Include="rv_commands.cpp" />
+    <ClCompile Include="rv_consts.cpp" />
+    <ClCompile Include="rv_ctool.cpp" />
+    <ClCompile Include="rv_dataflow.cpp" />
+    <ClCompile Include="rv_dbg.cpp" />
+    <ClCompile Include="rv_decompose.cpp" />
+    <ClCompile Include="rv_etc.cpp" />
+    <ClCompile Include="rv_framasum.cpp" />
+    <ClCompile Include="rv_funcdfs.cpp" />
+    <ClCompile Include="rv_funcnode.cpp" />
+    <ClCompile Include="rv_funcpair.cpp" />
+    <ClCompile Include="rv_gen.cpp" />
+    <ClCompile Include="rv_genctx.cpp" />
+    <ClCompile Include="rv_gotoEliminator.cpp" />
+    <ClCompile Include="rv_graph.cpp" />
+    <ClCompile Include="rv_indfunc.cpp" />
+    <ClCompile Include="rv_loops.cpp" />
+    <ClCompile Include="rv_main.cpp" />
+    <ClCompile Include="rv_msg.cpp" />
+    <ClCompile Include="rv_options.cpp" />
+    <ClCompile Include="rv_parse.cpp" />
+    <ClCompile Include="rv_propagate.cpp" />
+    <ClCompile Include="rv_replace.cpp" />
+    <ClCompile Include="rv_semchecker.cpp" />
+    <ClCompile Include="rv_summarizer.cpp" />
+    <ClCompile Include="rv_temps.cpp" />
+    <ClCompile Include="rv_tkn_gen.cpp" />
+    <ClCompile Include="rv_traversal.cpp" />
+    <ClCompile Include="rv_treecomp.cpp" />
+    <ClCompile Include="rv_typeeqmac.cpp" />
+    <ClCompile Include="rv_unroller.cpp" />
+    <ClCompile Include="rv_walk.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ctool\src\gram.cpp.h" />
+    <ClInclude Include="generated\rv_gram.h" />
+    <ClInclude Include="RVArithConverter.h" />
+    <ClInclude Include="RVTextualUnroller.h" />
+    <ClInclude Include="rv_arrays.h" />
+    <ClInclude Include="rv_array_assume.h" />
+    <ClInclude Include="rv_collect.h" />
+    <ClInclude Include="rv_commands.h" />
+    <ClInclude Include="rv_consts.h" />
+    <ClInclude Include="rv_ctool.h" />
+    <ClInclude Include="rv_dataflow.h" />
+    <ClInclude Include="rv_dbg.h" />
+    <ClInclude Include="rv_decompose.h" />
+    <ClInclude Include="rv_error.h" />
+    <ClInclude Include="rv_etc.h" />
+    <ClInclude Include="rv_framasum.h" />
+    <ClInclude Include="rv_funcdfs.h" />
+    <ClInclude Include="rv_funcflags.h" />
+    <ClInclude Include="rv_funcnode.h" />
+    <ClInclude Include="rv_funcpair.h" />
+    <ClInclude Include="rv_gen.h" />
+    <ClInclude Include="rv_genctx.h" />
+    <ClInclude Include="rv_gotoEliminator.h" />
+    <ClInclude Include="rv_graph.h" />
+    <ClInclude Include="rv_indfunc.h" />
+    <ClInclude Include="rv_loops.h" />
+    <ClInclude Include="rv_macros.h" />
+    <ClInclude Include="rv_main.h" />
+    <ClInclude Include="rv_options.h" />
+    <ClInclude Include="rv_parse.h" />
+    <ClInclude Include="rv_propagate.h" />
+    <ClInclude Include="rv_replace.h" />
+    <ClInclude Include="rv_side.h" />
+    <ClInclude Include="rv_structs.h" />
+    <ClInclude Include="rv_summarizer.h" />
+    <ClInclude Include="rv_temps.h" />
+    <ClInclude Include="rv_tkn_gen.h" />
+    <ClInclude Include="rv_tokens.h" />
+    <ClInclude Include="rv_traversal.h" />
+    <ClInclude Include="rv_treecomp.h" />
+    <ClInclude Include="rv_tuple.h" />
+    <ClInclude Include="rv_typeeqmac.h" />
+    <ClInclude Include="rv_unroller.h" />
+    <ClInclude Include="rv_walk.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram1.cd" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

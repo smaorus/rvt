@@ -8,18 +8,18 @@ Date: June 2006
  
 \*******************************************************************/
 
-#ifndef CPROVER_READ_GOTO_OBJECT_H
-#define CPROVER_READ_GOTO_OBJECT_H
+#ifndef READ_GOTO_OBJECT_H_
+#define READ_GOTO_OBJECT_H_
 
 #include <message.h>
-#include <symbol_table.h>
+#include <context.h>
 #include <goto-programs/goto_functions.h>
 
 bool read_goto_object(
   std::istream &in,
   const std::string &filename,
-  symbol_tablet &symbol_table,
+  contextt &context,
   goto_functionst &functions,
   message_handlert &msg_hndlr);
 
-#endif /* CPROVER_READ_GOTO_OBJECT_H */
+#endif /*READ_GOTO_OBJECT_H_*/

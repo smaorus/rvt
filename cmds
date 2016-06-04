@@ -1,0 +1,7 @@
+-mt -unitrv -debug 7777777 -fuf C:\NewRVT\test\rvtest\mt1\rv_pe.fuf -K 3 -mt -lb 0 C:\NewRVT\test\rvtest\mt1\try_side0.c C:\NewRVT\test\rvtest\mt1\try1_side1.c > out 2>&1
+
+-mt -unitrv -debug 7777777 -fuf C:\NewRVT\test\rvtest\gcd_refined_mt\rv_pe.fuf -K 3 -mt -lb 0 C:\NewRVT\test\rvtest\gcd_refined_mt\gcd_refined.c C:\NewRVT\test\rvtest\gcd_refined_mt\gcd_refined1.c > out 2>&1
+
+-unitrv -mt -nooutline_funcs -refined C:\NewRVT\test\rvtest\gcd_refined_mt\gcd_refined.c C:\NewRVT\test\rvtest\gcd_refined_mt\gcd_refined1.c > out 2>&1
+
+-unitrv -fuf C:\NewRVT\test\rvtest\mutual1\rv_pe.fuf -K 10 -mt C:\NewRVT\test\rvtest\mutual1\mutual.c C:\NewRVT\test\rvtest\mutual1\mutual1.c > out 2>&1

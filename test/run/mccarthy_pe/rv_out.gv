@@ -1,0 +1,22 @@
+digraph G{
+subgraph G0{ 
+side0[label = P0]
+node[color = black];
+f910[label = "f91",fontcolor = "black"];
+main0[label = "main",fontcolor = "grey"];
+f910[shape = "ellipse",  style = "filled", fillcolor = "green"]
+main0[shape = "ellipse", color = "blue", style = "filled", fillcolor = "green"]
+f910->f910
+main0->f910
+}
+subgraph G1{ 
+side1[label = P1]
+node[color = black];
+f911[label = "f91",fontcolor = "black"];
+main1[label = "main",fontcolor = "grey"];
+f911[shape = "ellipse",  style = "filled", fillcolor = "green"]
+main1[shape = "ellipse", color = "blue", style = "filled", fillcolor = "green"]
+f911->f911
+main1->f911
+}
+}

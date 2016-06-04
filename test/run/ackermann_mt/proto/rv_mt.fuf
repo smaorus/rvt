@@ -1,0 +1,4 @@
+`P0  P1   Result
+`--- ---- ------
+A    A    mutually-terminating
+main main syntactically-equal mutually-terminating

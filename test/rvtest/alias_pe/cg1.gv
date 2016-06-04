@@ -1,0 +1,6 @@
+digraph G{
+graph [ label = "cg1" , fontcolor = "blue" , bgcolor = "lightblue" ];
+n0;
+n7;
+n7->n0;
+}

@@ -22,15 +22,15 @@ RVTemp::RVTemp(void)
   : glob_fstream(foutstream),
     outstreamP(NULL), declarationsStreamP(NULL),
     assertStreamP(NULL), codePartStreamP(NULL),
-    max_records(32)
+    max_records(32), seperate_basecase_proof(false)
 {
 }
 
 RVTemp::RVTemp(std::ostream& strm)
   : glob_fstream(strm),
     outstreamP(&glob_fstream), declarationsStreamP(&glob_fstream),
-    assertStreamP(&glob_fstream), codePartStreamP(&code_uf_stream),
-    max_records(32)
+	assertStreamP(&glob_fstream), codePartStreamP(&code_uf_stream),
+	max_records(32), seperate_basecase_proof(false)
 {
 }
 
@@ -40,13 +40,14 @@ RVTemp::~RVTemp() {
 }
 
 bool RVTemp::open(RVDischarger& discharger,
-		          const std::string& filename,
+		          const std::string& filename, bool _seperate_basecase_proof,
 		          std::ios_base::openmode openmode)
 {
 	if (outstreamP != NULL) {
 		rv_errstrm << "RVTemp::open(" << filename << ") called when outstream != NULL\n";
 		discharge(dummyDischarcher);
 	}
+	seperate_basecase_proof = _seperate_basecase_proof;
 
 	foutstream.open(filename.data(), openmode);
 	bool opened = foutstream.is_open();
@@ -347,9 +348,17 @@ void RVTemp::gen_local_copy_uf(const std::string& type_text, const std::string& 
 
 void RVTemp::gen_assert_eq(const std::string& var0, const std::string& var1, std::string& by, bool pointer /*=false*/)
 {
+	
+	stringstream ss;
+	if (seperate_basecase_proof){
+		ss << "( " << GLOBAL_BASECASE_FALG_NAME << " < 2)";
+		ss << " || ";
+	}
+	
+
   //(*outstream) << 
 	(*assertStreamP) <<
-	"  assert( " << (pointer?"*":"") << var0 << " == "<< (pointer?"*":"") << var1 << " );"<< BY(by);
+	"  assert( " << ss.str()  << (pointer?"*":"") << var0 << " == "<< (pointer?"*":"") << var1 << " );"<< BY(by);
 }
 
 void RVTemp::gen_eq_null(const std::string& var, std::string& by)
@@ -410,6 +419,14 @@ void RVTemp::gen_nondet_save_val(const std::string& item, const std::string& var
 	(pointer ? "*" : "") << item << " = " <<
 	(pointer ? "*" : "") << var << " = (" << type_text << ")" <<
 	(is_long ? "nondet_long()" : "nondet_int()") << ";" << BY(by);
+}
+
+void RVTemp::gen_nondet_unitrv_save_val( std::string item, std::string var, std::string type_text, bool pointer, bool is_long, std::string& by )
+{
+	(*outstreamP) << "  " <<
+		item << " = " <<
+		(pointer ? "*" : "") << var << " = (" << type_text << ")" <<
+		(is_long ? "nondet_long()" : "nondet_int()") << ";" << BY(by);
 }
 
 void RVTemp::gen_compare_val(const std::string& item, const std::string& var, bool pointer, bool first, std::string& by)
@@ -485,6 +502,7 @@ void RVTemp::gen_uf_array(const std::string& ufname)
     rv_counter_type << " rv_UF_" << ufname << "_count[2] = {0,0};\n\n" ;
 }
 
+
 void RVTemp::gen_uf_head(const std::string& ret_type, const std::string* ret_var)
 {
   (*outstreamP) <<
@@ -549,9 +567,9 @@ void RVTemp::gen_uf_search_tail(const std::string& on_found)
   (*outstreamP) << 
 "    if( equal ) { \n"
 "      found = 1;\n" <<
-"      found_ind = rv_uf_ind;\n" <<
+"      found_ind = rv_uf_ind;\n		" <<
 on_found <<
-"    }\n" <<
+"    }\n		equal = 1;\n" <<
 "  }\n\n" <<
 "  if( found ) /* input values were found among the saved values */\n"
 "  {\n";
@@ -1074,3 +1092,17 @@ void RVTemp::gen_reach_equiv_over_uf_array(const std::string& ufname)
 	*outstreamP << "  for (i = " << uf_count_name(ufname, SIDE0) << " - 1; i >= 0; --i)\n";
 	*outstreamP << "    assert( " << uf_array_name(ufname) << "[i].reach_equiv_flag );\n";
 }
+
+void RVTemp::gen_max_array_size(const std::string& ufname)
+{
+	(*outstreamP) << 
+		uf_array_size_name_definition(ufname, max_records);
+}
+
+
+
+
+
+
+
+

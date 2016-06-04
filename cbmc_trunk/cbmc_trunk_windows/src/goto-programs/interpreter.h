@@ -12,7 +12,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "goto_functions.h"
 
 void interpreter(
-  const symbol_tablet &symbol_table,
+  const contextt &context,
   const goto_functionst &goto_functions);
 
 #endif

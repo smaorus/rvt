@@ -1,0 +1,16 @@
+Usage error!
+
+
+* *           UNITRV 0.1 - Copyright (C) 2012-2012           * *
+* *                     Daniel Kroening                     * *
+* *      Oxford University, Computer Science Department     * *
+* *                 kroening@kroening.com                   * *
+
+Usage:                       Purpose:
+
+ unitrv [-?] [-h] [--help]    show help
+ unitrv file.c f1 f2          compare functions f1 and f2
+
+Other options:
+ --version                    show version and exit
+

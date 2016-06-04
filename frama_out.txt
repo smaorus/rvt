@@ -1,0 +1,50 @@
+[kernel] Parsing FRAMAC_SHARE/libc/__fc_builtin_for_normalization.i (no preprocessing)
+[kernel] Parsing ../frama-test/frama-c-Sodium-20150201/share/builtin.c (with preprocessing)
+[kernel] Parsing frama.c (with preprocessing)
+frama.c:17:[kernel] warning: Calling undeclared function Frama_C_interval. Old style K&R code?
+[value] Analyzing a complete application starting at main
+[value] Computing initial state
+[value] Initial state computed
+[value] Values of globals at initialization
+  Frama_C_entropy_source ∈ {0}
+[value] computing for function f <- main.
+        Called from frama.c:30.
+[value] computing for function Frama_C_interval <- f <- main.
+        Called from frama.c:17.
+[value] computing for function Frama_C_update_entropy <- Frama_C_interval <- f <- 
+                                main.
+        Called from ../frama-test/frama-c-Sodium-20150201/share/builtin.c:44.
+[value] using specification for function Frama_C_update_entropy
+[value] Done for function Frama_C_update_entropy
+[value] Recording results for Frama_C_interval
+[value] Done for function Frama_C_interval
+[value] computing for function r <- f <- main.
+        Called from frama.c:24.
+[value] Recording results for r
+[value] Done for function r
+[value] Recording results for f
+[value] Done for function f
+[value] Recording results for main
+[value] done for function main
+[value] ====== VALUES COMPUTED ======
+
+-----Me1-----
+
+-----Me1-----
+[value] Values at end of function Frama_C_interval:
+   Frama_C_entropy_source ∈ [--..--]
+   r_0 ∈ {1; 2; 3; 4; 5}
+   aux ∈ [--..--]
+
+-----Me1-----
+[value] Values at end of function r:
+   __retres ∈ {5}
+
+-----Me1-----
+[value] Values at end of function f:
+   Frama_C_entropy_source ∈ [--..--]
+   __retres ∈ {1; 5}
+
+-----Me1-----
+[value] Values at end of function main:
+   Frama_C_entropy_source ∈ [--..--]

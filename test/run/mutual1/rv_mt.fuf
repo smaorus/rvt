@@ -1,0 +1,10 @@
+`P0                P1                 Result
+`----------------- ------------------ ------
+F                  F                  mutually-terminating
+putchar            putchar            syntactically-equal mutually-terminating
+__CPROVER_printf_0 __CPROVER_printf_0 syntactically-equal mutually-terminating
+Loop_main_for1     Loop_main_for1     mutually-terminating
+__CPROVER_printf_1 __CPROVER_printf_1 syntactically-equal mutually-terminating
+main               main               
+M                  M                  mutually-terminating
+puts               puts               syntactically-equal mutually-terminating

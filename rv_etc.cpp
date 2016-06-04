@@ -229,6 +229,7 @@ std::string Utils::mkFilename(const std::string& base,
 /// Converts integer to string.
 /// </summary>
 /// <param name="n"> the integer </param>
+
 std::string Utils::itoa(int n) {
 	if (n == 0) return "0";
 

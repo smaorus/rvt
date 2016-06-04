@@ -1,0 +1,22 @@
+digraph G{
+subgraph G0{ 
+side0[label = P0]
+node[color = black];
+Loop_main_while10[label = "Loop_main_while1",fontcolor = "black"];
+main0[label = "main",fontcolor = "black"];
+Loop_main_while10[shape = "ellipse",  style = "filled", fillcolor = "green"]
+main0[shape = "ellipse",  style = "filled", fillcolor = "green"]
+main0->Loop_main_while10[style = dotted]
+Loop_main_while10->Loop_main_while10[style = dotted]
+}
+subgraph G1{ 
+side1[label = P1]
+node[color = black];
+Loop_main_while11[label = "Loop_main_while1",fontcolor = "black"];
+main1[label = "main",fontcolor = "black"];
+Loop_main_while11[shape = "ellipse",  style = "filled", fillcolor = "green"]
+main1[shape = "ellipse",  style = "filled", fillcolor = "green"]
+main1->Loop_main_while11[style = dotted]
+Loop_main_while11->Loop_main_while11[style = dotted]
+}
+}

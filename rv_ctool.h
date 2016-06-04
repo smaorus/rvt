@@ -15,6 +15,10 @@
 class RVCtool
 {
   public:
+	
+	static FunctionType* current_func0;
+	static FunctionType* current_func1;
+	static int get_funcdef_parameter_index(Symbol* name, FunctionType* current_func);
 	static bool is_unary_change(UnaryExpr *exp); 
     static bool is_top_level(const SymEntry *se);
     static ScopeTbl* get_root_scope(Project* pt, SymEntryType entry_type = VarDeclEntry);
@@ -88,6 +92,28 @@ class RVCtool
 
 
     static std::string get_where(Statement* st);
+
+	// These functions are responsible to alter the check functions so unitrv could be used as the decision procedure.
+	static void adjust_function_to_unitrv( FunctionDef* st, Statement* global_statement, int side, std::vector<std::string>* uf_names ) ;
+	static void add_cprover_not_null_assume( FunctionDef* st ) ;
+	static void add_cprover_assume_for_parameter( FunctionDef* st, std::string parameterName ) ;
+	static void get_rv_get_calls( Block* st, std::vector<BinaryExpr*>* rv_get_assign_exprs, std::vector<ConstantType>* rv_get_types_out ) ;
+	static void add_new_parameters_to_function_definition( FunctionDef* st, std::vector<ConstantType>* types, std::vector<std::string>* new_parameter_names_out ) ;
+	static bool func_is_rv_get( std::string funcName ) ;
+	static void replace_rv_get_calls( FunctionDef* st, Block* param2, Statement* global_statement ) ;
+	static bool expr_is_rv_get_call( Expression* expr ) ;
+	static BaseTypeSpec get_rv_get_type( Expression* expr)  ;
+	static Variable* create_new_parameter( FunctionDef* st , int* rv_get_index, BaseTypeSpec rv_get_type, Statement* global_statement) ;
+
+	static Decl* create_new_declaration( int* rv_get_index, BaseTypeSpec rv_get_type ) ;
+
+	static void look_for_rv_get_call_in_expression_and_replace( FunctionDef* st, Expression* expr, int* rv_get_index, Statement* global_statement ) ;
+	static void transform_rvget_to_function_parameters( FunctionDef* st, Statement* global_statement  ) ;
+	static std::vector<std::string>* get_pointer_parameters( FunctionDef* st ) ;
+	static void adjust_all_functions_to_unitrv(Project* p, int, std::vector<std::string>* uf_names);
+	static void update_declaration(Decl* headerd, std::string funcName, Statement* global_statement) ;
+	static void add_first_call_flag_initialization( FunctionDef* st, std::vector<std::string>* uf_names );
+	static void transform_malloc_to_function_parameters( FunctionDef* st, Statement* global_statement );
 };
 
 

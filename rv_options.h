@@ -28,6 +28,7 @@ private:
 
 	bool        m_bOk;
 	std::string m_pathDelim;
+	
 };
 
 #endif /* RV_OPTIONS_H_ */

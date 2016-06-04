@@ -157,6 +157,15 @@ Type::printType( std::ostream& out, Symbol *name, bool showBase, int level) cons
 	
 }
 
+bool Type::isVoid()
+{
+	if (isBaseType()){
+		return ((BaseType*) this)->typemask == BT_Void;
+	}
+	return true;
+}
+
+
 
 // o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o
 BaseType::BaseType( BaseTypeSpec bt /* =BT_NoType */ )

@@ -1,0 +1,90 @@
+#!/bin/tcsh
+# $1 is the dir where the check is performed and all the result files are written.
+# $2 is the base name of the file to be checked by CBMC
+# $3 is the number of times to unwind
+# $4 is the timeout limit (cpulimit) in seconds - NOT FULLY IMPLEMENTED
+# $5 whether to print debug info
+# $6 C99 compliance
+setenv RVT_PLATFORM cygwin
+echo $RVT_PLATFORM
+if ( $5 == 1 ) then 
+    echo -- Begin semantic check \(semchk\) \( $1 $2 $3 $4 $5 $6\)
+endif
+source "$0:h"/rv_set
+
+cd "$1"
+
+\rm -f $2.gcc $2.cbm $2.res $2.ass
+
+setenv CCFLAGS  " $2.rv.c" #--unwind $3 -I ansi-c-lib
+setenv INSTRUMENTFLAGS  "  --div-by-zero-check  --pointer-check  --bounds-check --assert-to-assume a.out $2.exe"
+setenv CBMCFLAGS "--unwind $3  $2.exe"  # 
+
+# Ofer make sure all these exist. 
+
+#set path = (/cygdrive/c/temp/eclipse/plugins/org.plugin.RegVerification_4.0.6/lib $path)
+#set path = (/cygdrive/c/Documents\ and\ Settings/ofers/My\ Documents/Visual\ Studio\ 2010/Projects/decompose/rv1/ $path)
+
+#########
+#echo path = $path
+#setenv VCINSTALLDIR_BASE "/cygdrive/c/Program Flies/Microsoft Visual Studio 10.0"
+#setenv FrameworkDir "/cygdrive/c/Windows/Microsoft.NET/Framework"
+#setenv FrameworkVersion "v2.0.50727"
+#setenv Framework35Version "v3.5"
+########
+
+#echo path = $path
+#set path = ($path "$VCINSTALLDIR_BASE"/Common7/IDE "$VCINSTALLDIR_BASE"/VC/bin "$VCINSTALLDIR_BASE"/Common7/Tools  "$FrameworkDir"/v3.5 "$VCINSTALLDIR_BASE"/VC/VCPackages)
+#echo here01
+#which goto-cc
+#echo path = $path
+
+#########
+#set DevEnvDir = "$VCINSTALLDIR_BASE"/Common7/IDE
+#set INCLUDE   = ("$VCINSTALLDIR_BASE"/VC/ATLMFC/INCLUDE "$VCINSTALLDIR_BASE"/VC/INCLUDE )
+#set LIB       = ("$VCINSTALLDIR_BASE"/VC/ATLMFC/LIB "$VCINSTALLDIR_BASE"/VC/LIB)
+#set LIBPATH   = ("$FrameworkDir"/v3.5 "$FrameworkDir"/v2.0.50727 "$VCINSTALLDIR_BASE"/VC/ATLMFC/LIB "$VCINSTALLDIR_BASE"/LIB)
+########
+# Ofer end
+# echo checking syntax: gcc -fsyntax-only $2.rv.c
+gcc -fsyntax-only $2.rv.c 
+#  -Wall
+@ gcc_ret = $?
+if ( $gcc_ret ) then
+#  echo "UNCOMPILABLE" > $2.res
+#  cd -
+  exit $gcc_ret
+endif
+
+# echo Start CBMC at `date` >> $2.tms
+# echo "NOT FINISHED" > $2.res
+# echo $path
+#echo here2
+#which goto-cc #; which goto-instrument
+
+echo running goto-cc $CCFLAGS
+#/cygdrive/c/Documents\ and\ Settings/Ofer/My\ Documents/Visual\ Studio\ 2010/Projects/rv/tools/external/
+#/cygdrive/c/rv/tools/external/windows/
+goto-cc $CCFLAGS
+
+echo running goto-instrument $INSTRUMENTFLAGS
+#/cygdrive/c/Documents\ and\ Settings/Ofer/My\ Documents/Visual\ Studio\ 2010/Projects/rv/tools/external/
+#/cygdrive/c/rv/tools/external/windows/
+goto-instrument $INSTRUMENTFLAGS
+echo running cbmc $CBMCFLAGS  
+#/cygdrive/c/Documents\ and\ Settings/Ofer/My\ Documents/Visual\ Studio\ 2010/Projects/rv/tools/external/
+echo path before cbmc = $path
+which cbmc
+#/cygdrive/c/rv/tools/external/windows/
+cbmc $CBMCFLAGS  >& $2.cbm  
+#--pointer-check
+#endif
+# echo End CBMC at `date` >> $2.tms
+
+grep "\(VERIFICATION SUCCESSFUL\)\|\(VERIFICATION FAILED\)" $2.cbm > $2.res
+# grep -B 4 -A 4 "Failed assertion:" $2.cbm > $2.ass
+cd -
+if ( $4 == 0 ) then 
+echo -- End semantic check \(semchk\).
+endif
+

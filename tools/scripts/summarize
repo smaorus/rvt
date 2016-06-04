@@ -1,0 +1,1 @@
+/cygdrive/c/deltacheck-trunk/branches/summary/src/summarizer/summarizer.exe $1 --xml-ui --function $2

@@ -1,0 +1,6 @@
+`P0                  P1                   Result
+`------------------- -------------------- ------
+Loop_f_while1_while1 Loop_f_while1_while1 partially-equivalent
+main                 main                 syntactically-equal partially-equivalent
+f                    f                    syntactically-equal partially-equivalent
+Loop_f_while1        Loop_f_while1        partially-equivalent

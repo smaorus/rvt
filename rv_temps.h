@@ -13,6 +13,7 @@
 #include "rv_dbg.h"
 
 class array_item;
+#define GLOBAL_BASECASE_FALG_NAME "rv_unroll_helper_basecase_flag"
 
 class RVTemp : public RVIDischargee
 {
@@ -24,13 +25,15 @@ class RVTemp : public RVIDischargee
 
    unsigned max_records;
 
+   bool seperate_basecase_proof;
+
    public:
      RVTemp(void);
      RVTemp(std::ostream&);
      ~RVTemp();
 
      bool open(RVDischarger& discharger,
-    		   const std::string& filename,
+    		   const std::string& filename, bool _seperate_basecase_proof = false,
     		   std::ios_base::openmode openmode = std::ios_base::out);
      void close(RVDischarger&);
 	 void separate_assert_stream(); // ofer 
@@ -163,6 +166,11 @@ class RVTemp : public RVIDischargee
 
 	 //Interface RVIDischargee:
 	 virtual void discharge(RVDischarger&);
+	 void gen_max_array_size(const std::string& ufname);
+	 std::string unitrv_uf_array_name( const std::string& name );
+	 void gen_unitrv_uf_search_head( std::string name, unsigned actual_look_back );
+	 void gen_nondet_unitrv_save_val( std::string item, std::string var, std::string type_text, bool pointer, bool is_long, std::string& ACT_BY );
+	 
 };
 
 /* standard name for vars that return values from generated functions: */

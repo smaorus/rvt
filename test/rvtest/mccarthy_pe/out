@@ -1,0 +1,14 @@
+/usr/bin/gcc -fsyntax-only .//mccarthy.c
+/usr/bin/gcc -fsyntax-only .//mccarthy1.c
+/usr/bin/cpp -D__FUNCTION__="<unknown>" -I /cygdrive/c/NewRVT/debug/../tools/scripts/../ansi-c-lib -x c .//mccarthy.c .//S0.c
+/usr/bin/cpp -D__FUNCTION__="<unknown>" -I /cygdrive/c/NewRVT/debug/../tools/scripts/../ansi-c-lib -x c .//mccarthy1.c .//S1.c
+float  rv_mult(float  x, float  y);float  rv_mult(float  x, float  y);float  rv_mult(float  x, float  y);float  rv_mult(float  x, float  y);rm: No match.
+Setting environment for using Microsoft Visual Studio 2010 x86 tools.
+-- Begin semantic check (semchk) ( .//semchks// f91 chk0_f91 chk1_f91 1 )
+running vcvars64
+Setting environment for using Microsoft Visual Studio 2010 x86 tools.
+running unitrv
+the value of mutual term check: 
+( f91, f91 ) : passed
+( main, main ) : passed
+Output graph written to rv_out.gv

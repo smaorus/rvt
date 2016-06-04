@@ -1,0 +1,13 @@
+/usr/bin/gcc -fsyntax-only .//mutual.c
+/usr/bin/gcc -fsyntax-only .//mutual1.c
+/usr/bin/cpp -D__FUNCTION__="<unknown>" -I /cygdrive/c/NewRVT/debug/../tools/scripts/../ansi-c-lib -x c .//mutual.c .//S0.c
+/usr/bin/cpp -D__FUNCTION__="<unknown>" -I /cygdrive/c/NewRVT/debug/../tools/scripts/../ansi-c-lib -x c .//mutual1.c .//S1.c
+float  rv_mult(float  x, float  y);float  rv_mult(float  x, float  y);float  rv_mult(float  x, float  y);float  rv_mult(float  x, float  y);rm: No match.
+dos2unix: converting file S0.opb to Unix format ...
+Setting environment for using Microsoft Visual Studio 2010 x86 tools.
+-- Begin semantic check (semchk) ( .//semchks// M chk0_M chk1_M 1 --mutual)
+running vcvars64
+Setting environment for using Microsoft Visual Studio 2010 x86 tools.
+running unitrv
+he value of mutual term check: 
+RVT fatal error: Failed to execute semantic check command

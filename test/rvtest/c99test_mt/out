@@ -1,0 +1,22 @@
+/usr/bin/gcc -fsyntax-only -std=c99 .//c99test.c
+/usr/bin/gcc -fsyntax-only -std=c99 .//c99test1.c
+/usr/bin/cpp -D__FUNCTION__="<unknown>" -I /cygdrive/c/NewRVT/debug/../tools/scripts/../ansi-c-lib -x c .//c99test.c .//S0.c
+/usr/bin/cpp -D__FUNCTION__="<unknown>" -I /cygdrive/c/NewRVT/debug/../tools/scripts/../ansi-c-lib -x c .//c99test1.c .//S1.c
+int  checkInput(int  n)
+{
+  return (n >= 0) ? (1) : (0);
+}
+int  checkInput(int  n)
+{
+  return (n >= 0) ? (1) : (0);
+}
+int  checkInput(int  n);int  checkInput(int  n);rm: No match.
+( Loop_f_for1, Loop_f_for1 ) : passed
+( checkInput, checkInput ) he value of mutual term check: 
+: passed
+Setting environment for using Microsoft Visual Studio 2010 x86 tools.
+-- Begin semantic check (semchk) ( .//semchks// f chk0_f chk1_f 1 --mutual)
+running vcvars64
+Setting environment for using Microsoft Visual Studio 2010 x86 tools.
+running unitrv
+RVT fatal error: Failed to execute semantic check command

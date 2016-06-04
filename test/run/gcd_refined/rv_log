@@ -1,0 +1,15 @@
+
+
+
+ Syntactically equivalent 
+------------------------------------------------------
+------------------------------------------------------
+
+
+
+ Semantic Checks Results 
+------------------------------------------------------
+Loop_gcd_while1 == Loop_gcd_while1
+gcd != gcd
+simplify == simplify
+main == main

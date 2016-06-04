@@ -1,0 +1,341 @@
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 1: //: is a directory
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 12: $'\r': command not found
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 15: $'\r': command not found
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 18: $'\r': command not found
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 20: $'\r': command not found
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 21: $'_STD_BEGIN\r': command not found
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 22: //: is a directory
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 23: class: No such file or directory
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 24: class: command not found
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 30: syntax error near unexpected token `>'
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 30: `		allocator<_Elem> > string_type;'
+/usr/bin/gcc -fsyntax-only .//simple_goto_elimination.c
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 1: //: is a directory
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 12: $'\r': command not found
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 15: $'\r': command not found
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 18: $'\r': command not found
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 20: $'\r': command not found
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 21: $'_STD_BEGIN\r': command not found
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 22: //: is a directory
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 23: class: No such file or directory
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 24: class: command not found
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 30: syntax error near unexpected token `>'
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 30: `		allocator<_Elem> > string_type;'
+/usr/bin/gcc -fsyntax-only .//simple_goto_elimination1.c
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 1: //: is a directory
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 12: $'\r': command not found
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 15: $'\r': command not found
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 18: $'\r': command not found
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 20: $'\r': command not found
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 21: $'_STD_BEGIN\r': command not found
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 22: //: is a directory
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 23: class: No such file or directory
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 24: class: command not found
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 30: syntax error near unexpected token `>'
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 30: `		allocator<_Elem> > string_type;'
+/usr/bin/cpp -D__FUNCTION__="<unknown>" -I /cygdrive/c/NewRVT/debug/../tools/scripts/../ansi-c-lib -x c .//simple_goto_elimination.c .//S0.c
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 1: //: is a directory
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 12: $'\r': command not found
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 15: $'\r': command not found
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 18: $'\r': command not found
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 20: $'\r': command not found
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 21: $'_STD_BEGIN\r': command not found
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 22: //: is a directory
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 23: class: No such file or directory
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 24: class: command not found
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 30: syntax error near unexpected token `>'
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 30: `		allocator<_Elem> > string_type;'
+/usr/bin/cpp -D__FUNCTION__="<unknown>" -I /cygdrive/c/NewRVT/debug/../tools/scripts/../ansi-c-lib -x c .//simple_goto_elimination1.c .//S1.c
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 1: //: is a directory
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 12: $'\r': command not found
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 15: $'\r': command not found
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 18: $'\r': command not found
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 20: $'\r': command not found
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 21: $'_STD_BEGIN\r': command not found
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 22: //: is a directory
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 23: class: No such file or directory
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 24: class: command not found
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 30: syntax error near unexpected token `>'
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 30: `		allocator<_Elem> > string_type;'
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 1: //: is a directory
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 12: $'\r': command not found
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 15: $'\r': command not found
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 18: $'\r': command not found
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 20: $'\r': command not found
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 21: $'_STD_BEGIN\r': command not found
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 22: //: is a directory
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 23: class: No such file or directory
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 24: class: command not found
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 30: syntax error near unexpected token `>'
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 30: `		allocator<_Elem> > string_type;'
+int  main()
+{
+  int  i = 0;
+
+label:
+  i++;
+  if (i == 9)
+  {
+    return 1;
+  }
+
+  if (i > 0)
+  {
+    goto label;
+  }
+
+  return 2;
+}
+
+====================================================
+Removing goto statements from:
+
+int  main()
+{
+  int  i = 0;
+
+label:
+  i++;
+  if (i == 9)
+  {
+    return 1;
+  }
+
+  if (i > 0)
+  {
+    goto label;
+  }
+
+  return 2;
+}
+
+====================================================
+
+====================================================
+Function after setting up label variables:
+
+int  main()
+{
+  _Bool  rv_goto_label = 0;
+  int  i = 0;
+
+label:
+  rv_goto_label = 0;
+  i++;
+  if (i == 9)
+  {
+    return 1;
+  }
+
+  if (i > 0)
+  {
+    goto label;
+  }
+
+  return 2;
+}
+
+====================================================
+
+====================================================
+Removing following goto statement:
+
+if (i > 0)
+{
+  goto label;
+}
+
+====================================================
+
+====================================================
+Goto Statement should be directly related to matching label:
+
+int  main()
+{
+  _Bool  rv_goto_label = 0;
+  int  i = 0;
+
+label:
+  rv_goto_label = 0;
+  i++;
+  if (i == 9)
+  {
+    return 1;
+  }
+
+  if (i > 0)
+  {
+    goto label;
+  }
+
+  return 2;
+}
+
+====================================================
+in enclose
+====================================================
+Removed goto statement with do while
+
+int  main()
+{
+  _Bool  rv_goto_label = 0;
+  int  i = 0;
+
+  do   {
+  label:
+    rv_goto_label = 0;
+    i++;
+    if (i == 9)
+    {
+      return 1;
+    }
+
+  }
+  while (i > 0);
+  return 2;
+}
+
+====================================================
+int  main()
+{
+  int  i = 0;
+
+label:
+  i++;
+  if (i == 9)
+  {
+    return 1;
+  }
+
+  if (i > 0)
+  {
+    goto label;
+  }
+
+  return 2;
+}
+
+====================================================
+Removing goto statements from:
+
+int  main()
+{
+  int  i = 0;
+
+label:
+  i++;
+  if (i == 9)
+  {
+    return 1;
+  }
+
+  if (i > 0)
+  {
+    goto label;
+  }
+
+  return 2;
+}
+
+====================================================
+
+====================================================
+Function after setting up label variables:
+
+int  main()
+{
+  _Bool  rv_goto_label = 0;
+  int  i = 0;
+
+label:
+  rv_goto_label = 0;
+  i++;
+  if (i == 9)
+  {
+    return 1;
+  }
+
+  if (i > 0)
+  {
+    goto label;
+  }
+
+  return 2;
+}
+
+====================================================
+
+====================================================
+Removing following goto statement:
+
+if (i > 0)
+{
+  goto label;
+}
+
+====================================================
+
+====================================================
+Goto Statement should be directly related to matching label:
+
+int  main()
+{
+  _Bool  rv_goto_label = 0;
+  int  i = 0;
+
+label:
+  rv_goto_label = 0;
+  i++;
+  if (i == 9)
+  {
+    return 1;
+  }
+
+  if (i > 0)
+  {
+    goto label;
+  }
+
+  return 2;
+}
+
+====================================================
+in enclose
+====================================================
+Removed goto statement with do while
+
+int  main()
+{
+  _Bool  rv_goto_label = 0;
+  int  i = 0;
+
+  do   {
+  label:
+    rv_goto_label = 0;
+    i++;
+    if (i == 9)
+    {
+      return 1;
+    }
+
+  }
+  while (i > 0);
+  return 2;
+}
+
+====================================================
+float  rv_mult(float  x, float  y);float  rv_mult(float  x, float  y);float  rv_mult(float  x, float  y);float  rv_mult(float  x, float  y);/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 1: //: is a directory
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 12: $'\r': command not found
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 15: $'\r': command not found
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 18: $'\r': command not found
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 20: $'\r': command not found
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 21: $'_STD_BEGIN\r': command not found
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 22: //: is a directory
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 23: class: No such file or directory
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 24: class: command not found
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 30: syntax error near unexpected token `>'
+/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/locale: line 30: `		allocator<_Elem> > string_type;'
+rm: No match.
+( Loop_main_do_while1, Loop_main_do_while1 ) : passed
+( main, main ) : passed
+Output graph written to rv_out.gv

@@ -713,21 +713,32 @@ EnumConstant::print(std::ostream& out) const
 Variable::Variable(Symbol *varname, const Location& l)
          : Expression( ET_Variable, l)
 {
-    name = varname;
-
-// benny fixed:
-    if( varname && varname->entry ) 
-    {
-      SymEntry *se = varname->entry;
-      if( se->IsComponentDecl() && se->uComponent && se->uComponent->form )
-	type = se->uComponent->form;
-      else if( se->IsTagDecl() && se->uStructDef )
-	type = se->uStructDef;
-      else if( se->uVarDecl && se->uVarDecl->form )
-	type = se->uVarDecl->form;
-    }
+    init(varname, l);
 }
 
+Variable::Variable(std::string varName, const Location& l, SymEntry* symEntry)
+		: Expression( ET_Variable, l){
+	Symbol* s = new Symbol();
+	s->name = varName;
+	s->entry = symEntry;
+	init(s, l);
+}
+
+void Variable::init(Symbol *varname, const Location& l){
+	name = varname;
+
+	// benny fixed:
+	if( varname && varname->entry ) 
+	{
+		SymEntry *se = varname->entry;
+		if( se->IsComponentDecl() && se->uComponent && se->uComponent->form )
+			type = se->uComponent->form;
+		else if( se->IsTagDecl() && se->uStructDef )
+			type = se->uStructDef;
+		else if( se->uVarDecl && se->uVarDecl->form )
+			type = se->uVarDecl->form;
+	}
+}
 // o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o
 Variable::~Variable()
 {
@@ -780,6 +791,13 @@ FunctionCall::~FunctionCall()
     for (j=args.begin(); j != args.end(); j++)
         delete *j;
 }
+// o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o
+std::vector<Expression*>* FunctionCall::getSubExpressions() const{
+	std::vector<Expression*>* subExprs = new std::vector<Expression*>();
+	subExprs->push_back(function);
+	return subExprs;
+}
+
 
 // o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o
 void
@@ -962,6 +980,12 @@ UnaryExpr::print(std::ostream& out) const
 }
 
 // o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o
+std::vector<Expression*>* UnaryExpr::getSubExpressions() const{
+	std::vector<Expression*>* subExprs = new std::vector<Expression*>();
+	subExprs->push_back(_operand);
+	return subExprs;
+}
+// o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o
 int
 UnaryExpr::precedence() const
 {
@@ -1012,6 +1036,24 @@ BinaryExpr::~BinaryExpr()
 {
     delete _leftExpr;
     delete _rightExpr;
+}
+
+// o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o
+void BinaryExpr::replaceSubExpression(Expression* existingExpression, Expression* replacement){
+	if (existingExpression == _leftExpr){
+		_leftExpr = replacement;
+	}
+	if (existingExpression == _rightExpr){
+		_rightExpr = replacement;
+	}
+}
+
+// o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o
+std::vector<Expression*>* BinaryExpr::getSubExpressions() const{
+	std::vector<Expression*>* subExprs = new std::vector<Expression*>();
+	subExprs->push_back(_leftExpr);
+	subExprs->push_back(_rightExpr);
+	return subExprs;
 }
 
 // o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o
@@ -1142,6 +1184,28 @@ TrinaryExpr::~TrinaryExpr()
     delete _condExpr;
     delete _trueExpr;
     delete _falseExpr;
+}
+
+// o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o
+void TrinaryExpr::replaceSubExpression(Expression* existingExpression, Expression* replacement){
+	if (existingExpression == _condExpr){
+		_condExpr = replacement;
+	}
+	if (existingExpression == _trueExpr){
+		_trueExpr = replacement;
+	}
+	if (existingExpression == _falseExpr){
+		_falseExpr = replacement;
+	}
+}
+
+// o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o
+std::vector<Expression*>* TrinaryExpr::getSubExpressions() const{
+	std::vector<Expression*>* subExprs = new std::vector<Expression*>();
+	subExprs->push_back(_condExpr);
+	subExprs->push_back(_trueExpr);
+	subExprs->push_back(_falseExpr);
+	return subExprs;
 }
 
 // o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o
@@ -1329,6 +1393,13 @@ CastExpr::~CastExpr()
 }
 
 // o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o
+std::vector<Expression*>* CastExpr::getSubExpressions() const{
+	std::vector<Expression*>* subExprs = new std::vector<Expression*>();
+	subExprs->push_back(expr);
+	return subExprs;
+}
+
+// o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o
 Expression*
 CastExpr::dup0() const
 {
@@ -1394,6 +1465,13 @@ SizeofExpr::~SizeofExpr()
 }
 
 // o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o
+std::vector<Expression*>* SizeofExpr::getSubExpressions() const{
+	std::vector<Expression*>* subExprs = new std::vector<Expression*>();
+	subExprs->push_back(expr);
+	return subExprs;
+}
+
+// o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o
 Expression*
 SizeofExpr::dup0() const
 {
@@ -1452,6 +1530,24 @@ IndexExpr::~IndexExpr()
 {
     delete array;
     delete _subscript;
+}
+
+// o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o
+void IndexExpr::replaceSubExpression(Expression* existingExpression, Expression* replacement){
+	if (existingExpression == _subscript){
+		_subscript = replacement;
+	}
+	if (existingExpression == array){
+		array = replacement;
+	}
+}
+
+// o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o
+std::vector<Expression*>* IndexExpr::getSubExpressions() const{
+	std::vector<Expression*>* subExprs = new std::vector<Expression*>();
+	subExprs->push_back(array);
+	subExprs->push_back(_subscript);
+	return subExprs;
 }
 
 // o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o

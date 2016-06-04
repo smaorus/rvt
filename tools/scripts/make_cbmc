@@ -3,6 +3,7 @@
 # 1. Detect of OS
 
 make_cbmc_bbb=`set | grep -w DevEnvDir`
+echo $make_cbmc_bbb
 if [ -n "$make_cbmc_bbb" ]
 then
   make_cbmc_os=windows
@@ -44,8 +45,8 @@ make_cbmc_builddir=$make_cbmc_builddir/cbmc_trunk_$make_cbmc_os
 # rm -rf $make_cbmc_builddir/$make_cbmc_builddir/* $make_cbmc_builddir
 if [ ! -d $make_cbmc_builddir ]
 then
-  cp -r cbmc_trunk/cbmc_trunk_$make_cbmc_srcdirname $make_cbmc_builddir
-  cp -r cbmc_trunk/common/zlib-1.2.5 $make_cbmc_builddir
+  cp -r ../../cbmc_trunk/cbmc_trunk_$make_cbmc_srcdirname $make_cbmc_builddir
+  cp -r ../../cbmc_trunk/common/zlib-1.2.5 $make_cbmc_builddir
 fi
 
 # 3. Build

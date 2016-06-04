@@ -1,0 +1,45 @@
+/usr/bin/gcc -fsyntax-only ./alias.c
+/usr/bin/gcc -fsyntax-only ./alias1.c
+/usr/bin/cpp -D__FUNCTION__="<unknown>" -I /cygdrive/c/NewRVT/Debug/../tools/scripts/../ansi-c-lib -x c ./alias.c ./S0.c
+/usr/bin/cpp -D__FUNCTION__="<unknown>" -I /cygdrive/c/NewRVT/Debug/../tools/scripts/../ansi-c-lib -x c ./alias1.c ./S1.c
+Warning: unable to find function class to match declaration of function pointer:
+  int  (*rvt_FuncPtrSubst_int__const_void_ptr_const_void_ptr)(void  *rv_arg_0, void  *rv_arg_1)
+Warning: unable to find function class to match declaration of function pointer:
+  rvt_FuncPtrSubst_int__const_void_ptr_const_void_ptr  fncompare
+Warning: unable to find function class to match declaration of function pointer:
+  int  (*rvt_FuncPtrSubst_int__const_void_ptr_const_void_ptr)(void  *rv_arg_2, void  *rv_arg_3)
+Warning: unable to find function class to match declaration of function pointer:
+  rvt_FuncPtrSubst_int__const_void_ptr_const_void_ptr  fncompare
+rm: No match.
+Warning: argument "n" of function: F (side 0) has argtype: 3 
+  whereas its counterpart " n " on side 1 has argtype: 7 (1=in,2=out,4=deref,8=array).
+Warning: allow UBS (-dk flag) for better check of functions with pointer argument(s).
+  in: F (side 0) 
+running goto-cc F.rv.c
+running goto-instrument --div-by-zero-check --pointer-check --bounds-check --assert-to-assume a.out F.exe
+Reading GOTO program from a.out
+Function Pointer Removal
+Partial Inlining
+Pointer Analysis
+Adding Pointer Checks
+Writing GOTO program to F.exe
+running cbmc --unwind 0 F.exe
+path before cbmc = /cygdrive/c/NewRVT/Debug/../tools/scripts/../external/cygwin /usr/local/bin /usr/bin /cygdrive/c/jruby-1.6.3/bin /cygdrive/c/Program Files/Common Files/Microsoft Shared/Windows Live /cygdrive/c/Program Files (x86)/Common Files/Microsoft Shared/Windows Live /cygdrive/c/Ruby186/bin /cygdrive/c/windows/system32 /cygdrive/c/windows /cygdrive/c/windows/System32/Wbem /cygdrive/c/windows/System32/WindowsPowerShell/v1.0 /cygdrive/c/Program Files/Hewlett-Packard/Drive Encryption /cygdrive/c/Program Files (x86)/Bitvise Tunnelier /cygdrive/c/Program Files (x86)/Microsoft SQL Server/100/Tools/Binn /cygdrive/c/Program Files/Microsoft SQL Server/100/Tools/Binn /cygdrive/c/Program Files/Microsoft SQL Server/100/DTS/Binn /cygdrive/c/Program Files (x86)/Microsoft ASP.NET/ASP.NET Web Pages/v1.0 /cygdrive/c/Program Files (x86)/Windows Live/Shared C /jruby-1.6.3/bin /cygdrive/c/Program Files/TortoiseSVN/bin /cygdrive/c/Program Files/doxygen/bin /cygdrive/c/Program Files (x86)/Windows Kits/8.0/Windows Performance Toolkit /cygdrive/c/Program Files/Microsoft SQL Server/110/Tools/Binn /cygdrive/c/jruby-1.6.3/bin C /Windows/System32/java.exe /usr/lib/lapack
+/cygdrive/c/NewRVT/Debug/../tools/scripts/../external/cygwin/cbmc
+-- End semantic check (semchk).
+( F, F ) : passed
+/usr/bin/cpp -D__FUNCTION__="<unknown>" -I /cygdrive/c/NewRVT/Debug/../tools/scripts/../ansi-c-lib -x c ./semchks/main.rv.c ./semchks/main.rv.cpp.c
+running goto-cc main.rv.c
+running goto-instrument --div-by-zero-check --pointer-check --bounds-check --assert-to-assume a.out main.exe
+Reading GOTO program from a.out
+Function Pointer Removal
+Partial Inlining
+Pointer Analysis
+Adding Pointer Checks
+Writing GOTO program to main.exe
+running cbmc --unwind 2 main.exe
+path before cbmc = /cygdrive/c/NewRVT/Debug/../tools/scripts/../external/cygwin /usr/local/bin /usr/bin /cygdrive/c/jruby-1.6.3/bin /cygdrive/c/Program Files/Common Files/Microsoft Shared/Windows Live /cygdrive/c/Program Files (x86)/Common Files/Microsoft Shared/Windows Live /cygdrive/c/Ruby186/bin /cygdrive/c/windows/system32 /cygdrive/c/windows /cygdrive/c/windows/System32/Wbem /cygdrive/c/windows/System32/WindowsPowerShell/v1.0 /cygdrive/c/Program Files/Hewlett-Packard/Drive Encryption /cygdrive/c/Program Files (x86)/Bitvise Tunnelier /cygdrive/c/Program Files (x86)/Microsoft SQL Server/100/Tools/Binn /cygdrive/c/Program Files/Microsoft SQL Server/100/Tools/Binn /cygdrive/c/Program Files/Microsoft SQL Server/100/DTS/Binn /cygdrive/c/Program Files (x86)/Microsoft ASP.NET/ASP.NET Web Pages/v1.0 /cygdrive/c/Program Files (x86)/Windows Live/Shared C /jruby-1.6.3/bin /cygdrive/c/Program Files/TortoiseSVN/bin /cygdrive/c/Program Files/doxygen/bin /cygdrive/c/Program Files (x86)/Windows Kits/8.0/Windows Performance Toolkit /cygdrive/c/Program Files/Microsoft SQL Server/110/Tools/Binn /cygdrive/c/jruby-1.6.3/bin C /Windows/System32/java.exe /usr/lib/lapack
+/cygdrive/c/NewRVT/Debug/../tools/scripts/../external/cygwin/cbmc
+-- End semantic check (semchk).
+( main, main ) : passed
+Output graph written to rv_out.gv

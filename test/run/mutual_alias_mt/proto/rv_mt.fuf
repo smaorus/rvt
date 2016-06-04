@@ -1,0 +1,9 @@
+`P0            P1             Result
+`------------- -------------- ------
+F              F              mutually-terminating
+myempty        myempty        syntactically-equal mutually-terminating
+Loop_main_for1 Loop_main_for1 syntactically-equal mutually-terminating
+G              G              mutually-terminating
+Loop_main_for2 Loop_main_for2 
+main           main           syntactically-equal
+M              M              mutually-terminating

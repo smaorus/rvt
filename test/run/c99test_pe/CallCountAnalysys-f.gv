@@ -1,0 +1,32 @@
+digraph G{
+0 [ label = "DN_Start" , fontcolor = "grey" , shape = "pentagon" , color = "grey" ];
+2 [ label = "rvretval:=0" , fontcolor = "grey" , shape = "pentagon" , color = "grey" ];
+3 [ label = "n" ];
+4 [ label = "$0:=checkInput(n)" , fontcolor = "grey" , shape = "pentagon" , color = "grey" ];
+5 [ label = "$0" ];
+6 [ label = "return 0" , fontcolor = "grey" , shape = "pentagon" , color = "grey" ];
+7 [ label = "sum:=0" , fontcolor = "grey" , shape = "pentagon" , color = "grey" ];
+8 [ label = "i:=1" , fontcolor = "grey" , shape = "pentagon" , color = "grey" ];
+9 [ label = "n" ];
+10 [ label = "&i" ];
+11 [ label = "&sum" ];
+12 [ label = "&rvretval" ];
+13 [ label = "Loop_f_for1(n,&i,&sum,&rvretval)" ];
+14 [ label = "return sum" , fontcolor = "grey" , shape = "pentagon" , color = "grey" ];
+15 [ label = "DN_Finish" , fontcolor = "grey" , shape = "pentagon" , color = "grey" ];
+0->2;
+2->3;
+3->4;
+4->5;
+5->6;
+5->7;
+7->8;
+8->9;
+9->10;
+10->11;
+11->12;
+12->13;
+13->14;
+6->15;
+14->15;
+}

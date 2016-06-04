@@ -16,11 +16,11 @@ Date: January 2010
 #include <goto-programs/goto_functions.h>
 
 void add_uninitialized_locals_assertions(
-  class symbol_tablet &symbol_table,
+  class contextt &context,
   goto_functionst &goto_functions);
 
 void show_uninitialized(
-  const class symbol_tablet &symbol_table,
+  const class contextt &context,
   const goto_functionst &goto_functions,
   std::ostream &out);
 

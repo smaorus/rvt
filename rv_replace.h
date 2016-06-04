@@ -5,6 +5,7 @@
 #include <rv_walk.h>
 #include "rv_side.h"
 #include "rv_etc.h"
+#include "rv_unroller.h"
 
 class RVFuncPair;
 class ScopeTbl;
@@ -24,7 +25,11 @@ struct RVDecisionParams;
 class RVRenameTree : public RVWalk, public RVIDischargee
 {
   protected:
-    Project* parsetree;
+	rv_unroller* unroller;
+	//rv_unroller* unroller0;
+	//rv_unroller* unroller1;
+	bool is_unrolling_activated;
+
     const RVSide side;
 
     RVDirectives* directs;
@@ -46,6 +51,7 @@ class RVRenameTree : public RVWalk, public RVIDischargee
     
     // for special care of recursion, and loops when they are not "the pair"
     // that is compared
+	bool m_unitrv; // flag means - are we using unitrv? 
 
     std::string  current_func_name;
     bool m_bSymbolForTypeName;
@@ -66,11 +72,14 @@ class RVRenameTree : public RVWalk, public RVIDischargee
     void changeSymbolName(Symbol* sym, const std::string& newName) const;
     static void prependPrefix(std::string& name, const std::string prefix);
 
+	std::vector<std::string>* globally_declared_variables;
   public:
     static BaseType* channel_type; 
+	Project* parsetree;
 
-    RVRenameTree(Project* _tree, const RVSide& _side);
-    virtual ~RVRenameTree();
+    //RVRenameTree(Project* _tree, const RVSide& _side);
+	RVRenameTree(Project* _tree, const RVSide& _side, rv_unroller* unroller);
+	virtual ~RVRenameTree();
 
     void delete_parsetree() { delete parsetree; parsetree = NULL; }
 
@@ -138,6 +147,22 @@ class RVRenameTree : public RVWalk, public RVIDischargee
 
     // Interface RVIDischargee:
     virtual void discharge(RVDischarger&);
+	Project* get_parse_tree();
+	bool global_definition( Statement* st ) const;
+	bool print_mutual_global_declarations( RVTemp& temp, std::vector<std::string>* uf_names, bool mutual_term_check) ;
+	void set_unitrv( bool unitrv );
+	void print_first_call_flag_variable( RVTemp& temp, std::vector<std::string>* uf_names ) const;
+	bool global_variable_definition( Statement* st ) const;
+	void remember_global_variable_name( std::string st ) ;
+
+	bool is_variable_declared_globally_for_both_sides(std::string var_name){
+		return std::find(globally_declared_variables->begin(), globally_declared_variables->end(), var_name) != globally_declared_variables->end();		
+	}
+
+	void add_variable_declared_globally_for_both_sides(std::string var_name){
+		globally_declared_variables->push_back(var_name);
+	}
+
 };
 
 

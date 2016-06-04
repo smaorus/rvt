@@ -1,0 +1,121 @@
+Reading GOTO program from file
+Adding CPROVER library
+Function Pointer Removal
+Partial Inlining
+Generic Property Instrumentation
+Starting Bounded Model Checking
+size of program expression: 51 assignments
+simple slicing removed 1 assignments
+Generated 2 VCC(s), 2 remaining after simplification
+Passing problem to propositional reduction
+Running propositional reduction
+Solving with MiniSAT2 with simplifier
+926 variables, 2401 clauses
+SAT checker: negated claim is SATISFIABLE, i.e., does not hold
+Runtime decision procedure: 0.027s
+Building error trace
+
+Counterexample:
+
+State 2 file f.rv.c line 81 thread 0
+----------------------------------------------------
+  rvs1_g=0 (00000000000000000000000000000000)
+
+State 3 file <built-in> line 23 thread 0
+----------------------------------------------------
+  __CPROVER_memory=(assignment removed)
+
+State 4 file <built-in> line 25 thread 0
+----------------------------------------------------
+  __CPROVER_deallocated=NULL (00000000000000000000000000000000)
+
+State 5 file <built-in> line 26 thread 0
+----------------------------------------------------
+  __CPROVER_malloc_object=NULL (00000000000000000000000000000000)
+
+State 6 file <built-in> line 27 thread 0
+----------------------------------------------------
+  __CPROVER_malloc_size=0 (00000000000000000000000000000000)
+
+State 7 file <built-in> line 36 thread 0
+----------------------------------------------------
+  __CPROVER_rounding_mode=0 (00000000000000000000000000000000)
+
+State 8 file f.rv.c line 39 thread 0
+----------------------------------------------------
+  rvs0_g=0 (00000000000000000000000000000000)
+
+State 10 file f.rv.c line 153 function main thread 0
+----------------------------------------------------
+  main::1::equal=TRUE (1)
+
+State 11 file f.rv.c line 165 function main thread 0
+----------------------------------------------------
+  main::1::rvs0_x=268435458 (00010000000000000000000000000010)
+
+State 12 file f.rv.c line 169 function main thread 0
+----------------------------------------------------
+  c::main::$tmp::return_value_nondet_long$1=0 (00000000000000000000000000000000)
+
+State 13 file f.rv.c line 169 function main thread 0
+----------------------------------------------------
+  rvs0_g=0 (00000000000000000000000000000000)
+
+State 14 file f.rv.c line 172 function main thread 0
+----------------------------------------------------
+  rvs1_g=0 (00000000000000000000000000000000)
+
+State 16 file f.rv.c line 179 function main thread 0
+----------------------------------------------------
+  chk0_f::x=268435458 (00010000000000000000000000000010)
+
+State 18 file f.rv.c line 96 function chk0_f thread 0
+----------------------------------------------------
+  rvs0_g=1 (00000000000000000000000000000001)
+
+State 20 file f.rv.c line 97 function chk0_f thread 0
+----------------------------------------------------
+  rvs0_f::x=268435457 (00010000000000000000000000000001)
+
+State 21 file f.rv.c line 127 function rvs0_f thread 0
+----------------------------------------------------
+  rvs0_g=0 (00000000000000000000000000000000)
+
+State 22 file f.rv.c line 128 function rvs0_f thread 0
+----------------------------------------------------
+  rvs0_f::1::retval=8 (00000000000000000000000000001000)
+
+State 25 file f.rv.c line 98 function chk0_f thread 0
+----------------------------------------------------
+  main::1::retval0=0 (00000000000000000000000000000000)
+
+State 27 file f.rv.c line 180 function main thread 0
+----------------------------------------------------
+  chk1_f::x=268435458 (00010000000000000000000000000010)
+
+State 29 file f.rv.c line 108 function chk1_f thread 0
+----------------------------------------------------
+  rvs1_g=2 (00000000000000000000000000000010)
+
+State 31 file f.rv.c line 109 function chk1_f thread 0
+----------------------------------------------------
+  rvs1_f::x=268435457 (00010000000000000000000000000001)
+
+State 32 file f.rv.c line 143 function rvs1_f thread 0
+----------------------------------------------------
+  rvs1_g=1048576 (00000000000100000000000000000000)
+
+State 33 file f.rv.c line 144 function rvs1_f thread 0
+----------------------------------------------------
+  rvs1_f::1::retval=0 (00000000000000000000000000000000)
+
+State 36 file f.rv.c line 110 function chk1_f thread 0
+----------------------------------------------------
+  main::1::retval1=0 (00000000000000000000000000000000)
+
+Violated property:
+  file f.rv.c line 187 function main
+  assertion
+  rvs0_g == rvs1_g
+
+VERIFICATION FAILED

@@ -4,7 +4,8 @@
 #include <sstream>
 #include <string>
 #include <map>
-
+#include <vector>
+#include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -51,6 +52,19 @@ private:
 
 RVCommands rv_commands;
 
+const char* RVCommands::unitrv_res_code_names[4] = {
+	"PROGRAMS ARE EQUIVALENT",
+	"PROGRAMS ARE NOT EQUIVALENT",
+	"NOT FINISHED",
+	"UNCOMPILABLE"
+};
+
+const char* RVCommands::unitrv_mutual_termination_res_code_names[4] = {
+	"PROGRAMS ARE MUTUALLY TERMINATING",
+	"PROGRAMS ARE NOT MUTUALLY TERMINATING",
+	"NOT FINISHED",
+	"UNCOMPILABLE"
+};
 
 const char* RVCommands::res_code_names[4] = {
   "VERIFICATION SUCCESSFUL",
@@ -67,6 +81,21 @@ RVCommands::RVCommands(void)
 {
 }
 
+vector<string>* RVCommands::runFrama(){
+
+	runScript(FRAMA_SCRIPT_NAME);
+	exec(FRAMA_PARSER_PATH);
+	std::ifstream infile(FRAMA_PARSED_FILE);
+	std::string line;
+	vector<string>* result = new vector<string>();
+	while (std::getline(infile, line))
+	{
+		result->push_back(line);
+	}
+
+
+	return result;
+}
 
 int RVCommands::runScript(const std::string& script,
 	  				      const std::string& arg1,
@@ -102,16 +131,28 @@ int RVCommands::runScript(const std::string& script,
 	char rvtPlatform[RV_MAX_IDENT] = "RVT_PLATFORM=";
 
 #ifdef _MSC_VER
-    cmd = "tcsh -c \"" + cmd + " \"";
+	if (script == "semchk_unitrv"){
+		static const RVRelativePath ScriptsLocation(3, "..", "tools", "scripts");
+		std::string cmdtcsh(ScriptsLocation.combineRelativePath("tcsh.bat"));
+		//cmd = cmdtcsh + " -c \"" + cmd + " \"";
+		cmd = "C:/NewRVT/tools/scripts/tcsh.bat -c \"" + cmd + " \"";
+		//cmd = "tcsh -c \"" + cmd + " \"";
+	}
+	else{
+		cmd = "tcsh -c \"" + cmd + " \"";
+	}
+	
     strcat(rvtPlatform, "windows");
 #elif defined LINUX || defined __LINUX__ || defined __linux__
     strcat(rvtPlatform, "linux");
 #else
     strcat(rvtPlatform, "cygwin");
 #endif
-
+	
     putenv(rvtPlatform);
+	//exec()
 	return exec(cmd);
+
 }
 
 
@@ -137,6 +178,21 @@ void RVCommands::mkdir(const std::string& dir)
 	  fatal_error("Failed mkdir command ", false);
 }
 
+
+bool RVCommands::runSummarizer(const std::string& funcName, const std::string& filePath, int side){
+	
+	std::stringstream ss;
+	ss << "C:/NewRVT/tools/scripts/summarize.bat " << filePath << " " << funcName << " " << side;
+	std::string cmd = ss.str();
+	
+	int result = exec(cmd);
+	if (result != 0) fatal_error("Failed summarizer command ", false);
+
+
+
+	return 0;
+	
+}
 
 bool RVCommands::cpp(const std::string& in_file_name,
 		             const std::string& out_file_name)
@@ -224,23 +280,28 @@ RVCommands::ResCode RVCommands::get_result(void)
 }
 
 
-bool RVCommands::run_sem_check(const std::string& dir,
-		                   	   const std::string& fname,
-							   int K /*=0*/,
-							   int timeout /*=0*/,
-							   bool abortIfUnknownCbmcErr /*=false*/,
-							   bool c99)
+bool RVCommands::run_sem_check( const std::string& dir, 
+								const std::string& fname, 
+								int K /*= 0*/, int timeout /*= 0*/, 
+								bool abortIfUnknownCbmcErr /*= true*/, 
+								bool c99 /*= false*/, 
+								bool is_unitrv /*= false*/, bool is_mutual_check /*= false*/ )
 {
   result = UNKNOWN;  
   std::ostringstream com_strm;
 
   com_strm << K;  
-
-  std::string command("semchk");
-
-  int ret = runScript(command, unixStylePath(dir), fname,
-		                       com_strm.str(), "0",
-		                       DBG? "1" : "0", c99GccOption(c99));
+  int ret=-1;
+  if (is_unitrv){
+	  std::string command("semchk_unitrv"); 
+	  ret = runScript(command, unixStylePath(dir), fname, RV_SEMCHK0_PREFIX + fname, RV_SEMCHK1_PREFIX + fname, "1", is_mutual_check? "--mutual --unwind 6" : NO_ARG);
+  }
+  else{
+	  std::string command("semchk");
+	  ret = runScript(command, unixStylePath(dir), fname,
+		  com_strm.str(), "0",
+		  DBG? "1" : "0", c99GccOption(c99));
+  }
 
   if( ret != 0 )
 	  fatal_error("Failed to execute semantic check command", false);
@@ -255,9 +316,7 @@ bool RVCommands::run_sem_check(const std::string& dir,
 
   if(DBG) rv_errstrm << "Semchk result: \"" << res <<"\" \n";
 
-  for(int i = 0; i<=UNCOMPILABLE; ++i)
-	if( strncmp(res, res_code_names[i], strlen(res_code_names[i])) == 0 )
-	  result = (ResCode)i;
+  result = get_result_code(is_unitrv, is_mutual_check, res);
 
   switch (result) {
 	  case UNKNOWN      : rv_errstrm << "*** RVT Error:  Unexpected result of semantic check command. Assuming not equal. \n";
@@ -397,5 +456,29 @@ string RVCommands::combineFilePath(const string &dir, const string &filename, co
 {
 	string combinedFilePath = isAbsolutePath(filename) ? filename : dir + filename;
 	return ext == NULL ? combinedFilePath : combinedFilePath.append(ext);
+}
+
+RVCommands::ResCode RVCommands::get_result_code( bool is_unitrv, bool is_mutual_check, char * res )
+{
+	ResCode r;
+	const char** matching_code_name_list;
+	if (is_unitrv){
+		if (is_mutual_check){
+			matching_code_name_list = unitrv_mutual_termination_res_code_names;
+		}
+		else{
+			matching_code_name_list = unitrv_res_code_names;
+		}
+	}
+	else{
+		matching_code_name_list = res_code_names;
+	}
+	
+	for(int i = 0; i<=UNCOMPILABLE; ++i)
+		if( strncmp(res, matching_code_name_list[i], strlen(matching_code_name_list[i])) == 0 )
+			r = (ResCode)i;
+
+	return r;
+
 }
 

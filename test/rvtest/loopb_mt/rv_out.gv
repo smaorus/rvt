@@ -1,0 +1,28 @@
+digraph G{
+subgraph G0{ 
+side0[label = P0]
+node[color = black];
+Loop_g_while10[label = "Loop_g_while1",fontcolor = "black"];
+main0[label = "main",fontcolor = "grey"];
+g0[label = "g",fontcolor = "grey"];
+Loop_g_while10[shape = "octagon",  style = "filled", fillcolor = "white"]
+main0[shape = "octagon", color = "blue", style = "filled", fillcolor = "white"]
+g0[shape = "octagon", color = "blue", style = "filled", fillcolor = "white"]
+g0->Loop_g_while10[style = dotted]
+Loop_g_while10->Loop_g_while10[style = dotted]
+main0->g0
+}
+subgraph G1{ 
+side1[label = P1]
+node[color = black];
+Loop_g_while11[label = "Loop_g_while1",fontcolor = "black"];
+main1[label = "main",fontcolor = "grey"];
+g1[label = "g",fontcolor = "grey"];
+Loop_g_while11[shape = "octagon",  style = "filled", fillcolor = "white"]
+main1[shape = "octagon", color = "blue", style = "filled", fillcolor = "white"]
+g1[shape = "octagon", color = "blue", style = "filled", fillcolor = "white"]
+g1->Loop_g_while11[style = dotted]
+Loop_g_while11->Loop_g_while11[style = dotted]
+main1->g1
+}
+}

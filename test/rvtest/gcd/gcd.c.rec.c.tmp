@@ -1,0 +1,2 @@
+/* type-specific outlined function created by prependOutlineFunction() */
+short rv_mod_short__short_(short x, short y);

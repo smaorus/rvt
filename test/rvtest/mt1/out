@@ -1,0 +1,2882 @@
+Executes: cmd /c sh -c "cygpath -u 'C:\\\NewRVT\\\debug\\\' 2> /dev/null " > C:\Users\Maor\AppData\Local\Temp\rvtmp41 
+Executes: cmd /c sh -c "cygpath -u '.\\\try_side0.c' 2> /dev/null " > C:\Users\Maor\AppData\Local\Temp\rvtmp18467 
+Executes: tcsh -c "/cygdrive/c/NewRVT/debug/../tools/scripts/rv_gcc .//try_side0.c   " 
+/usr/bin/gcc -fsyntax-only .//try_side0.c
+Executes: cmd /c sh -c "cygpath -u '.\\\try1_side1.c' 2> /dev/null " > C:\Users\Maor\AppData\Local\Temp\rvtmp6334 
+Executes: tcsh -c "/cygdrive/c/NewRVT/debug/../tools/scripts/rv_gcc .//try1_side1.c   " 
+/usr/bin/gcc -fsyntax-only .//try1_side1.c
+c:\newrvt\rv_main.cpp(RVMain::main):622 P1 - after syntax test + testing CTOOL
+Executes: cmd /c sh -c "cygpath -u '.\\\S0.c' 2> /dev/null " > C:\Users\Maor\AppData\Local\Temp\rvtmp26500 
+Executes: tcsh -c "/cygdrive/c/NewRVT/debug/../tools/scripts/rv_cpp .//try_side0.c .//S0.c " 
+/usr/bin/cpp -D__FUNCTION__="<unknown>" -I /cygdrive/c/NewRVT/debug/../tools/scripts/../ansi-c-lib -x c .//try_side0.c .//S0.c
+RVCommands::cpp: ret = 0 
+Executes: cmd /c sh -c "cygpath -u '.\\\S1.c' 2> /dev/null " > C:\Users\Maor\AppData\Local\Temp\rvtmp19169 
+Executes: tcsh -c "/cygdrive/c/NewRVT/debug/../tools/scripts/rv_cpp .//try1_side1.c .//S1.c " 
+/usr/bin/cpp -D__FUNCTION__="<unknown>" -I /cygdrive/c/NewRVT/debug/../tools/scripts/../ansi-c-lib -x c .//try1_side1.c .//S1.c
+RVCommands::cpp: ret = 0 
+Executes: tcsh -c "/cygdrive/c/NewRVT/debug/../tools/scripts/rv_outline rv_outline.h .//S0.c " 
+RVCommands::outline_header: ret = 0 
+Executes: tcsh -c "/cygdrive/c/NewRVT/debug/../tools/scripts/rv_outline rv_outline.h .//S1.c " 
+RVCommands::outline_header: ret = 0 
+... RVParse::do_parse() - start .\S0.c
+... RVParse::do_parse() - finished .\S0.c (succesfully)
+... RVParse::do_parse() - start .\S1.c
+... RVParse::do_parse() - finished .\S1.c (succesfully)
+c:\newrvt\rv_main.cpp(RVMain::main):640 P2.5 - after parsing the sides
+Start RVTypeProp::process_all() 
+float (float  x, float  y)
+float 
+float 
+float 
+float (float  x, float  y)
+float 
+float 
+float 
+int (int  x, int  y)
+int 
+int 
+int 
+int 
+RVWALK::processing sum
+int (int  n)
+int 
+int 
+RVWalk::go_block() starts block at "try.c", 5, 15
+n <= 1
+n
+1
+RVWalk::go_block() starts block at "try.c", 7, 14
+n
+n + sum(n - 1)
+n
+sum(n - 1)
+sum
+n - 1
+n
+1
+RVWALK::processing main
+int ()
+int 
+RVWalk::go_block() starts block at "try.c", 11, 11
+sum(n)
+sum
+n
+Finish RVTypeProp::process_all() 
+Function Name: rv_mult:
+Definition: float  rv_mult(float  x, float  y)
+Position: "External Function", 0, 0
+
+-------------
+
+Function Name: rv_div:
+Definition: float  rv_div(float  x, float  y)
+Position: "External Function", 0, 0
+
+-------------
+
+Function Name: rv_mod:
+Definition: int  rv_mod(int  x, int  y)
+Position: "External Function", 0, 0
+
+-------------
+
+Variable Name: n:
+Definition: int  n
+
+-------------
+
+int 
+RVWALK::processing sum
+Function Name: sum:
+Definition: int  sum(int  n)
+Position: "try.c", 5, 15
+
+-------------
+
+RVWalk::go_block() starts block at "try.c", 5, 15
+n <= 1
+n
+Parameter Name: n:
+Definition: int  n
+
+-------------
+
+int 
+1
+1
+RVWalk::go_block() starts block at "try.c", 7, 14
+n
+Parameter Name: n:
+Definition: int  n
+
+-------------
+
+int 
+n + sum(n - 1)
+n
+Parameter Name: n:
+Definition: int  n
+
+-------------
+
+int 
+sum(n - 1)
+sum
+Function Name: sum:
+Definition: int  sum(int  n)
+Position: "try.c", 5, 15
+
+-------------
+
+n - 1
+n
+Parameter Name: n:
+Definition: int  n
+
+-------------
+
+int 
+1
+1
+RVWALK::processing main
+Function Name: main:
+Definition: int  main()
+Position: "try.c", 11, 11
+
+-------------
+
+RVWalk::go_block() starts block at "try.c", 11, 11
+sum(n)
+sum
+Function Name: sum:
+Definition: int  sum(int  n)
+Position: "try.c", 5, 15
+
+-------------
+
+n
+Variable Name: n:
+Definition: int  n
+
+-------------
+
+int 
+Start RVTypeProp::process_all() 
+float (float  x, float  y)
+float 
+float 
+float 
+float (float  x, float  y)
+float 
+float 
+float 
+int (int  x, int  y)
+int 
+int 
+int 
+int 
+RVWALK::processing ident
+int (int  n)
+int 
+int 
+RVWalk::go_block() starts block at "try.c", 5, 17
+n
+RVWALK::processing sum
+int (int  n)
+int 
+int 
+RVWalk::go_block() starts block at "try.c", 9, 15
+n = ident(n + 1) - 1
+n
+ident(n + 1) - 1
+ident(n + 1)
+ident
+n + 1
+n
+1
+1
+n <= 1
+n
+1
+RVWalk::go_block() starts block at "try.c", 12, 14
+n
+n + sum(n - 1)
+n
+sum(n - 1)
+sum
+n - 1
+n
+1
+RVWALK::processing main
+int ()
+int 
+RVWalk::go_block() starts block at "try.c", 16, 11
+sum(n)
+sum
+n
+Finish RVTypeProp::process_all() 
+Function Name: rv_mult:
+Definition: float  rv_mult(float  x, float  y)
+Position: "External Function", 0, 0
+
+-------------
+
+Function Name: rv_div:
+Definition: float  rv_div(float  x, float  y)
+Position: "External Function", 0, 0
+
+-------------
+
+Function Name: rv_mod:
+Definition: int  rv_mod(int  x, int  y)
+Position: "External Function", 0, 0
+
+-------------
+
+Variable Name: n:
+Definition: int  n
+
+-------------
+
+int 
+RVWALK::processing ident
+Function Name: ident:
+Definition: int  ident(int  n)
+Position: "try.c", 5, 17
+
+-------------
+
+RVWalk::go_block() starts block at "try.c", 5, 17
+n
+Parameter Name: n:
+Definition: int  n
+
+-------------
+
+int 
+RVWALK::processing sum
+Function Name: sum:
+Definition: int  sum(int  n)
+Position: "try.c", 9, 15
+
+-------------
+
+RVWalk::go_block() starts block at "try.c", 9, 15
+n = ident(n + 1) - 1
+ident(n + 1) - 1
+ident(n + 1)
+ident
+Function Name: ident:
+Definition: int  ident(int  n)
+Position: "try.c", 5, 17
+
+-------------
+
+n + 1
+n
+Parameter Name: n:
+Definition: int  n
+
+-------------
+
+int 
+1
+1
+1
+1
+n
+Parameter Name: n:
+Definition: int  n
+
+-------------
+
+int 
+n <= 1
+n
+Parameter Name: n:
+Definition: int  n
+
+-------------
+
+int 
+1
+1
+RVWalk::go_block() starts block at "try.c", 12, 14
+n
+Parameter Name: n:
+Definition: int  n
+
+-------------
+
+int 
+n + sum(n - 1)
+n
+Parameter Name: n:
+Definition: int  n
+
+-------------
+
+int 
+sum(n - 1)
+sum
+Function Name: sum:
+Definition: int  sum(int  n)
+Position: "try.c", 9, 15
+
+-------------
+
+n - 1
+n
+Parameter Name: n:
+Definition: int  n
+
+-------------
+
+int 
+1
+1
+RVWALK::processing main
+Function Name: main:
+Definition: int  main()
+Position: "try.c", 16, 11
+
+-------------
+
+RVWalk::go_block() starts block at "try.c", 16, 11
+sum(n)
+sum
+Function Name: sum:
+Definition: int  sum(int  n)
+Position: "try.c", 9, 15
+
+-------------
+
+n
+Variable Name: n:
+Definition: int  n
+
+-------------
+
+int 
+c:\newrvt\rv_main.cpp(RVMain::main):647 P3 - after type propagation
+RVWALK::processing sum
+RVWalk::go_block() starts block at "try.c", 5, 15
+n <= 1
+n
+1
+1
+RVWalk::go_block() starts block at "try.c", 7, 14
+n
+n + sum(n - 1)
+n
+sum(n - 1)
+sum
+n - 1
+n
+1
+1
+RVWALK::processing main
+RVWalk::go_block() starts block at "try.c", 11, 11
+sum(n)
+sum
+n
+RVWALK::processing ident
+RVWalk::go_block() starts block at "try.c", 5, 17
+n
+RVWALK::processing sum
+RVWalk::go_block() starts block at "try.c", 9, 15
+n = ident(n + 1) - 1
+ident(n + 1) - 1
+ident(n + 1)
+ident
+n + 1
+n
+1
+1
+1
+1
+n
+n <= 1
+n
+1
+1
+RVWalk::go_block() starts block at "try.c", 12, 14
+n
+n + sum(n - 1)
+n
+sum(n - 1)
+sum
+n - 1
+n
+1
+1
+RVWALK::processing main
+RVWalk::go_block() starts block at "try.c", 16, 11
+sum(n)
+sum
+n
+
+
+Start creating call graph of side 0c:\newrvt\rv_main.cpp(RVMain::create_call_graph):319  
+float  rv_mult(float  x, float  y);RVCollect collects info in function: rv_mult (side 0)
+RVCollect after init_argtypes info in function: rv_mult (side 0)
+RVFuncNode::switchOn_argtype(0, In )
+RVFuncNode::switchOn_argtype(1, In )
+RVCollect calling collect_bodyless : rv_mult (side 0)
+argtype (side : 0) (ind : 0) 1
+argtype (side : 0) (ind : 1) 1
+... RVDirectives::get_func_flags(0,rv_mult)
+RVCollect collects info in function: rv_div (side 0)
+RVCollect after init_argtypes info in function: rv_div (side 0)
+RVFuncNode::switchOn_argtype(0, In )
+RVFuncNode::switchOn_argtype(1, In )
+RVCollect calling collect_bodyless : rv_div (side 0)
+argtype (side : 0) (ind : 0) 1
+argtype (side : 0) (ind : 1) 1
+... RVDirectives::get_func_flags(0,rv_div)
+RVCollect collects info in function: rv_mod (side 0)
+RVCollect after init_argtypes info in function: rv_mod (side 0)
+RVFuncNode::switchOn_argtype(0, In )
+RVFuncNode::switchOn_argtype(1, In )
+RVCollect calling collect_bodyless : rv_mod (side 0)
+argtype (side : 0) (ind : 0) 1
+argtype (side : 0) (ind : 1) 1
+... RVDirectives::get_func_flags(0,rv_mod)
+RVCollect collects info in function: sum (side 0)
+RVCollect after init_argtypes info in function: sum (side 0)
+RVWALK::processing sum
+RVWalk::go_block() starts block at "try.c", 5, 15
+RVCollectBase::RVCollectBase::process(Statement*)
+n <= 1
+Debug: symbol "n" is read, function param variable.
+RVFuncNode::switchOn_argtype(0, In )
+RVCollectBase::RVCollectBase::add_scope_vartype
+1
+RVCollectBase::RVCollectBase::process(Statement*)
+RVWalk::go_block() starts block at "try.c", 7, 14
+RVCollectBase::RVCollectBase::process(Statement*)
+Debug: symbol "n" is read, function param variable.
+RVFuncNode::switchOn_argtype(0, In )
+RVCollectBase::RVCollectBase::add_scope_vartype
+RVCollectBase::RVCollectBase::process(Statement*)
+n + sum(n - 1)
+Debug: symbol "n" is read, function param variable.
+RVFuncNode::switchOn_argtype(0, In )
+RVCollectBase::RVCollectBase::add_scope_vartype
+callee "sum" has 1 args!
+add_callees( sum )
+n - 1
+Debug: symbol "n" is read, function param variable.
+RVFuncNode::switchOn_argtype(0, In )
+RVCollectBase::RVCollectBase::add_scope_vartype
+1
+RVCollect calling RVWalk:process : sum (side 0)
+argtype (side : 0) (ind : 0) 1
+... RVDirectives::get_func_flags(0,sum)
+RVCollect collects info in function: main (side 0)
+RVCollect after init_argtypes info in function: main (side 0)
+RVWALK::processing main
+RVWalk::go_block() starts block at "try.c", 11, 11
+RVCollectBase::RVCollectBase::process(Statement*)
+callee "sum" has 1 args!
+add_callees( sum )
+Debug: symbol "n" is next_symbol_is_unused
+Debug: symbol "n" is read, used global variable.
+add_read( n )
+RVCollectBase::RVCollectBase::add_scope_vartype
+RVCollect calling RVWalk:process : main (side 0)
+... RVDirectives::get_func_flags(0,main)
+Function c:\newrvt\rv_main.cpp(RVMain::create_call_graph):368 sum:
+callees: sum, 
+callers: main, sum, 
+directly read globals: 
+directly written globals: 
+Function c:\newrvt\rv_main.cpp(RVMain::create_call_graph):368 rv_div:
+callees: 
+callers: 
+directly read globals: 
+directly written globals: 
+Function c:\newrvt\rv_main.cpp(RVMain::create_call_graph):368 rv_mult:
+callees: 
+callers: 
+directly read globals: 
+directly written globals: 
+Function c:\newrvt\rv_main.cpp(RVMain::create_call_graph):368 main:
+callees: sum, 
+callers: 
+directly read globals: n, 
+directly written globals: 
+Function c:\newrvt\rv_main.cpp(RVMain::create_call_graph):368 rv_mod:
+callees: 
+callers: 
+directly read globals: 
+directly written globals: 
+
+
+Start creating call graph of side 1c:\newrvt\rv_main.cpp(RVMain::create_call_graph):319  
+float  rv_mult(float  x, float  y);RVCollect collects info in function: rv_mult (side 1)
+RVCollect after init_argtypes info in function: rv_mult (side 1)
+RVFuncNode::switchOn_argtype(0, In )
+RVFuncNode::switchOn_argtype(1, In )
+RVCollect calling collect_bodyless : rv_mult (side 1)
+argtype (side : 1) (ind : 0) 1
+argtype (side : 1) (ind : 1) 1
+... RVDirectives::get_func_flags(1,rv_mult)
+RVCollect collects info in function: rv_div (side 1)
+RVCollect after init_argtypes info in function: rv_div (side 1)
+RVFuncNode::switchOn_argtype(0, In )
+RVFuncNode::switchOn_argtype(1, In )
+RVCollect calling collect_bodyless : rv_div (side 1)
+argtype (side : 1) (ind : 0) 1
+argtype (side : 1) (ind : 1) 1
+... RVDirectives::get_func_flags(1,rv_div)
+RVCollect collects info in function: rv_mod (side 1)
+RVCollect after init_argtypes info in function: rv_mod (side 1)
+RVFuncNode::switchOn_argtype(0, In )
+RVFuncNode::switchOn_argtype(1, In )
+RVCollect calling collect_bodyless : rv_mod (side 1)
+argtype (side : 1) (ind : 0) 1
+argtype (side : 1) (ind : 1) 1
+... RVDirectives::get_func_flags(1,rv_mod)
+RVCollect collects info in function: ident (side 1)
+RVCollect after init_argtypes info in function: ident (side 1)
+RVWALK::processing ident
+RVWalk::go_block() starts block at "try.c", 5, 17
+RVCollectBase::RVCollectBase::process(Statement*)
+Debug: symbol "n" is read, function param variable.
+RVFuncNode::switchOn_argtype(0, In )
+RVCollectBase::RVCollectBase::add_scope_vartype
+RVCollect calling RVWalk:process : ident (side 1)
+argtype (side : 1) (ind : 0) 1
+... RVDirectives::get_func_flags(1,ident)
+RVCollect collects info in function: sum (side 1)
+RVCollect after init_argtypes info in function: sum (side 1)
+RVWALK::processing sum
+RVWalk::go_block() starts block at "try.c", 9, 15
+RVCollectBase::RVCollectBase::process(Statement*)
+n = ident(n + 1) - 1
+Debug: symbol "n" is written, function param variable.
+RVCollectBase::RVCollectBase::add_scope_vartype
+ident(n + 1) - 1
+callee "ident" has 1 args!
+add_callees( ident )
+n + 1
+Debug: symbol "n" is read, function param variable.
+RVFuncNode::switchOn_argtype(0, In )
+RVCollectBase::RVCollectBase::add_scope_vartype
+1
+1
+RVCollectBase::RVCollectBase::process(Statement*)
+n <= 1
+Debug: symbol "n" is read, function param variable.
+RVFuncNode::switchOn_argtype(0, In )
+RVCollectBase::RVCollectBase::add_scope_vartype
+1
+RVCollectBase::RVCollectBase::process(Statement*)
+RVWalk::go_block() starts block at "try.c", 12, 14
+RVCollectBase::RVCollectBase::process(Statement*)
+Debug: symbol "n" is read, function param variable.
+RVFuncNode::switchOn_argtype(0, In )
+RVCollectBase::RVCollectBase::add_scope_vartype
+RVCollectBase::RVCollectBase::process(Statement*)
+n + sum(n - 1)
+Debug: symbol "n" is read, function param variable.
+RVFuncNode::switchOn_argtype(0, In )
+RVCollectBase::RVCollectBase::add_scope_vartype
+callee "sum" has 1 args!
+add_callees( sum )
+n - 1
+Debug: symbol "n" is read, function param variable.
+RVFuncNode::switchOn_argtype(0, In )
+RVCollectBase::RVCollectBase::add_scope_vartype
+1
+RVCollect calling RVWalk:process : sum (side 1)
+argtype (side : 1) (ind : 0) 1
+... RVDirectives::get_func_flags(1,sum)
+RVCollect collects info in function: main (side 1)
+RVCollect after init_argtypes info in function: main (side 1)
+RVWALK::processing main
+RVWalk::go_block() starts block at "try.c", 16, 11
+RVCollectBase::RVCollectBase::process(Statement*)
+callee "sum" has 1 args!
+add_callees( sum )
+Debug: symbol "n" is next_symbol_is_unused
+Debug: symbol "n" is read, used global variable.
+add_read( n )
+RVCollectBase::RVCollectBase::add_scope_vartype
+RVCollect calling RVWalk:process : main (side 1)
+... RVDirectives::get_func_flags(1,main)
+Function c:\newrvt\rv_main.cpp(RVMain::create_call_graph):368 sum:
+callees: ident, sum, 
+callers: main, sum, 
+directly read globals: 
+directly written globals: 
+Function c:\newrvt\rv_main.cpp(RVMain::create_call_graph):368 rv_div:
+callees: 
+callers: 
+directly read globals: 
+directly written globals: 
+Function c:\newrvt\rv_main.cpp(RVMain::create_call_graph):368 rv_mult:
+callees: 
+callers: 
+directly read globals: 
+directly written globals: 
+Function c:\newrvt\rv_main.cpp(RVMain::create_call_graph):368 main:
+callees: sum, 
+callers: 
+directly read globals: n, 
+directly written globals: 
+Function c:\newrvt\rv_main.cpp(RVMain::create_call_graph):368 ident:
+callees: 
+callers: sum, 
+directly read globals: 
+directly written globals: 
+Function c:\newrvt\rv_main.cpp(RVMain::create_call_graph):368 rv_mod:
+callees: 
+callers: 
+directly read globals: 
+directly written globals: 
+omega_total_bound = 0 
+end creating call graph of side 1 
+
+float (float  x, float  y)
+float 
+float 
+float 
+float (float  x, float  y)
+float 
+float 
+float 
+int (int  x, int  y)
+int 
+int 
+int 
+int 
+RVWALK::processing sum
+int (int  n)
+int 
+int 
+RVWalk::go_block() starts block at "try.c", 5, 15
+n <= 1
+n
+1
+1
+RVWalk::go_block() starts block at "try.c", 7, 14
+n
+n + sum(n - 1)
+n
+sum(n - 1)
+sum
+n - 1
+n
+1
+1
+RVWALK::processing main
+int ()
+int 
+RVWalk::go_block() starts block at "try.c", 11, 11
+sum(n)
+sum
+n
+float (float  x, float  y)
+float 
+float 
+float 
+float (float  x, float  y)
+float 
+float 
+float 
+int (int  x, int  y)
+int 
+int 
+int 
+int 
+RVWALK::processing ident
+int (int  n)
+int 
+int 
+RVWalk::go_block() starts block at "try.c", 5, 17
+n
+RVWALK::processing sum
+int (int  n)
+int 
+int 
+RVWalk::go_block() starts block at "try.c", 9, 15
+n = ident(n + 1) - 1
+ident(n + 1) - 1
+ident(n + 1)
+ident
+n + 1
+n
+1
+1
+1
+1
+n
+n <= 1
+n
+1
+1
+RVWalk::go_block() starts block at "try.c", 12, 14
+n
+n + sum(n - 1)
+n
+sum(n - 1)
+sum
+n - 1
+n
+1
+1
+RVWALK::processing main
+int ()
+int 
+RVWalk::go_block() starts block at "try.c", 16, 11
+sum(n)
+sum
+n
+c:\newrvt\rv_main.cpp(RVMain::main):668 P3.5 - after creation of first call graph
+RVArgTypesDfs::propogate_argtyes(0) "main
+RVWALK::processing main
+RVWalk::go_block() starts block at "try.c", 11, 11
+RVCollectBase::RVCollectBase::process(Statement*)
+RVWALK::processing sum
+RVWalk::go_block() starts block at "try.c", 5, 15
+RVCollectBase::RVCollectBase::process(Statement*)
+RVCollectBase::RVCollectBase::process(Statement*)
+RVWalk::go_block() starts block at "try.c", 7, 14
+RVCollectBase::RVCollectBase::process(Statement*)
+n
+RVCollectBase::RVCollectBase::process(Statement*)
+n + sum(n - 1)
+n
+RVPropArgTypes::add_argtype_from_callee() #0(side : 0 of sum, arg:
+  n - 1
+  at: "try.c", 8, 17 
+RVPropArgTypes::add_argtype_from_callee() #0(side : 0 of sum, arg:
+  n
+  at: "try.c", 12, 11 
+Debug: symbol "n" is read,    var (by propagation).
+add_read( n )
+RVCollectBase::RVCollectBase::add_scope_vartype
+n
+RVArgTypesDfs::propogate_argtyes(1) "main
+RVWALK::processing main
+RVWalk::go_block() starts block at "try.c", 16, 11
+RVCollectBase::RVCollectBase::process(Statement*)
+RVWALK::processing sum
+RVWalk::go_block() starts block at "try.c", 9, 15
+RVCollectBase::RVCollectBase::process(Statement*)
+RVCollectBase::RVCollectBase::process(Statement*)
+RVCollectBase::RVCollectBase::process(Statement*)
+RVWalk::go_block() starts block at "try.c", 12, 14
+RVCollectBase::RVCollectBase::process(Statement*)
+n
+RVCollectBase::RVCollectBase::process(Statement*)
+n + sum(n - 1)
+n
+RVPropArgTypes::add_argtype_from_callee() #0(side : 1 of sum, arg:
+  n - 1
+  at: "try.c", 13, 17 
+RVPropArgTypes::add_argtype_from_callee() #0(side : 1 of sum, arg:
+  n
+  at: "try.c", 17, 11 
+Debug: symbol "n" is read,    var (by propagation).
+add_read( n )
+RVCollectBase::RVCollectBase::add_scope_vartype
+n
+
+
+Start sort_global_vectors(), side 0c:\newrvt\rv_main.cpp(RVMain::sort_global_vectors):291  
+Function c:\newrvt\rv_main.cpp(RVMain::sort_global_vectors):301 sum:
+directly read globals: 
+directly written globals: 
+Function c:\newrvt\rv_main.cpp(RVMain::sort_global_vectors):301 rv_div:
+directly read globals: 
+directly written globals: 
+Function c:\newrvt\rv_main.cpp(RVMain::sort_global_vectors):301 rv_mult:
+directly read globals: 
+directly written globals: 
+Function c:\newrvt\rv_main.cpp(RVMain::sort_global_vectors):301 main:
+directly read globals: n, 
+directly written globals: 
+Function c:\newrvt\rv_main.cpp(RVMain::sort_global_vectors):301 rv_mod:
+directly read globals: 
+directly written globals: 
+End sort_global_vectors()
+
+
+Start sort_global_vectors(), side 1c:\newrvt\rv_main.cpp(RVMain::sort_global_vectors):291  
+Function c:\newrvt\rv_main.cpp(RVMain::sort_global_vectors):301 sum:
+directly read globals: 
+directly written globals: 
+Function c:\newrvt\rv_main.cpp(RVMain::sort_global_vectors):301 rv_div:
+directly read globals: 
+directly written globals: 
+Function c:\newrvt\rv_main.cpp(RVMain::sort_global_vectors):301 rv_mult:
+directly read globals: 
+directly written globals: 
+Function c:\newrvt\rv_main.cpp(RVMain::sort_global_vectors):301 main:
+directly read globals: n, 
+directly written globals: 
+Function c:\newrvt\rv_main.cpp(RVMain::sort_global_vectors):301 ident:
+directly read globals: 
+directly written globals: 
+Function c:\newrvt\rv_main.cpp(RVMain::sort_global_vectors):301 rv_mod:
+directly read globals: 
+directly written globals: 
+End sort_global_vectors()
+c:\newrvt\rv_main.cpp(RVMain::main):677 P4 - after propogating argtypes, and sorting the vectors
+c:\newrvt\rv_main.cpp(RVMain::main):681 before convert_loops
+Start RVIndirectFuncs::process_all() on side 0 with #classes = 0 .
+Start RVIndirectFuncs::one_pass() on side 0 with fix_decl_types =  false, #classes = 0 .
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::process
+RVWALK::processing sum
+RVWalk::go_block() starts block at "try.c", 5, 15
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+n <= 1
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+1
+RVIndirectFuncs::RVIndirectFuncs::process
+RVWalk::go_block() starts block at "try.c", 7, 14
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+n + sum(n - 1)
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+n - 1
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+1
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::process
+RVWALK::processing main
+RVWalk::go_block() starts block at "try.c", 11, 11
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+Indirect Function classes on side 0 :
+Start RVIndirectFuncs::one_pass() on side 0 with fix_decl_types =  true, #classes = 0 .
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::process
+float (float  x, float  y)
+float 
+RVIndirectFuncs::RVIndirectFuncs::process
+float 
+RVIndirectFuncs::RVIndirectFuncs::process
+float 
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::process
+float (float  x, float  y)
+float 
+RVIndirectFuncs::RVIndirectFuncs::process
+float 
+RVIndirectFuncs::RVIndirectFuncs::process
+float 
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::process
+int (int  x, int  y)
+int 
+RVIndirectFuncs::RVIndirectFuncs::process
+int 
+RVIndirectFuncs::RVIndirectFuncs::process
+int 
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::process
+int 
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::process
+int (int  n)
+int 
+RVIndirectFuncs::RVIndirectFuncs::process
+int 
+RVWALK::processing sum
+RVWalk::go_block() starts block at "try.c", 5, 15
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+n <= 1
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+1
+RVIndirectFuncs::RVIndirectFuncs::process
+RVWalk::go_block() starts block at "try.c", 7, 14
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+n + sum(n - 1)
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+n - 1
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+1
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::process
+int ()
+int 
+RVWALK::processing main
+RVWalk::go_block() starts block at "try.c", 11, 11
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+Start RVIndirectFuncs::gen_all_func_ind_enums() on side 0 with #classes = 0 .
+RVLoops::RVLoops::print_protos
+RVReplaceLoopCalls::RVReplaceLoopCalls::replace
+RVLoops::RVLoops::gen_loop_funcs
+RVLoops::RVLoops::print_protos
+RVReplaceLoopCalls::RVReplaceLoopCalls::replace
+RVLoops::RVLoops::gen_loop_funcs
+Start RVIndirectFuncs::gen_all_class_hubs() on side 0 with #classes = 0 .
+Start RVIndirectFuncs::process_all() on side 1 with #classes = 0 .
+Start RVIndirectFuncs::one_pass() on side 1 with fix_decl_types =  false, #classes = 0 .
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::process
+RVWALK::processing ident
+RVWalk::go_block() starts block at "try.c", 5, 17
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::process
+RVWALK::processing sum
+RVWalk::go_block() starts block at "try.c", 9, 15
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+n = ident(n + 1) - 1
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+ident(n + 1) - 1
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+n + 1
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+1
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+1
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+n <= 1
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+1
+RVIndirectFuncs::RVIndirectFuncs::process
+RVWalk::go_block() starts block at "try.c", 12, 14
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+n + sum(n - 1)
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+n - 1
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+1
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::process
+RVWALK::processing main
+RVWalk::go_block() starts block at "try.c", 16, 11
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+Indirect Function classes on side 1 :
+Start RVIndirectFuncs::one_pass() on side 1 with fix_decl_types =  true, #classes = 0 .
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::process
+float (float  x, float  y)
+float 
+RVIndirectFuncs::RVIndirectFuncs::process
+float 
+RVIndirectFuncs::RVIndirectFuncs::process
+float 
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::process
+float (float  x, float  y)
+float 
+RVIndirectFuncs::RVIndirectFuncs::process
+float 
+RVIndirectFuncs::RVIndirectFuncs::process
+float 
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::process
+int (int  x, int  y)
+int 
+RVIndirectFuncs::RVIndirectFuncs::process
+int 
+RVIndirectFuncs::RVIndirectFuncs::process
+int 
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::process
+int 
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::process
+int (int  n)
+int 
+RVIndirectFuncs::RVIndirectFuncs::process
+int 
+RVWALK::processing ident
+RVWalk::go_block() starts block at "try.c", 5, 17
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::process
+int (int  n)
+int 
+RVIndirectFuncs::RVIndirectFuncs::process
+int 
+RVWALK::processing sum
+RVWalk::go_block() starts block at "try.c", 9, 15
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+n = ident(n + 1) - 1
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+ident(n + 1) - 1
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+n + 1
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+1
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+1
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+n <= 1
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+1
+RVIndirectFuncs::RVIndirectFuncs::process
+RVWalk::go_block() starts block at "try.c", 12, 14
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+n + sum(n - 1)
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+n - 1
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+1
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::process
+int ()
+int 
+RVWALK::processing main
+RVWalk::go_block() starts block at "try.c", 16, 11
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+RVIndirectFuncs::RVIndirectFuncs::process
+RVIndirectFuncs::RVIndirectFuncs::try_replace
+Start RVIndirectFuncs::gen_all_func_ind_enums() on side 1 with #classes = 0 .
+RVLoops::RVLoops::print_protos
+RVReplaceLoopCalls::RVReplaceLoopCalls::replace
+RVLoops::RVLoops::gen_loop_funcs
+RVLoops::RVLoops::print_protos
+RVReplaceLoopCalls::RVReplaceLoopCalls::replace
+RVLoops::RVLoops::gen_loop_funcs
+RVLoops::RVLoops::print_protos
+RVReplaceLoopCalls::RVReplaceLoopCalls::replace
+RVLoops::RVLoops::gen_loop_funcs
+Start RVIndirectFuncs::gen_all_class_hubs() on side 1 with #classes = 0 .
+c:\newrvt\rv_main.cpp(RVMain::main):689 after convert_loops - reparse
+... RVParse::do_parse() - start .\try_side0.c.rec.c
+... RVParse::do_parse() - finished .\try_side0.c.rec.c (succesfully)
+... RVParse::do_parse() - start .\try1_side1.c.rec.c
+... RVParse::do_parse() - finished .\try1_side1.c.rec.c (succesfully)
+c:\newrvt\rv_main.cpp(RVMain::main):701 after convert_loops - propagate types
+Start RVTypeProp::process_all() 
+float (float  x, float  y)
+float 
+float 
+float 
+float (float  x, float  y)
+float 
+float 
+float 
+int (int  x, int  y)
+int 
+int 
+int 
+int 
+int (int  n)
+int 
+int 
+int ()
+int 
+RVWALK::processing sum
+int (int  n)
+int 
+int 
+RVWalk::go_block() starts block at ".\try_side0.c.rec.c", 12, 0
+n <= 1
+n
+1
+RVWalk::go_block() starts block at ".\try_side0.c.rec.c", 14, 2
+n
+n + sum(n - 1)
+n
+sum(n - 1)
+sum
+n - 1
+n
+1
+RVWALK::processing main
+int ()
+int 
+RVWalk::go_block() starts block at ".\try_side0.c.rec.c", 23, 0
+sum(n)
+sum
+n
+void (_Bool  rv_arg_0)
+void 
+_Bool 
+Finish RVTypeProp::process_all() 
+Function Name: rv_mult:
+Definition: float  rv_mult(float  x, float  y)
+Position: "External Function", 0, 0
+
+-------------
+
+Function Name: rv_div:
+Definition: float  rv_div(float  x, float  y)
+Position: "External Function", 0, 0
+
+-------------
+
+Function Name: rv_mod:
+Definition: int  rv_mod(int  x, int  y)
+Position: "External Function", 0, 0
+
+-------------
+
+Variable Name: n:
+Definition: int  n
+
+-------------
+
+int 
+Function Name: sum:
+Definition: int  sum(int  n)
+Position: ".\try_side0.c.rec.c", 12, 0
+
+-------------
+
+Function Name: main:
+Definition: int  main()
+Position: ".\try_side0.c.rec.c", 23, 0
+
+-------------
+
+RVWALK::processing sum
+Function Name: sum:
+Definition: int  sum(int  n)
+Position: ".\try_side0.c.rec.c", 12, 0
+
+-------------
+
+RVWalk::go_block() starts block at ".\try_side0.c.rec.c", 12, 0
+n <= 1
+n
+Parameter Name: n:
+Definition: int  n
+
+-------------
+
+int 
+1
+1
+RVWalk::go_block() starts block at ".\try_side0.c.rec.c", 14, 2
+n
+Parameter Name: n:
+Definition: int  n
+
+-------------
+
+int 
+n + sum(n - 1)
+n
+Parameter Name: n:
+Definition: int  n
+
+-------------
+
+int 
+sum(n - 1)
+sum
+Function Name: sum:
+Definition: int  sum(int  n)
+Position: ".\try_side0.c.rec.c", 12, 0
+
+-------------
+
+n - 1
+n
+Parameter Name: n:
+Definition: int  n
+
+-------------
+
+int 
+1
+1
+RVWALK::processing main
+Function Name: main:
+Definition: int  main()
+Position: ".\try_side0.c.rec.c", 23, 0
+
+-------------
+
+RVWalk::go_block() starts block at ".\try_side0.c.rec.c", 23, 0
+sum(n)
+sum
+Function Name: sum:
+Definition: int  sum(int  n)
+Position: ".\try_side0.c.rec.c", 12, 0
+
+-------------
+
+n
+Variable Name: n:
+Definition: int  n
+
+-------------
+
+int 
+Function Name: __CPROVER_assume:
+Definition: void  __CPROVER_assume(_Bool  rv_arg_0)
+Position: "External Function", 0, 0
+
+-------------
+
+Start RVTypeProp::process_all() 
+float (float  x, float  y)
+float 
+float 
+float 
+float (float  x, float  y)
+float 
+float 
+float 
+int (int  x, int  y)
+int 
+int 
+int 
+int 
+int (int  n)
+int 
+int 
+int (int  n)
+int 
+int 
+int ()
+int 
+RVWALK::processing ident
+int (int  n)
+int 
+int 
+RVWalk::go_block() starts block at ".\try1_side1.c.rec.c", 14, 0
+n
+RVWALK::processing sum
+int (int  n)
+int 
+int 
+RVWalk::go_block() starts block at ".\try1_side1.c.rec.c", 20, 0
+n = ident(n + 1) - 1
+n
+ident(n + 1) - 1
+ident(n + 1)
+ident
+n + 1
+n
+1
+1
+n <= 1
+n
+1
+RVWalk::go_block() starts block at ".\try1_side1.c.rec.c", 23, 2
+n
+n + sum(n - 1)
+n
+sum(n - 1)
+sum
+n - 1
+n
+1
+RVWALK::processing main
+int ()
+int 
+RVWalk::go_block() starts block at ".\try1_side1.c.rec.c", 32, 0
+sum(n)
+sum
+n
+void (_Bool  rv_arg_1)
+void 
+_Bool 
+Finish RVTypeProp::process_all() 
+Function Name: rv_mult:
+Definition: float  rv_mult(float  x, float  y)
+Position: "External Function", 0, 0
+
+-------------
+
+Function Name: rv_div:
+Definition: float  rv_div(float  x, float  y)
+Position: "External Function", 0, 0
+
+-------------
+
+Function Name: rv_mod:
+Definition: int  rv_mod(int  x, int  y)
+Position: "External Function", 0, 0
+
+-------------
+
+Variable Name: n:
+Definition: int  n
+
+-------------
+
+int 
+Function Name: ident:
+Definition: int  ident(int  n)
+Position: ".\try1_side1.c.rec.c", 14, 0
+
+-------------
+
+Function Name: sum:
+Definition: int  sum(int  n)
+Position: ".\try1_side1.c.rec.c", 20, 0
+
+-------------
+
+Function Name: main:
+Definition: int  main()
+Position: ".\try1_side1.c.rec.c", 32, 0
+
+-------------
+
+RVWALK::processing ident
+Function Name: ident:
+Definition: int  ident(int  n)
+Position: ".\try1_side1.c.rec.c", 14, 0
+
+-------------
+
+RVWalk::go_block() starts block at ".\try1_side1.c.rec.c", 14, 0
+n
+Parameter Name: n:
+Definition: int  n
+
+-------------
+
+int 
+RVWALK::processing sum
+Function Name: sum:
+Definition: int  sum(int  n)
+Position: ".\try1_side1.c.rec.c", 20, 0
+
+-------------
+
+RVWalk::go_block() starts block at ".\try1_side1.c.rec.c", 20, 0
+n = ident(n + 1) - 1
+ident(n + 1) - 1
+ident(n + 1)
+ident
+Function Name: ident:
+Definition: int  ident(int  n)
+Position: ".\try1_side1.c.rec.c", 14, 0
+
+-------------
+
+n + 1
+n
+Parameter Name: n:
+Definition: int  n
+
+-------------
+
+int 
+1
+1
+1
+1
+n
+Parameter Name: n:
+Definition: int  n
+
+-------------
+
+int 
+n <= 1
+n
+Parameter Name: n:
+Definition: int  n
+
+-------------
+
+int 
+1
+1
+RVWalk::go_block() starts block at ".\try1_side1.c.rec.c", 23, 2
+n
+Parameter Name: n:
+Definition: int  n
+
+-------------
+
+int 
+n + sum(n - 1)
+n
+Parameter Name: n:
+Definition: int  n
+
+-------------
+
+int 
+sum(n - 1)
+sum
+Function Name: sum:
+Definition: int  sum(int  n)
+Position: ".\try1_side1.c.rec.c", 20, 0
+
+-------------
+
+n - 1
+n
+Parameter Name: n:
+Definition: int  n
+
+-------------
+
+int 
+1
+1
+RVWALK::processing main
+Function Name: main:
+Definition: int  main()
+Position: ".\try1_side1.c.rec.c", 32, 0
+
+-------------
+
+RVWalk::go_block() starts block at ".\try1_side1.c.rec.c", 32, 0
+sum(n)
+sum
+Function Name: sum:
+Definition: int  sum(int  n)
+Position: ".\try1_side1.c.rec.c", 20, 0
+
+-------------
+
+n
+Variable Name: n:
+Definition: int  n
+
+-------------
+
+int 
+Function Name: __CPROVER_assume:
+Definition: void  __CPROVER_assume(_Bool  rv_arg_1)
+Position: "External Function", 0, 0
+
+-------------
+
+c:\newrvt\rv_main.cpp(RVMain::main):707 after convert_loops - call graph
+
+
+Start creating call graph of side 0c:\newrvt\rv_main.cpp(RVMain::create_call_graph):319  
+float  rv_mult(float  x, float  y);RVCollect collects info in function: rv_mult (side 0)
+RVCollect after init_argtypes info in function: rv_mult (side 0)
+RVFuncNode::switchOn_argtype(0, In )
+RVFuncNode::switchOn_argtype(1, In )
+RVCollect calling collect_bodyless : rv_mult (side 0)
+argtype (side : 0) (ind : 0) 1
+argtype (side : 0) (ind : 1) 1
+... RVDirectives::get_func_flags(0,rv_mult)
+RVCollect collects info in function: rv_div (side 0)
+RVCollect after init_argtypes info in function: rv_div (side 0)
+RVFuncNode::switchOn_argtype(0, In )
+RVFuncNode::switchOn_argtype(1, In )
+RVCollect calling collect_bodyless : rv_div (side 0)
+argtype (side : 0) (ind : 0) 1
+argtype (side : 0) (ind : 1) 1
+... RVDirectives::get_func_flags(0,rv_div)
+RVCollect collects info in function: rv_mod (side 0)
+RVCollect after init_argtypes info in function: rv_mod (side 0)
+RVFuncNode::switchOn_argtype(0, In )
+RVFuncNode::switchOn_argtype(1, In )
+RVCollect calling collect_bodyless : rv_mod (side 0)
+argtype (side : 0) (ind : 0) 1
+argtype (side : 0) (ind : 1) 1
+... RVDirectives::get_func_flags(0,rv_mod)
+... RVDirectives::get_func_flags(0,sum)
+... RVDirectives::get_func_flags(0,main)
+RVCollect collects info in function: sum (side 0)
+RVCollect after init_argtypes info in function: sum (side 0)
+RVWALK::processing sum
+RVWalk::go_block() starts block at ".\try_side0.c.rec.c", 12, 0
+RVCollectBase::RVCollectBase::process(Statement*)
+n <= 1
+Debug: symbol "n" is read, function param variable.
+RVFuncNode::switchOn_argtype(0, In )
+RVCollectBase::RVCollectBase::add_scope_vartype
+1
+RVCollectBase::RVCollectBase::process(Statement*)
+RVWalk::go_block() starts block at ".\try_side0.c.rec.c", 14, 2
+RVCollectBase::RVCollectBase::process(Statement*)
+Debug: symbol "n" is read, function param variable.
+RVFuncNode::switchOn_argtype(0, In )
+RVCollectBase::RVCollectBase::add_scope_vartype
+RVCollectBase::RVCollectBase::process(Statement*)
+n + sum(n - 1)
+Debug: symbol "n" is read, function param variable.
+RVFuncNode::switchOn_argtype(0, In )
+RVCollectBase::RVCollectBase::add_scope_vartype
+callee "sum" has 1 args!
+add_callees( sum )
+n - 1
+Debug: symbol "n" is read, function param variable.
+RVFuncNode::switchOn_argtype(0, In )
+RVCollectBase::RVCollectBase::add_scope_vartype
+1
+RVCollect calling RVWalk:process : sum (side 0)
+argtype (side : 0) (ind : 0) 1
+... RVDirectives::get_func_flags(0,sum)
+RVCollect collects info in function: main (side 0)
+RVCollect after init_argtypes info in function: main (side 0)
+RVWALK::processing main
+RVWalk::go_block() starts block at ".\try_side0.c.rec.c", 23, 0
+RVCollectBase::RVCollectBase::process(Statement*)
+callee "sum" has 1 args!
+add_callees( sum )
+Debug: symbol "n" is next_symbol_is_unused
+Debug: symbol "n" is read, used global variable.
+add_read( n )
+RVCollectBase::RVCollectBase::add_scope_vartype
+RVCollect calling RVWalk:process : main (side 0)
+... RVDirectives::get_func_flags(0,main)
+RVCollect collects info in function: __CPROVER_assume (side 0)
+RVCollect after init_argtypes info in function: __CPROVER_assume (side 0)
+RVFuncNode::switchOn_argtype(0, In )
+RVCollect calling collect_bodyless : __CPROVER_assume (side 0)
+argtype (side : 0) (ind : 0) 1
+... RVDirectives::get_func_flags(0,__CPROVER_assume)
+Function c:\newrvt\rv_main.cpp(RVMain::create_call_graph):368 __CPROVER_assume:
+callees: 
+callers: 
+directly read globals: 
+directly written globals: 
+Function c:\newrvt\rv_main.cpp(RVMain::create_call_graph):368 sum:
+callees: sum, 
+callers: main, sum, 
+directly read globals: 
+directly written globals: 
+Function c:\newrvt\rv_main.cpp(RVMain::create_call_graph):368 rv_div:
+callees: 
+callers: 
+directly read globals: 
+directly written globals: 
+Function c:\newrvt\rv_main.cpp(RVMain::create_call_graph):368 rv_mult:
+callees: 
+callers: 
+directly read globals: 
+directly written globals: 
+Function c:\newrvt\rv_main.cpp(RVMain::create_call_graph):368 main:
+callees: sum, 
+callers: 
+directly read globals: n, 
+directly written globals: 
+Function c:\newrvt\rv_main.cpp(RVMain::create_call_graph):368 rv_mod:
+callees: 
+callers: 
+directly read globals: 
+directly written globals: 
+
+
+Start creating call graph of side 1c:\newrvt\rv_main.cpp(RVMain::create_call_graph):319  
+float  rv_mult(float  x, float  y);RVCollect collects info in function: rv_mult (side 1)
+RVCollect after init_argtypes info in function: rv_mult (side 1)
+RVFuncNode::switchOn_argtype(0, In )
+RVFuncNode::switchOn_argtype(1, In )
+RVCollect calling collect_bodyless : rv_mult (side 1)
+argtype (side : 1) (ind : 0) 1
+argtype (side : 1) (ind : 1) 1
+... RVDirectives::get_func_flags(1,rv_mult)
+RVCollect collects info in function: rv_div (side 1)
+RVCollect after init_argtypes info in function: rv_div (side 1)
+RVFuncNode::switchOn_argtype(0, In )
+RVFuncNode::switchOn_argtype(1, In )
+RVCollect calling collect_bodyless : rv_div (side 1)
+argtype (side : 1) (ind : 0) 1
+argtype (side : 1) (ind : 1) 1
+... RVDirectives::get_func_flags(1,rv_div)
+RVCollect collects info in function: rv_mod (side 1)
+RVCollect after init_argtypes info in function: rv_mod (side 1)
+RVFuncNode::switchOn_argtype(0, In )
+RVFuncNode::switchOn_argtype(1, In )
+RVCollect calling collect_bodyless : rv_mod (side 1)
+argtype (side : 1) (ind : 0) 1
+argtype (side : 1) (ind : 1) 1
+... RVDirectives::get_func_flags(1,rv_mod)
+... RVDirectives::get_func_flags(1,ident)
+... RVDirectives::get_func_flags(1,sum)
+... RVDirectives::get_func_flags(1,main)
+RVCollect collects info in function: ident (side 1)
+RVCollect after init_argtypes info in function: ident (side 1)
+RVWALK::processing ident
+RVWalk::go_block() starts block at ".\try1_side1.c.rec.c", 14, 0
+RVCollectBase::RVCollectBase::process(Statement*)
+Debug: symbol "n" is read, function param variable.
+RVFuncNode::switchOn_argtype(0, In )
+RVCollectBase::RVCollectBase::add_scope_vartype
+RVCollect calling RVWalk:process : ident (side 1)
+argtype (side : 1) (ind : 0) 1
+... RVDirectives::get_func_flags(1,ident)
+RVCollect collects info in function: sum (side 1)
+RVCollect after init_argtypes info in function: sum (side 1)
+RVWALK::processing sum
+RVWalk::go_block() starts block at ".\try1_side1.c.rec.c", 20, 0
+RVCollectBase::RVCollectBase::process(Statement*)
+n = ident(n + 1) - 1
+Debug: symbol "n" is written, function param variable.
+RVCollectBase::RVCollectBase::add_scope_vartype
+ident(n + 1) - 1
+callee "ident" has 1 args!
+add_callees( ident )
+n + 1
+Debug: symbol "n" is read, function param variable.
+RVFuncNode::switchOn_argtype(0, In )
+RVCollectBase::RVCollectBase::add_scope_vartype
+1
+1
+RVCollectBase::RVCollectBase::process(Statement*)
+n <= 1
+Debug: symbol "n" is read, function param variable.
+RVFuncNode::switchOn_argtype(0, In )
+RVCollectBase::RVCollectBase::add_scope_vartype
+1
+RVCollectBase::RVCollectBase::process(Statement*)
+RVWalk::go_block() starts block at ".\try1_side1.c.rec.c", 23, 2
+RVCollectBase::RVCollectBase::process(Statement*)
+Debug: symbol "n" is read, function param variable.
+RVFuncNode::switchOn_argtype(0, In )
+RVCollectBase::RVCollectBase::add_scope_vartype
+RVCollectBase::RVCollectBase::process(Statement*)
+n + sum(n - 1)
+Debug: symbol "n" is read, function param variable.
+RVFuncNode::switchOn_argtype(0, In )
+RVCollectBase::RVCollectBase::add_scope_vartype
+callee "sum" has 1 args!
+add_callees( sum )
+n - 1
+Debug: symbol "n" is read, function param variable.
+RVFuncNode::switchOn_argtype(0, In )
+RVCollectBase::RVCollectBase::add_scope_vartype
+1
+RVCollect calling RVWalk:process : sum (side 1)
+argtype (side : 1) (ind : 0) 1
+... RVDirectives::get_func_flags(1,sum)
+RVCollect collects info in function: main (side 1)
+RVCollect after init_argtypes info in function: main (side 1)
+RVWALK::processing main
+RVWalk::go_block() starts block at ".\try1_side1.c.rec.c", 32, 0
+RVCollectBase::RVCollectBase::process(Statement*)
+callee "sum" has 1 args!
+add_callees( sum )
+Debug: symbol "n" is next_symbol_is_unused
+Debug: symbol "n" is read, used global variable.
+add_read( n )
+RVCollectBase::RVCollectBase::add_scope_vartype
+RVCollect calling RVWalk:process : main (side 1)
+... RVDirectives::get_func_flags(1,main)
+RVCollect collects info in function: __CPROVER_assume (side 1)
+RVCollect after init_argtypes info in function: __CPROVER_assume (side 1)
+RVFuncNode::switchOn_argtype(0, In )
+RVCollect calling collect_bodyless : __CPROVER_assume (side 1)
+argtype (side : 1) (ind : 0) 1
+... RVDirectives::get_func_flags(1,__CPROVER_assume)
+Function c:\newrvt\rv_main.cpp(RVMain::create_call_graph):368 __CPROVER_assume:
+callees: 
+callers: 
+directly read globals: 
+directly written globals: 
+Function c:\newrvt\rv_main.cpp(RVMain::create_call_graph):368 sum:
+callees: ident, sum, 
+callers: main, sum, 
+directly read globals: 
+directly written globals: 
+Function c:\newrvt\rv_main.cpp(RVMain::create_call_graph):368 rv_div:
+callees: 
+callers: 
+directly read globals: 
+directly written globals: 
+Function c:\newrvt\rv_main.cpp(RVMain::create_call_graph):368 rv_mult:
+callees: 
+callers: 
+directly read globals: 
+directly written globals: 
+Function c:\newrvt\rv_main.cpp(RVMain::create_call_graph):368 main:
+callees: sum, 
+callers: 
+directly read globals: n, 
+directly written globals: 
+Function c:\newrvt\rv_main.cpp(RVMain::create_call_graph):368 ident:
+callees: 
+callers: sum, 
+directly read globals: 
+directly written globals: 
+Function c:\newrvt\rv_main.cpp(RVMain::create_call_graph):368 rv_mod:
+callees: 
+callers: 
+directly read globals: 
+directly written globals: 
+omega_total_bound = 0 
+end creating call graph of side 1 
+
+c:\newrvt\rv_main.cpp(RVMain::main):714 after convert_loops - propagate ArgTypes
+RVArgTypesDfs::propogate_argtyes(0) "main
+RVWALK::processing main
+RVWalk::go_block() starts block at ".\try_side0.c.rec.c", 23, 0
+RVCollectBase::RVCollectBase::process(Statement*)
+RVWALK::processing sum
+RVWalk::go_block() starts block at ".\try_side0.c.rec.c", 12, 0
+RVCollectBase::RVCollectBase::process(Statement*)
+RVCollectBase::RVCollectBase::process(Statement*)
+RVWalk::go_block() starts block at ".\try_side0.c.rec.c", 14, 2
+RVCollectBase::RVCollectBase::process(Statement*)
+n
+RVCollectBase::RVCollectBase::process(Statement*)
+n + sum(n - 1)
+n
+RVPropArgTypes::add_argtype_from_callee() #0(side : 0 of sum, arg:
+  n - 1
+  at: ".\try_side0.c.rec.c", 18, 17 
+RVPropArgTypes::add_argtype_from_callee() #0(side : 0 of sum, arg:
+  n
+  at: ".\try_side0.c.rec.c", 24, 13 
+Debug: symbol "n" is read,    var (by propagation).
+add_read( n )
+RVCollectBase::RVCollectBase::add_scope_vartype
+n
+RVArgTypesDfs::propogate_argtyes(1) "main
+RVWALK::processing main
+RVWalk::go_block() starts block at ".\try1_side1.c.rec.c", 32, 0
+RVCollectBase::RVCollectBase::process(Statement*)
+RVWALK::processing sum
+RVWalk::go_block() starts block at ".\try1_side1.c.rec.c", 20, 0
+RVCollectBase::RVCollectBase::process(Statement*)
+RVCollectBase::RVCollectBase::process(Statement*)
+RVCollectBase::RVCollectBase::process(Statement*)
+RVWalk::go_block() starts block at ".\try1_side1.c.rec.c", 23, 2
+RVCollectBase::RVCollectBase::process(Statement*)
+n
+RVCollectBase::RVCollectBase::process(Statement*)
+n + sum(n - 1)
+n
+RVPropArgTypes::add_argtype_from_callee() #0(side : 1 of sum, arg:
+  n - 1
+  at: ".\try1_side1.c.rec.c", 27, 17 
+RVPropArgTypes::add_argtype_from_callee() #0(side : 1 of sum, arg:
+  n
+  at: ".\try1_side1.c.rec.c", 33, 13 
+Debug: symbol "n" is read,    var (by propagation).
+add_read( n )
+RVCollectBase::RVCollectBase::add_scope_vartype
+n
+
+
+Start sort_global_vectors(), side 0c:\newrvt\rv_main.cpp(RVMain::sort_global_vectors):291  
+Function c:\newrvt\rv_main.cpp(RVMain::sort_global_vectors):301 __CPROVER_assume:
+directly read globals: 
+directly written globals: 
+Function c:\newrvt\rv_main.cpp(RVMain::sort_global_vectors):301 sum:
+directly read globals: 
+directly written globals: 
+Function c:\newrvt\rv_main.cpp(RVMain::sort_global_vectors):301 rv_div:
+directly read globals: 
+directly written globals: 
+Function c:\newrvt\rv_main.cpp(RVMain::sort_global_vectors):301 rv_mult:
+directly read globals: 
+directly written globals: 
+Function c:\newrvt\rv_main.cpp(RVMain::sort_global_vectors):301 main:
+directly read globals: n, 
+directly written globals: 
+Function c:\newrvt\rv_main.cpp(RVMain::sort_global_vectors):301 rv_mod:
+directly read globals: 
+directly written globals: 
+End sort_global_vectors()
+
+
+Start sort_global_vectors(), side 1c:\newrvt\rv_main.cpp(RVMain::sort_global_vectors):291  
+Function c:\newrvt\rv_main.cpp(RVMain::sort_global_vectors):301 __CPROVER_assume:
+directly read globals: 
+directly written globals: 
+Function c:\newrvt\rv_main.cpp(RVMain::sort_global_vectors):301 sum:
+directly read globals: 
+directly written globals: 
+Function c:\newrvt\rv_main.cpp(RVMain::sort_global_vectors):301 rv_div:
+directly read globals: 
+directly written globals: 
+Function c:\newrvt\rv_main.cpp(RVMain::sort_global_vectors):301 rv_mult:
+directly read globals: 
+directly written globals: 
+Function c:\newrvt\rv_main.cpp(RVMain::sort_global_vectors):301 main:
+directly read globals: n, 
+directly written globals: 
+Function c:\newrvt\rv_main.cpp(RVMain::sort_global_vectors):301 ident:
+directly read globals: 
+directly written globals: 
+Function c:\newrvt\rv_main.cpp(RVMain::sort_global_vectors):301 rv_mod:
+directly read globals: 
+directly written globals: 
+End sort_global_vectors()
+c:\newrvt\rv_main.cpp(RVMain::main):725 P5 - after loop_to_rec
+buf="{ `P0 P1 Result } " 
+buf="{ `--- ---- ------ } " 
+buf="{ sum sum partially-equivalent } " 
+buf="{ main main partially-equivalent } " 
+c:\newrvt\rv_main.cpp(RVMain::main):731 P5.1 - after fuf file processing
+c:\newrvt\rv_main.cpp(RVMain::main):746 P5.2 - after auf file procesing
+c:\newrvt\rv_main.cpp(RVMain::main):756 P6 - after rel file processing 
+int 
+int (int  n)
+int 
+int 
+int (int  n)
+int 
+int 
+int ()
+int 
+int ()
+int 
+c:\newrvt\rv_main.cpp(RVMain::main):764 P7 - after connect all
+detecting related func of: rv_div().
+float (float  x, float  y)
+float 
+float 
+float 
+detected related pair: rv_div and rv_div .
+detecting related func of: rv_mult().
+float (float  x, float  y)
+float 
+float 
+float 
+detected related pair: rv_mult and rv_mult .
+detecting related func of: rv_mod().
+int (int  x, int  y)
+int 
+int 
+int 
+detected related pair: rv_mod and rv_mod .
+compare: rv_mult().
+float  rv_mult(float  x, float  y)
+{
+}
+
+float  rv_mult(float  x, float  y)
+{
+}
+
+rv_mult == rv_mult (bodyless) 
+compare: rv_div().
+float  rv_div(float  x, float  y)
+{
+}
+
+float  rv_div(float  x, float  y)
+{
+}
+
+rv_div == rv_div (bodyless) 
+compare: sum().
+int  sum(int  n)
+{
+  if (n <= 1)
+  {
+    return n;
+  }
+
+  return n + sum(n - 1);
+}
+
+int  sum(int  n)
+{
+  if (n <= 1)
+  {
+    return n;
+  }
+
+  return n + sum(n - 1);
+}
+
+if (n <= 1)
+{
+  return n;
+}
+
+sum != sum (syntax) 
+compare: main().
+int  main()
+{
+  return sum(n);
+}
+
+int  main()
+{
+  return sum(n);
+}
+
+return sum(n)
+sum(n)
+The callees are:sum and sum 
+sum
+n
+main == main (syntax) 
+compare: rv_mod().
+int  rv_mod(int  x, int  y)
+{
+}
+
+int  rv_mod(int  x, int  y)
+{
+}
+
+rv_mod == rv_mod (bodyless) 
+compare: sum().
+int  sum(int  n)
+{
+  if (n <= 1)
+  {
+    return n;
+  }
+
+  return n + sum(n - 1);
+}
+
+int  sum(int  n)
+{
+  if (n <= 1)
+  {
+    return n;
+  }
+
+  return n + sum(n - 1);
+}
+
+if (n <= 1)
+{
+  return n;
+}
+
+sum != sum (syntax) 
+c:\newrvt\rv_main.cpp(RVMain::main):773 P7.1 - after first pairing of equal prototypes
+c:\newrvt\rv_main.cpp(RVMain::main):778 P7.2 - after we relate globals
+c:\newrvt\rv_main.cpp(RVMain::main):786 before execution of semchks 
+Executes: cmd /c sh -c "cygpath -u '.\\\semchks\\\' 2> /dev/null " > C:\Users\Maor\AppData\Local\Temp\rvtmp15724 
+Executes: tcsh -c "/cygdrive/c/NewRVT/debug/../tools/scripts/rv_mkdir .//semchks// " 
+rm: No match.
+RVCommands::mkdir(): ret = 0 
+Entered RVFuncPairList::buildEdgeList()
+Edge on side0: 0->0
+Edge on side0: 3->0
+Edge on side1: 0->4
+Edge on side1: 0->0
+Edge on side1: 3->0
+RVIntraProcDataflowGraphBuilder::processing sum
+Function Name: sum:
+Definition: int  sum(int  n)
+Position: ".\try_side0.c.rec.c", 12, 0
+
+-------------
+
+int (int  n)
+int 
+Parameter Name: n:
+Definition: int  n
+
+-------------
+
+int 
+RVWalk::go_block() starts block at ".\try_side0.c.rec.c", 12, 0
+RVWalk::go_block() starts block at ".\try_side0.c.rec.c", 14, 2
+RVIntraProcDataflowGraphBuilder::processing main
+Function Name: main:
+Definition: int  main()
+Position: ".\try_side0.c.rec.c", 23, 0
+
+-------------
+
+int ()
+int 
+RVWalk::go_block() starts block at ".\try_side0.c.rec.c", 23, 0
+RVIntraProcDataflowGraphBuilder::processing ident
+Function Name: ident:
+Definition: int  ident(int  n)
+Position: ".\try1_side1.c.rec.c", 14, 0
+
+-------------
+
+int (int  n)
+int 
+Parameter Name: n:
+Definition: int  n
+
+-------------
+
+int 
+RVWalk::go_block() starts block at ".\try1_side1.c.rec.c", 14, 0
+RVIntraProcDataflowGraphBuilder::processing sum
+Function Name: sum:
+Definition: int  sum(int  n)
+Position: ".\try1_side1.c.rec.c", 20, 0
+
+-------------
+
+int (int  n)
+int 
+Parameter Name: n:
+Definition: int  n
+
+-------------
+
+int 
+RVWalk::go_block() starts block at ".\try1_side1.c.rec.c", 20, 0
+RVWalk::go_block() starts block at ".\try1_side1.c.rec.c", 23, 2
+RVIntraProcDataflowGraphBuilder::processing main
+Function Name: main:
+Definition: int  main()
+Position: ".\try1_side1.c.rec.c", 32, 0
+
+-------------
+
+int ()
+int 
+RVWalk::go_block() starts block at ".\try1_side1.c.rec.c", 32, 0
+SCCs: { 0 } ;{ 3 } ;
+SCCs: { 4 } ;{ 0 } ;{ 3 } ;
+Building_SCC_map, iteration 1
+DAG 0: S0 is mapped to DAG 1: S1
+DAG 0: S1 is mapped to DAG 1: S2
+
+Checking map consistency
+==== Decomposing ====
+
+Now solving SCC S0 { 0 } 
+Single recursive function in SCC
+Check (0,0)
+Side 0: calls to { 0 }  are replaced with UFs
+Side 0: the following are inlined:{ } 
+Side 1: calls to { 0 }  are replaced with UFs
+Side 1: the following are inlined:{ 4 } 
+Syntactic-equivalence test: failed.
+Semantic equivalence check:
+-*-*-*-*-*-*-*  In  -*-*-*-*-*-*-*-*-*-*-
+Globals used by "sum" (side 0) and its successors: 
+read globals: 
+written globals: 
+Globals used by "sum" (side 1) and its successors: 
+read globals: 
+written globals: 
+All globals accessed by sum pair and its subtrees:
+side 0 read globals: 
+side 1 read globals: 
+side 0 written globals: 
+side 1 written globals: 
+generate_output(sum)
+c:\newrvt\rv_semchecker.cpp(RVSemChecker::generate_output):187 before semcheck processing: 
+c:\newrvt\rv_semchecker.cpp(RVSemChecker::generate_output):196  pair_name:sum 
+c:\newrvt\rv_semchecker.cpp(RVSemChecker::generate_output):197 open output file and start generation.
+c:\newrvt\rv_semchecker.cpp(RVSemChecker::start_generation):341 enter start_generation()
+c:\newrvt\rv_semchecker.cpp(RVSemChecker::generate_output):211 P24: Start print renamed version of each side: 
+... RVParse::do_parse() - start .\try_side0.c.rec.c
+... RVParse::do_parse() - finished .\try_side0.c.rec.c (succesfully)
+Start RVTypeProp::process_all() 
+float (float  x, float  y)
+float 
+float 
+float 
+float (float  x, float  y)
+float 
+float 
+float 
+int (int  x, int  y)
+int 
+int 
+int 
+int 
+int (int  n)
+int 
+int 
+int ()
+int 
+RVWALK::processing sum
+int (int  n)
+int 
+int 
+RVWalk::go_block() starts block at ".\try_side0.c.rec.c", 12, 0
+n <= 1
+n
+1
+RVWalk::go_block() starts block at ".\try_side0.c.rec.c", 14, 2
+n
+n + sum(n - 1)
+n
+sum(n - 1)
+sum
+n - 1
+n
+1
+RVWALK::processing main
+int ()
+int 
+RVWalk::go_block() starts block at ".\try_side0.c.rec.c", 23, 0
+sum(n)
+sum
+n
+void (_Bool  rv_arg_2)
+void 
+_Bool 
+Finish RVTypeProp::process_all() 
+Function Name: rv_mult:
+Definition: float  rv_mult(float  x, float  y)
+Position: "External Function", 0, 0
+
+-------------
+
+Function Name: rv_div:
+Definition: float  rv_div(float  x, float  y)
+Position: "External Function", 0, 0
+
+-------------
+
+Function Name: rv_mod:
+Definition: int  rv_mod(int  x, int  y)
+Position: "External Function", 0, 0
+
+-------------
+
+Variable Name: n:
+Definition: int  n
+
+-------------
+
+int 
+Function Name: sum:
+Definition: int  sum(int  n)
+Position: ".\try_side0.c.rec.c", 12, 0
+
+-------------
+
+Function Name: main:
+Definition: int  main()
+Position: ".\try_side0.c.rec.c", 23, 0
+
+-------------
+
+RVWALK::processing sum
+Function Name: sum:
+Definition: int  sum(int  n)
+Position: ".\try_side0.c.rec.c", 12, 0
+
+-------------
+
+RVWalk::go_block() starts block at ".\try_side0.c.rec.c", 12, 0
+n <= 1
+n
+Parameter Name: n:
+Definition: int  n
+
+-------------
+
+int 
+1
+1
+RVWalk::go_block() starts block at ".\try_side0.c.rec.c", 14, 2
+n
+Parameter Name: n:
+Definition: int  n
+
+-------------
+
+int 
+n + sum(n - 1)
+n
+Parameter Name: n:
+Definition: int  n
+
+-------------
+
+int 
+sum(n - 1)
+sum
+Function Name: sum:
+Definition: int  sum(int  n)
+Position: ".\try_side0.c.rec.c", 12, 0
+
+-------------
+
+n - 1
+n
+Parameter Name: n:
+Definition: int  n
+
+-------------
+
+int 
+1
+1
+RVWALK::processing main
+Function Name: main:
+Definition: int  main()
+Position: ".\try_side0.c.rec.c", 23, 0
+
+-------------
+
+RVWalk::go_block() starts block at ".\try_side0.c.rec.c", 23, 0
+sum(n)
+sum
+Function Name: sum:
+Definition: int  sum(int  n)
+Position: ".\try_side0.c.rec.c", 12, 0
+
+-------------
+
+n
+Variable Name: n:
+Definition: int  n
+
+-------------
+
+int 
+Function Name: __CPROVER_assume:
+Definition: void  __CPROVER_assume(_Bool  rv_arg_2)
+Position: "External Function", 0, 0
+
+-------------
+
+Start RVRenameTree::remove_unneeded_funcs() 
+Finish RVRenameTree::remove_unneeded_funcs() 
+Start RVRenameTree::create_semchk_uf_proto() 
+Prepare semchked: Function Name: sum:
+Definition: int  sum(int  n)
+Position: ".\try_side0.c.rec.c", 12, 0
+
+-------------
+Finish RVRenameTree::create_semchk_uf_proto() 
+Start RVRenameTree::rename_all_globs() 
+Prefix: rvs0_
+Variable Name: __PRETTY_FUNCTION__:
+Definition: NO definition for Variable entry!
+
+-------------
+
+Prefix: rvs0_
+Variable Name: __FUNCTION__:
+Definition: NO definition for Variable entry!
+
+-------------
+
+Prefix: rvs0_
+Variable Name: n:
+Definition: int  n
+
+-------------
+
+Prefix: chk0_
+Function Name: sum:
+Definition: int  sum(int  n)
+Position: ".\try_side0.c.rec.c", 12, 0
+
+-------------
+
+Prefix: rvs0_
+Function Name: rv_div:
+Definition: float  rv_div(float  x, float  y)
+Position: "External Function", 0, 0
+
+-------------
+
+Prefix: rvs0_
+Function Name: rv_mult:
+Definition: float  rv_mult(float  x, float  y)
+Position: "External Function", 0, 0
+
+-------------
+
+Prefix: rvs0_
+Function Name: main:
+Definition: int  main()
+No Position.
+
+-------------
+
+Prefix: rvs0_
+Function Name: rv_mod:
+Definition: int  rv_mod(int  x, int  y)
+Position: "External Function", 0, 0
+
+-------------
+
+Finish RVRenameTree::rename_all_globs() 
+Start RVRenameTree::rename_all_tags() 
+Finish RVRenameTree::rename_all_tags() 
+int (int  n)
+float (float  x, float  y)
+float (float  x, float  y)
+int (int  x, int  y)
+int (int  n)
+int ()
+Start RVRenameTree::process_func() on "sum"
+int (int  n)
+RVWalk::go_block() starts block at ".\try_side0.c.rec.c", 12, 0
+n <= 1
+n
+1
+1
+RVWalk::go_block() starts block at ".\try_side0.c.rec.c", 14, 2
+n
+n + sum(n - 1)
+n
+sum(n - 1)
+sum
+n - 1
+n
+1
+1
+RVRenameTree::process_func() on "sum": success 
+void (_Bool  rv_arg_2)
+... RVParse::do_parse() - start .\try1_side1.c.rec.c
+... RVParse::do_parse() - finished .\try1_side1.c.rec.c (succesfully)
+Start RVTypeProp::process_all() 
+float (float  x, float  y)
+float 
+float 
+float 
+float (float  x, float  y)
+float 
+float 
+float 
+int (int  x, int  y)
+int 
+int 
+int 
+int 
+int (int  n)
+int 
+int 
+int (int  n)
+int 
+int 
+int ()
+int 
+RVWALK::processing ident
+int (int  n)
+int 
+int 
+RVWalk::go_block() starts block at ".\try1_side1.c.rec.c", 14, 0
+n
+RVWALK::processing sum
+int (int  n)
+int 
+int 
+RVWalk::go_block() starts block at ".\try1_side1.c.rec.c", 20, 0
+n = ident(n + 1) - 1
+n
+ident(n + 1) - 1
+ident(n + 1)
+ident
+n + 1
+n
+1
+1
+n <= 1
+n
+1
+RVWalk::go_block() starts block at ".\try1_side1.c.rec.c", 23, 2
+n
+n + sum(n - 1)
+n
+sum(n - 1)
+sum
+n - 1
+n
+1
+RVWALK::processing main
+int ()
+int 
+RVWalk::go_block() starts block at ".\try1_side1.c.rec.c", 32, 0
+sum(n)
+sum
+n
+void (_Bool  rv_arg_3)
+void 
+_Bool 
+Finish RVTypeProp::process_all() 
+Function Name: rv_mult:
+Definition: float  rv_mult(float  x, float  y)
+Position: "External Function", 0, 0
+
+-------------
+
+Function Name: rv_div:
+Definition: float  rv_div(float  x, float  y)
+Position: "External Function", 0, 0
+
+-------------
+
+Function Name: rv_mod:
+Definition: int  rv_mod(int  x, int  y)
+Position: "External Function", 0, 0
+
+-------------
+
+Variable Name: n:
+Definition: int  n
+
+-------------
+
+int 
+Function Name: ident:
+Definition: int  ident(int  n)
+Position: ".\try1_side1.c.rec.c", 14, 0
+
+-------------
+
+Function Name: sum:
+Definition: int  sum(int  n)
+Position: ".\try1_side1.c.rec.c", 20, 0
+
+-------------
+
+Function Name: main:
+Definition: int  main()
+Position: ".\try1_side1.c.rec.c", 32, 0
+
+-------------
+
+RVWALK::processing ident
+Function Name: ident:
+Definition: int  ident(int  n)
+Position: ".\try1_side1.c.rec.c", 14, 0
+
+-------------
+
+RVWalk::go_block() starts block at ".\try1_side1.c.rec.c", 14, 0
+n
+Parameter Name: n:
+Definition: int  n
+
+-------------
+
+int 
+RVWALK::processing sum
+Function Name: sum:
+Definition: int  sum(int  n)
+Position: ".\try1_side1.c.rec.c", 20, 0
+
+-------------
+
+RVWalk::go_block() starts block at ".\try1_side1.c.rec.c", 20, 0
+n = ident(n + 1) - 1
+ident(n + 1) - 1
+ident(n + 1)
+ident
+Function Name: ident:
+Definition: int  ident(int  n)
+Position: ".\try1_side1.c.rec.c", 14, 0
+
+-------------
+
+n + 1
+n
+Parameter Name: n:
+Definition: int  n
+
+-------------
+
+int 
+1
+1
+1
+1
+n
+Parameter Name: n:
+Definition: int  n
+
+-------------
+
+int 
+n <= 1
+n
+Parameter Name: n:
+Definition: int  n
+
+-------------
+
+int 
+1
+1
+RVWalk::go_block() starts block at ".\try1_side1.c.rec.c", 23, 2
+n
+Parameter Name: n:
+Definition: int  n
+
+-------------
+
+int 
+n + sum(n - 1)
+n
+Parameter Name: n:
+Definition: int  n
+
+-------------
+
+int 
+sum(n - 1)
+sum
+Function Name: sum:
+Definition: int  sum(int  n)
+Position: ".\try1_side1.c.rec.c", 20, 0
+
+-------------
+
+n - 1
+n
+Parameter Name: n:
+Definition: int  n
+
+-------------
+
+int 
+1
+1
+RVWALK::processing main
+Function Name: main:
+Definition: int  main()
+Position: ".\try1_side1.c.rec.c", 32, 0
+
+-------------
+
+RVWalk::go_block() starts block at ".\try1_side1.c.rec.c", 32, 0
+sum(n)
+sum
+Function Name: sum:
+Definition: int  sum(int  n)
+Position: ".\try1_side1.c.rec.c", 20, 0
+
+-------------
+
+n
+Variable Name: n:
+Definition: int  n
+
+-------------
+
+int 
+Function Name: __CPROVER_assume:
+Definition: void  __CPROVER_assume(_Bool  rv_arg_3)
+Position: "External Function", 0, 0
+
+-------------
+
+Start RVRenameTree::remove_unneeded_funcs() 
+Finish RVRenameTree::remove_unneeded_funcs() 
+Start RVRenameTree::create_semchk_uf_proto() 
+Prepare semchked: Function Name: sum:
+Definition: int  sum(int  n)
+Position: ".\try1_side1.c.rec.c", 20, 0
+
+-------------
+Finish RVRenameTree::create_semchk_uf_proto() 
+Start RVRenameTree::rename_all_globs() 
+Prefix: rvs1_
+Variable Name: __PRETTY_FUNCTION__:
+Definition: NO definition for Variable entry!
+
+-------------
+
+Prefix: rvs1_
+Variable Name: __FUNCTION__:
+Definition: NO definition for Variable entry!
+
+-------------
+
+Prefix: rvs1_
+Variable Name: n:
+Definition: int  n
+
+-------------
+
+Prefix: chk1_
+Function Name: sum:
+Definition: int  sum(int  n)
+Position: ".\try1_side1.c.rec.c", 20, 0
+
+-------------
+
+Prefix: rvs1_
+Function Name: rv_div:
+Definition: float  rv_div(float  x, float  y)
+Position: "External Function", 0, 0
+
+-------------
+
+Prefix: rvs1_
+Function Name: rv_mult:
+Definition: float  rv_mult(float  x, float  y)
+Position: "External Function", 0, 0
+
+-------------
+
+Prefix: rvs1_
+Function Name: main:
+Definition: int  main()
+No Position.
+
+-------------
+
+Prefix: rvs1_
+Function Name: ident:
+Definition: int  ident(int  n)
+Position: ".\try1_side1.c.rec.c", 14, 0
+
+-------------
+
+Prefix: rvs1_
+Function Name: rv_mod:
+Definition: int  rv_mod(int  x, int  y)
+Position: "External Function", 0, 0
+
+-------------
+
+Finish RVRenameTree::rename_all_globs() 
+Start RVRenameTree::rename_all_tags() 
+Finish RVRenameTree::rename_all_tags() 
+int (int  n)
+float (float  x, float  y)
+float (float  x, float  y)
+int (int  x, int  y)
+int (int  n)
+int (int  n)
+int ()
+Start RVRenameTree::process_func() on "ident"
+int (int  n)
+RVWalk::go_block() starts block at ".\try1_side1.c.rec.c", 14, 0
+n
+RVRenameTree::process_func() on "ident": success 
+Start RVRenameTree::process_func() on "sum"
+int (int  n)
+RVWalk::go_block() starts block at ".\try1_side1.c.rec.c", 20, 0
+n = ident(n + 1) - 1
+ident(n + 1) - 1
+ident(n + 1)
+ident
+n + 1
+n
+1
+1
+1
+1
+n
+n <= 1
+n
+1
+1
+RVWalk::go_block() starts block at ".\try1_side1.c.rec.c", 23, 2
+n
+n + sum(n - 1)
+n
+sum(n - 1)
+sum
+n - 1
+n
+1
+1
+RVRenameTree::process_func() on "sum": success 
+void (_Bool  rv_arg_3)
+Executes: C:/NewRVT/tools/scripts/summarize.bat .\try_side0.c.rec.c sum 
+
+C:\NewRVT\test\rvtest\mt1>c:/deltacheck-trunk/branches/summary/src/summarizer/summarizer.exe .\try_side0.c.rec.c --xml-ui --context-sensitive  1>sum.sum 
+
+C:\NewRVT\test\rvtest\mt1>c:/NewRVT/tools/scripts/SummarizerParser.exe sum.sum sum.sumres 
+Executes: C:/NewRVT/tools/scripts/summarize.bat .\try1_side1.c.rec.c sum 
+
+C:\NewRVT\test\rvtest\mt1>c:/deltacheck-trunk/branches/summary/src/summarizer/summarizer.exe .\try1_side1.c.rec.c --xml-ui --context-sensitive  1>sum.sum 
+
+C:\NewRVT\test\rvtest\mt1>c:/NewRVT/tools/scripts/SummarizerParser.exe sum.sum sum.sumres 
+/*** Functions side 0: ***/
+/*** Functions side 1: ***/
+c:\newrvt\rv_semchecker.cpp(RVSemChecker::generate_output):270 P25
+gen_one_uf(rv_mult)
+is_needed : 0 is_uf :0
+gen_one_uf(rv_div)
+is_needed : 0 is_uf :0
+gen_one_uf(sum)
+is_needed : 1 is_uf :0
+gen_one_uf(main)
+is_needed : 0 is_uf :0
+gen_one_uf(rv_mod)
+is_needed : 0 is_uf :0
+... RVRename::copy_with_prefixi
+
+RVRename::copy_with_prefix() converts symbol: "int"
+  symbol_len=3 
+new: int
+... RVRename::copy_with_prefixr
+
+RVRename::copy_with_prefix() converts symbol: "rvs0_sum"
+  symbol_len=8 
+new: rvs0_sum
+... RVRename::copy_with_prefixi
+
+RVRename::copy_with_prefix() converts symbol: "int"
+  symbol_len=3 
+new: int
+... RVRename::copy_with_prefixn
+
+RVRename::copy_with_prefix() converts symbol: "n"
+  symbol_len=1 
+new: n
+... RVRename::copy_with_prefixi
+
+RVRename::copy_with_prefix() converts symbol: "int"
+  symbol_len=3 
+new: int
+RVGenCtx_0(n,n)
+... RVRename::copy_with_prefixi
+
+RVRename::copy_with_prefix() converts symbol: "int"
+  symbol_len=3 
+new: int
+... RVRename::copy_with_prefixr
+
+RVRename::copy_with_prefix() converts symbol: "rvs1_sum"
+  symbol_len=8 
+new: rvs1_sum
+... RVRename::copy_with_prefixi
+
+RVRename::copy_with_prefix() converts symbol: "int"
+  symbol_len=3 
+new: int
+... RVRename::copy_with_prefixn
+
+RVRename::copy_with_prefix() converts symbol: "n"
+  symbol_len=1 
+new: n
+... RVRename::copy_with_prefixi
+
+RVRename::copy_with_prefix() converts symbol: "int"
+  symbol_len=3 
+new: int
+RVGenCtx_1(n,n,n)
+c:\newrvt\rv_semchecker.cpp(RVSemChecker::generate_output):301 P26
+c:\newrvt\rv_semchecker.cpp(RVSemChecker::generate_output):303 P27
+... RVRename::copy_with_prefixi
+
+RVRename::copy_with_prefix() converts symbol: "int"
+  symbol_len=3 
+new: int
+... RVRename::copy_with_prefixi
+
+RVRename::copy_with_prefix() converts symbol: "int"
+  symbol_len=3 
+new: int
+c:\newrvt\rv_semchecker.cpp(RVSemChecker::generate_output):314 P28
+he value of mutual term check: 
+Semantic Check side0(sum)	side1(sum) 
+Executes: tcsh -c "/cygdrive/c/NewRVT/debug/../tools/scripts/semchk .//semchks// sum 3 0 1   " 
+-- Begin semantic check (semchk) ( .//semchks// sum 3 0 1 )
+sum.rv.c: In function ‘rvs0_sum’:
+sum.rv.c:78:40: error: expected identifier before ‘=’ token
+   rv_UF_sum_array[rv_UF_sum_count[0]]. = n; /* Generated by:  RVUFGen::gen_side0_uf(621)(626)(392)(306)/ c:\newrvt\rv_temps.cpp:362*/
+                                        ^
+sum.rv.c:82:40: error: expected identifier before ‘=’ token
+   rv_UF_sum_array[rv_UF_sum_count[0]]. = retval = (int )nondet_long(); /* Generated by:  RVUFGen::gen_side0_uf(621)(626)(392)(306)(621)(626)(392)(276)/ c:\newrvt\rv_temps.cpp:412*/
+                                        ^
+sum.rv.c: In function ‘rvs1_sum’:
+sum.rv.c:99:42: error: expected identifier before ‘==’ token
+     equal = (rv_UF_sum_array[rv_uf_ind]. == n); /* Generated by:  RVUFGen::gen_side1_uf(621)(626)(392)(285)/ c:\newrvt\rv_temps.cpp:427*/
+                                          ^
+sum.rv.c:112:39: error: expected identifier before ‘;’ token
+   retval = rv_UF_sum_array[found_ind].; /* Generated by:  RVUFGen::gen_input_found_case(621)(626)(392)(296)/ c:\newrvt\rv_temps.cpp:362*/
+                                       ^
+sum.rv.c: In function ‘rvt_token_initialize_mutual_termination_tokens_sum’:
+sum.rv.c:128:4: error: ‘rvt_token_sum_call_mark_array0’ undeclared (first use in this function)
+    rvt_token_sum_call_mark_array0[rvt_token_i] = 0;
+    ^
+sum.rv.c:128:4: note: each undeclared identifier is reported only once for each function it appears in
+sum.rv.c:129:4: error: ‘rvt_token_sum_call_mark_array1’ undeclared (first use in this function)
+    rvt_token_sum_call_mark_array1[rvt_token_i] = 0;
+    ^
+sum.rv.c:131:3: error: ‘rvt_token_sum_count’ undeclared (first use in this function)
+   rvt_token_sum_count = 0;
+   ^
+sum.rv.c:132:3: error: ‘rvt_token_sum_first_call_to_uf_flag’ undeclared (first use in this function)
+   rvt_token_sum_first_call_to_uf_flag = 0;
+   ^
+RVT fatal error: Failed to execute semantic check command

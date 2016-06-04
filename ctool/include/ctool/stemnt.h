@@ -127,10 +127,14 @@ typedef    std::vector<Label*>    LabelVector;
 // o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o
 
 class Statement;
+class Block;
 typedef Dup<Statement> DupableStatement;
 
 class Statement : public DupableStatement 
 {
+  private:
+	void insertBeforeInner(Statement* statementToInsert, Block* enclosingBlock);
+  
   public:
 	Statement(StatementType stemntType, const Location& location);
 	virtual ~Statement();
@@ -140,6 +144,7 @@ class Statement : public DupableStatement
 	void addLabel( Label *lbl );    // Add a label to this statement.
 	void addHeadLabel( Label *lbl ); 
 
+	
 	virtual bool isBlock() const { return false; }
 	virtual bool isFuncDef() const { return false; }
 	virtual bool isDeclaration() const { return false; }
@@ -162,7 +167,18 @@ class Statement : public DupableStatement
 	Location         location;
 
 	Statement       *next;     // For making a list of statements.
-
+// maor added:
+	bool statementContainsBlock();
+	void insertBefore(Statement* statementToInsert, Block* enclosingBlock);
+	void insertBeforeTransUnit(Statement* statementToInsert, TransUnit* enclosingBlock);
+	void replaceWithTransUnit(Statement* newStatement, TransUnit* enclosingBlock);
+	std::vector<Block*>* getBlockFromStatement();
+	Block* getEnclosingBlock(Block* enclosingBlock);
+	Statement* getEnclosingStatement(Block* enclosingBlock);
+	void replaceWith(Statement* newStatement, Block* enclosingBlock);
+	void removeAllLabels();
+	bool isStatementContainCaseLabel();
+	Block* encloseInBlockIfNeeded();
 // benny added:
 	const Statement *equalTo;
 	RVBlockNode      bnode;
@@ -222,6 +238,8 @@ class ExpressionStemnt : public Statement
 {
   public:
 	ExpressionStemnt( Expression *expr, const Location& location);
+	// most expressions I make are just simple assignments of a constant to a variable, this would be useful
+	ExpressionStemnt( std::string varName, SymEntry* matchingSymEntry, int assignmentConst, const Location& location);
 	virtual ~ExpressionStemnt();
 
 	virtual void accept(Traversal *t) { t->traverse_expression(this);}
@@ -280,6 +298,9 @@ class SwitchStemnt : public Statement
 	Expression    *cond;
 
 	Statement     *block;
+
+	//maor
+	Statement* getFatherCaseStatementOf(Statement* statement);
 };
 
 // o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o
@@ -449,6 +470,14 @@ class Block : public Statement
 
 	void inherit(Block *other);
 
+	//maor
+	bool statementIsInBlock(Statement* statementToFind);
+	int statementCount();
+	bool isStatementSingleInBlock(Statement* statementToFind);
+	void setBlockHead(Statement* newHead);
+	void appendToTail(Statement* newTail);
+	bool removeStatement(Statement* statementToRemove);
+	
 	Statement     *head;    // List of statements in this block.
 	Statement     *tail;
 };
@@ -471,6 +500,7 @@ class FunctionDef : public Block
 	void findExpr( fnExprCallback cb );
 
 	Symbol  *FunctionName() const;
+	bool isVoid();
 
 	Decl          *decl;    // The declaration.
 

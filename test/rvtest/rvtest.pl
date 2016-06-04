@@ -15,6 +15,7 @@ use File::Basename;
 use File::Copy::Recursive qw(rcopy fcopy);
 use Cwd;
 use Cwd 'abs_path';
+use Switch;
 
 undef my %torun;
 
@@ -80,20 +81,19 @@ sub run_next_test_low {
     my $test = shift;
     my @instrs = @_;
     my $cur;
-
+	
     my @testinstr = split(/\s+/, $test);
     $test = $testinstr[1];
     $cur_test_failed = 2;
     return $test unless defined $torun{$test};
     print "running test: ".$test." (".($n_all_tests-keys(%torun)+1)."/".$n_all_tests.")...\n";
     $cur_test_failed = 0;
-    
     `rm -rf $test`;
     $test_srcdir = $rvtestdir . "tests/" . $test;
     rcopy($test_srcdir, $test) || return test_failed($test, "could not create the directory ./" . $test);
     my $cwd = getcwd();
     chdir($test) || return test_failed($test, "could not enter the directory ./" . $test);
-
+	
     @instrs = update_instructions(@instrs);
     while (@instrs) {
         $cur = shift(@instrs); 
@@ -360,21 +360,14 @@ sub parse_command_line_options {
     while (@_ > 0) {
         my $option = shift;
         if ($option =~ /^-/) {
-            if ($option == '-args') {
-                my $add_args = shift;
-                $value{"global_rvt_args"} .= $add_args." ";
-                print "Additional options ".$add_args." will be enforced on the tests.\n";
-            }
-            elsif ($option == '--') {
-                return @_;
-            }
-            elsif ($option =~ /-h(elp)?/) {
-                print_help_and_exit();
-            }
-            else {
-                print "Illegal option ".$option."\n"; 
-                print_help_and_exit(); 
-            } 
+            switch($option) {
+                case "-args" {my $add_args = shift;
+                              $value{"global_rvt_args"} .= $add_args." ";
+                              print "Additional options ".$add_args." will be enforced on the tests.\n";}
+                case "--"    {return @_;}
+                case /-h(elp)?/ {print_help_and_exit();}
+                else         {print "Illegal option ".$option."\n"; print_help_and_exit(); } 
+            }            
         } 
         else {
             unshift(@_, $option);

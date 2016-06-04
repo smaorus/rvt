@@ -55,6 +55,8 @@ RVGenCtx::RVGenCtx(const char *_where, bool in, const RVGen* pRenamer, const RVS
 
 	my_parent = NULL;
 	my_comp_num = my_item_num = 0;
+
+	m_unitrv = false;
 }
 
 RVGenCtx::RVGenCtx(Symbol *sym,
@@ -73,6 +75,8 @@ RVGenCtx::RVGenCtx(Symbol *sym,
 		if (sym) rv_errstrm << "RVGenCtx_1(" << item << "," << var << "," << sym->name << ")\n";
 
 	init_uf_ctx(sym,item_tp, item, item_pref, var_tp, var, var_side, in, global, _where);
+
+	m_unitrv = false;
 }
 
 RVGenCtx::RVGenCtx(Symbol *sym,
@@ -90,21 +94,32 @@ RVGenCtx::RVGenCtx(Symbol *sym,
 
 	/* in case of side0 UF the item name and type is similar to var's ones */
 	init_uf_ctx(sym,side0_tp, side0_name, item_pref, side0_tp, side0_name, SIDE0, in, global, _where);
+
+	m_unitrv = false;
 }
 
 void RVGenCtx::init_uf_ctx(Symbol *sym,Type* item_tp, const string& item, const string& item_pref, Type* var_tp, const string& var,	const RVSide& var_side, bool in, bool global, const char *_where)
 {
-	const char* var_pref = global ? var_side.get_side_prefix() : "";
+	const char* var_pref = get_prefix(global, sym, var_side);
 
+	
 	where = _where;
 	input   = in;
 
 	my_parent = NULL;
 	my_comp_num = my_item_num = 0;
+	//m_unitrv
+	if (m_unitrv){
 
-
-	add_lane(sym,item_tp, item, NO_SIDE, item_pref + RVTemp::uf_item_prefix(input));
-	add_lane(sym,var_tp, var, var_side, var_pref);
+		Symbol* left_sym = new Symbol();
+		left_sym->name = item_pref;
+		add_lane(left_sym, item_tp, item_pref, NO_SIDE, "");
+		add_lane(sym, var_tp, var, var_side, var_pref);
+	}
+	else{
+		add_lane(sym,item_tp, item, NO_SIDE, item_pref + RVTemp::uf_item_prefix(input));
+		add_lane(sym,var_tp, var, var_side, var_pref);
+	}
 }
 
 Decl* RVGenCtx::find_comp(unsigned lane, unsigned comp_num, unsigned item_num)
@@ -263,14 +278,19 @@ bool RVGenCtx::localize_lanes()
 	return true;
 }
 
-void RVGenCtx::add_lane(Symbol *sym, Type* tp, const string& name, const RVSide& side, const string& prefix)
+void RVGenCtx::add_lane(Symbol *sym, Type* tp, const string& name, const RVSide& side, const string& in_prefix)
 {
 	RVTreeComp compare;
 	int arr_sz = 0, the_ind;
 	bool is_array = false, is_func_ptr = false;
 	Symbol *org_sym;
 	array_item *the_arr = NULL;
-
+	string prefix = in_prefix;
+	if (m_unitrv){
+		if (was_variable_declared_globally_for_both_sides(sym)){
+			prefix = "";
+		}
+	}
 	if( !tp )
 		fatal_error((char *)"RVGenCtx::add_lane() received NULL Type. in: ", where, false);
 
@@ -466,7 +486,15 @@ const RVSide& RVGenCtx::get_side(unsigned lane) const {
 std::string RVGenCtx::get_prefix(unsigned lane) const {
 	check_lane(lane, "RVGenCtx::get_prefix()");
 	return lanes[lane].pref;
+	//return "";
 }
+
+const char* RVGenCtx::get_prefix( bool global, Symbol * sym, const RVSide &var_side )
+{
+	const char* res = global ? (was_variable_declared_globally_for_both_sides(sym)? "" : var_side.get_side_prefix()) : "";
+	return res;
+}
+
 
 bool RVGenCtx::is_localized(unsigned lane) const {
 	check_lane(lane, "RVGenCtx::is_localized()");
@@ -486,4 +514,20 @@ bool RVGenCtx::check_out_arg(unsigned lane) const {
 			      "\" is not a pointer ! in: \""<< where <<"\" \n";
 	return false;
 }
+
+void RVGenCtx::set_unitrv( bool unitrv )
+{
+	m_unitrv = unitrv;
+}
+
+bool RVGenCtx::was_variable_declared_globally_for_both_sides( Symbol* sym )
+{
+	if (sym == NULL) return false;
+	bool res = ((RVGenRename*) m_pRenamer)->is_variable_declared_globally_for_both_sides(sym->name);
+
+	return res;
+}
+
+
+
 

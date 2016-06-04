@@ -1,0 +1,24 @@
+/usr/bin/gcc -fsyntax-only .//mutual.c
+/usr/bin/gcc -fsyntax-only .//mutual1.c
+/usr/bin/cpp -D__FUNCTION__="<unknown>" -I /cygdrive/c/NewRVT/debug/../tools/scripts/../ansi-c-lib -x c .//mutual.c .//S0.c
+/usr/bin/cpp -D__FUNCTION__="<unknown>" -I /cygdrive/c/NewRVT/debug/../tools/scripts/../ansi-c-lib -x c .//mutual1.c .//S1.c
+float  rv_mult(float  x, float  y);float  rv_mult(float  x, float  y);float  rv_mult(float  x, float  y);float  rv_mult(float  x, float  y);rm: No match.
+dos2unix: converting file S0.opb to Unix format ...
+
+C:\NewRVT\test\rvtest\peqmutual>c:/deltacheck-trunk/branches/summary/src/summarizer/summarizer.exe .\mutual.c.rec.c --xml-ui --context-sensitive  1>M.sum 
+
+C:\NewRVT\test\rvtest\peqmutual>c:/NewRVT/tools/scripts/SummarizerParser.exe M.sum M.sumres 
+
+Unhandled Exception: System.Xml.XmlException: Unexpected end of file has occurred. The following elements are not closed: cprover. Line 46720, position 1.
+   at System.Xml.XmlTextReaderImpl.Throw(Exception e)
+   at System.Xml.XmlTextReaderImpl.Throw(String res, String arg)
+   at System.Xml.XmlTextReaderImpl.ThrowUnclosedElements()
+   at System.Xml.XmlTextReaderImpl.ParseElementContent()
+   at System.Xml.XmlTextReaderImpl.Read()
+   at System.Xml.Linq.XContainer.ReadContentFrom(XmlReader r)
+   at System.Xml.Linq.XContainer.ReadContentFrom(XmlReader r, LoadOptions o)
+   at System.Xml.Linq.XElement.ReadElementFrom(XmlReader r, LoadOptions o)
+   at System.Xml.Linq.XElement.Load(XmlReader reader, LoadOptions options)
+   at System.Xml.Linq.XElement.Load(String uri, LoadOptions options)
+   at System.Xml.Linq.XElement.Load(String uri)
+   at SummarizerParser.Program.Main(String[] args)

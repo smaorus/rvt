@@ -9,6 +9,270 @@
 
 #define RV_SECTION 0
 
+FunctionType* RVCtool::current_func0;
+FunctionType* RVCtool::current_func1;
+
+void RVCtool::adjust_all_functions_to_unitrv(Project* parsetree, int side, std::vector<std::string>* uf_names)
+{
+	Statement* first_st = get_glob_stemnt(parsetree);
+	for(Statement* st = first_st; st; st = st->next) {
+		if( (st->isFuncDef()) )
+		{ 
+			adjust_function_to_unitrv((FunctionDef*) st, first_st, side, uf_names);
+		}
+	}
+}
+
+void RVCtool::adjust_function_to_unitrv( FunctionDef* st, Statement* global_statement, int side, std::vector<std::string>* uf_names) 
+{
+	// What about situations where one side might have and rvget\malloc but the other side doesn't? We will have functions 
+	// with a different parameter list.
+	transform_rvget_to_function_parameters(st, global_statement);
+	//transform_malloc_to_function_parameters(st, global_statement);
+	add_cprover_not_null_assume(st);
+	
+}
+
+void RVCtool::transform_malloc_to_function_parameters( FunctionDef* st, Statement* global_statement )
+{
+	int* rv_get_index = new int();
+	Block* block = (Block*) st;
+	*rv_get_index = 0;
+	for (Statement *statement = block->head; statement; statement = statement->next)
+	{
+		if (statement->statementContainsBlock()){
+			std::vector<Block*>* b = statement->getBlockFromStatement();
+			for (unsigned int i = 0 ; i < b->size() ; i++){
+				transform_malloc_to_function_parameters(st, global_statement);
+			}
+		}
+		else if (statement -> type == ST_ExpressionStemnt){
+			ExpressionStemnt* exprStemnt = (ExpressionStemnt*) statement;
+			Expression* expr = exprStemnt->expression;
+			//if (expr_is_malloc_init(expr)){
+			//	//BaseTypeSpec rv_get_type = get_rv_get_type(expr);
+			//	//exprStemnt->expression = create_new_parameter(st, rv_get_index, rv_get_type, global_statement);
+			//}
+			//else{
+			//	look_for_rv_get_call_in_expression_and_replace(st, expr, rv_get_index, global_statement);
+			//}
+		}
+	}
+}
+
+void RVCtool::add_first_call_flag_initialization( FunctionDef* st, std::vector<std::string>* uf_names)
+{
+	for (unsigned int i = 0 ; i < uf_names->size() ; i++){
+		Symbol* s = new Symbol();
+		s->name = (*uf_names)[i];
+		Variable* flag_name = new Variable(s, st->location);
+		IntConstant* const_flag_value = new IntConstant(1, false, st->location);
+		BinaryExpr* b = new AssignExpr(AO_Equal, flag_name, const_flag_value, st->location);
+		ExpressionStemnt* ex = new ExpressionStemnt(b, st->location);
+		st->head->insertBefore(ex, st);
+	}
+}
+
+
+void RVCtool::transform_rvget_to_function_parameters( FunctionDef* st, Statement* global_statement  ) 
+{
+	replace_rv_get_calls(st, (Block*) st, global_statement);
+}
+
+void RVCtool::replace_rv_get_calls( FunctionDef* st, Block* block, Statement* global_statement ) 
+{
+	int* rv_get_index = new int();
+	*rv_get_index = 0;
+	for (Statement *statement = block->head; statement; statement = statement->next)
+	{
+		if (statement->statementContainsBlock()){
+			std::vector<Block*>* b = statement->getBlockFromStatement();
+			for (unsigned int i = 0 ; i < b->size() ; i++){
+				replace_rv_get_calls(st, b->at(i), global_statement);
+			}
+		}
+		else if (statement -> type == ST_ExpressionStemnt){
+			ExpressionStemnt* exprStemnt = (ExpressionStemnt*) statement;
+			Expression* expr = exprStemnt->expression;
+			if (expr_is_rv_get_call(expr)){
+				BaseTypeSpec rv_get_type = get_rv_get_type(expr);
+				exprStemnt->expression = create_new_parameter(st, rv_get_index, rv_get_type, global_statement);
+			}
+			else{
+				look_for_rv_get_call_in_expression_and_replace(st, expr, rv_get_index, global_statement);
+			}
+		}
+	}
+
+}
+
+void RVCtool::look_for_rv_get_call_in_expression_and_replace(FunctionDef* st, Expression* parentExpr, int* rv_get_index, Statement* global_statement) 
+{
+	std::vector<Expression*>* subExpressions = parentExpr->getSubExpressions();
+
+	for (unsigned int i = 0 ; i < subExpressions->size() ; i++){
+		Expression* expr = subExpressions->at(i);
+		if (expr_is_rv_get_call(expr)){
+			BaseTypeSpec rv_get_type = get_rv_get_type(expr);
+			Variable* replacement = create_new_parameter(st, rv_get_index, rv_get_type, global_statement);
+			parentExpr->replaceSubExpression(expr, replacement);
+		}
+		else{
+			look_for_rv_get_call_in_expression_and_replace(st, expr, rv_get_index, global_statement);
+		}
+	}
+
+}
+
+Variable* RVCtool::create_new_parameter( FunctionDef* st, int* rv_get_index, BaseTypeSpec rv_get_type, Statement* global_statement) 
+{
+	Decl* d = create_new_declaration(rv_get_index, rv_get_type);
+	((FunctionType*)st->decl->form)->addArg(d);
+
+	Decl* headerd = create_new_declaration(rv_get_index, rv_get_type);
+	update_declaration(headerd, st->decl->name->name, global_statement);
+
+	Decl* vard = create_new_declaration(rv_get_index, rv_get_type);
+
+	(*rv_get_index)++;
+
+	return new Variable(vard->name, st->location);
+}
+
+void RVCtool::update_declaration(Decl* headerd, std::string funcName, Statement* global_statement) 
+{
+	for(Statement* st = global_statement; st; st = st->next) {
+		if( (st->isDeclaration()) )
+		{
+			DeclStemnt* decl = (DeclStemnt*) st;
+			std::string declFuncName = decl->decls.at(0)->name->name;
+			if (declFuncName == funcName){
+				((FunctionType*) decl->decls.at(0)->form)->addArg(headerd);
+			}
+		}
+	}
+}
+
+
+bool RVCtool::expr_is_rv_get_call( Expression* expr ) 
+{
+	if (expr->etype == ET_FunctionCall){
+		FunctionCall* funcCallExpr = (FunctionCall*) expr;
+		Variable* v = (Variable*) funcCallExpr->function;
+		std::string funcName = v->name->name;
+		return func_is_rv_get(funcName);
+	}
+	else{
+		return false;
+	}
+} 
+
+bool RVCtool::func_is_rv_get( std::string funcName ) 
+{
+	return funcName == "rvs0_rv_getint" || funcName == "rvs1_rv_getint" || funcName == "rvs0_rv_getchar" || funcName == "rvs1_rv_getchar";
+}
+
+
+void RVCtool::add_cprover_not_null_assume( FunctionDef* st ) 
+{
+	std::vector<std::string>* pointerParameters = get_pointer_parameters(st);
+
+	for (unsigned int i = 0 ; i < pointerParameters->size() ; i++){
+		add_cprover_assume_for_parameter(st, pointerParameters->at(i));
+	}
+}
+
+
+void RVCtool::add_cprover_assume_for_parameter( FunctionDef* st, std::string parameterName) 
+{
+	std::string funcName = "__CPROVER_assume";
+	Symbol* symbolFuncName = new Symbol();
+	symbolFuncName -> name = funcName;
+	Variable* funcNameVar = new Variable(symbolFuncName, st->location);
+
+	Symbol* symbol = new Symbol();
+	symbol -> name = parameterName;
+	Variable* param = new Variable(symbol, st->location);
+	IntConstant* zero = new IntConstant(0, false, st->location);
+
+	RelExpr* paramNotNull = new RelExpr(RO_NotEqual, param, zero, st->location);
+	FunctionCall* funcCallExpr = new FunctionCall(funcNameVar, st->location);
+	funcCallExpr->addArg(paramNotNull);
+
+
+
+	ExpressionStemnt* funcCallStatmenet = new ExpressionStemnt(funcCallExpr, st->location);
+
+	Statement* head = st->head;
+	head->insertBefore(funcCallStatmenet, st);
+}
+
+std::vector<std::string>* RVCtool::get_pointer_parameters( FunctionDef* st )
+{
+	std::vector<std::string>* result = new std::vector<std::string>();
+
+	FunctionType* type = (FunctionType*) st->decl->form;
+	Decl* decl;
+	for (int i = 0 ; i < type -> nArgs ; i++){
+		decl = type->args[i];
+		if (decl->form->isPointer()){ // maybe I should also check if its array..
+			result->push_back(decl->name->name);
+		}
+	}
+	return result;
+}
+
+BaseTypeSpec RVCtool::get_rv_get_type( Expression* expr ) 
+{
+	FunctionCall* funcCallExpr = (FunctionCall*) expr;
+	Variable* v = (Variable*) funcCallExpr->function;
+	std::string funcName = v->name->name;
+	if (funcName == "rvs0_rv_getint" || funcName == "rvs1_rv_getint"){
+		return BT_Int;
+	}
+	else
+		return BT_Char;
+
+}
+
+
+Decl* RVCtool::create_new_declaration( int* rv_get_index, BaseTypeSpec rv_get_type ) 
+{
+	Decl* d = new Decl();
+
+	std::ostringstream convert;
+	convert<<"rv_get"<<*rv_get_index;
+	std::string newParamName = convert.str();
+
+	d->name = new Symbol();
+	d->name->name = newParamName;
+	d->form = new BaseType(rv_get_type);
+
+	return d;
+}
+
+
+
+
+
+
+int RVCtool::get_funcdef_parameter_index(Symbol* name, FunctionType* current_func){
+	if (current_func == NULL){
+		return -1;
+	}
+
+	Decl **args = current_func-> args;
+	int nArgs = current_func -> nArgs;
+
+	for (int i = 0 ; i < nArgs ; i++){
+		Decl *argument = args[i];
+		if (argument -> name-> name == name -> name){
+			return i;
+		}
+	}
+
+	return -1;
+}
 
 bool RVCtool::is_unary_change(UnaryExpr *exp) 
 {
@@ -18,7 +282,6 @@ bool RVCtool::is_unary_change(UnaryExpr *exp)
             exp->uOp == UO_PostDec) return true;
     return false;
 }
-
 
 
 bool RVCtool::is_top_level(const SymEntry *se)
@@ -622,7 +885,7 @@ ScopeTbl* RVCtool::get_scope(DeclStemnt* s0p, const char *where)
 	fatal_error("\n",false);
 	return NULL;
   }
-									
+
   return sym->entry->scope;
 }
 
@@ -1001,6 +1264,11 @@ bool RVCtool::isDirectPointerToFunction(Type* tp, FunctionType **ppFuncType) {
 		*ppFuncType = static_cast<FunctionType*>(ptrType->subType);
 	return true;
 }
+
+
+
+
+
 
 
 

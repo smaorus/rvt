@@ -5,6 +5,8 @@
 # $4 is the timeout limit (cpulimit) in seconds - NOT FULLY IMPLEMENTED
 # $5 whether to print debug info
 # $6 C99 compliance
+setenv RVT_PLATFORM cygwin
+
 if ( $5 == 1 ) then 
     echo -- Begin semantic check \(semchk\) \( $1 $2 $3 $4 $5 $6\)
 endif
@@ -16,7 +18,12 @@ cd "$1"
 
 setenv CCFLAGS  " $2.rv.c" #--unwind $3 -I ansi-c-lib
 setenv INSTRUMENTFLAGS  "  --div-by-zero-check  --pointer-check  --bounds-check --assert-to-assume a.out $2.exe"
-setenv CBMCFLAGS "--unwind $3  $2.exe"  # 
+
+if ($3 == -1) then
+	setenv CBMCFLAGS "$2.exe"  # 
+else then
+	setenv CBMCFLAGS "--unwind $3  $2.exe"  # 
+endif
 
 # Ofer make sure all these exist. 
 

@@ -51,6 +51,7 @@ class RVTreeComp : public RVCtool
     bool use_uf_lists;
     bool force_eq_comp_names;
 
+	
     bool eq_basetype(const BaseType* s0p, const BaseType* s1p) const;
     bool eq_sizeof(const SizeofExpr* s0p, const SizeofExpr* s1p) const;
     bool eq_member_op(const BinaryExpr* s0p, const BinaryExpr* s1p) const;

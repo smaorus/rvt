@@ -254,6 +254,7 @@ class Type : public DupableType
 
     // Delete all types stored in this list.
     static void    DeleteTypeList(Type* typelist);
+	bool isVoid();
 
 
     TypeType        type;

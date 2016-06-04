@@ -1,0 +1,40 @@
+digraph G{
+subgraph G0{ 
+side0[label = P0]
+node[color = black];
+simplify0[label = "simplify",fontcolor = "black"];
+main0[label = "main",fontcolor = "black"];
+gcd0[label = "gcd",fontcolor = "black"];
+swap0[label = "swap",fontcolor = "grey"];
+Loop_gcd_while10[label = "Loop_gcd_while1",fontcolor = "black"];
+simplify0[shape = "octagon",  style = "filled", fillcolor = "green"]
+main0[shape = "octagon",  style = "filled", fillcolor = "green"]
+gcd0[shape = "octagon",  style = "filled", fillcolor = "white"]
+swap0[shape = "octagon", color = "blue", style = "filled", fillcolor = "white"]
+Loop_gcd_while10[shape = "octagon",  style = "filled", fillcolor = "green"]
+main0->simplify0
+simplify0->gcd0
+Loop_gcd_while10->swap0
+gcd0->Loop_gcd_while10[style = dotted]
+Loop_gcd_while10->Loop_gcd_while10[style = dotted]
+}
+subgraph G1{ 
+side1[label = P1]
+node[color = black];
+simplify1[label = "simplify",fontcolor = "black"];
+main1[label = "main",fontcolor = "black"];
+gcd1[label = "gcd",fontcolor = "black"];
+swap1[label = "swap",fontcolor = "grey"];
+Loop_gcd_while11[label = "Loop_gcd_while1",fontcolor = "black"];
+simplify1[shape = "octagon",  style = "filled", fillcolor = "green"]
+main1[shape = "octagon",  style = "filled", fillcolor = "green"]
+gcd1[shape = "octagon",  style = "filled", fillcolor = "white"]
+swap1[shape = "octagon", color = "blue", style = "filled", fillcolor = "white"]
+Loop_gcd_while11[shape = "octagon",  style = "filled", fillcolor = "green"]
+main1->simplify1
+simplify1->gcd1
+Loop_gcd_while11->swap1
+gcd1->Loop_gcd_while11[style = dotted]
+Loop_gcd_while11->Loop_gcd_while11[style = dotted]
+}
+}

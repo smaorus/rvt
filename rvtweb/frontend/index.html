@@ -1,0 +1,298 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>RVT</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Le styles -->
+    <link rel="icon" href="./assets/ico/favicon.png">
+    <link href="css/bootstrap.css" rel="stylesheet">
+    <style>
+      body {
+        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+      }
+      .tooltip-inner {
+          white-space:pre;
+          max-width:none;
+      }
+      .alert-danger {
+          white-space:pre;
+          max-width:none;
+      }
+      .top-buffer { margin-top:20px; }
+
+      .btn-block {margin-bottom: 5px;}
+
+      .CodeMirror {
+        border: 1px solid #eee;
+      }
+    </style>
+    <link href="css/bootstrap-responsive.css" rel="stylesheet">
+
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="navbar-brand" href="#">RVT</a>
+          <div class="collapse collapse">
+            <ul class="navbar">
+              <li class="active"><a href="#">Home</a></li>
+              <li><a href="#about">About</a></li>
+              <li><a href="#contact">Contact</a></li>
+            </ul>
+          </div><!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>
+
+      <div class="row">
+        <div class="col-md-2">
+          <div id="options" class="row">
+
+            <button disabled="true" id="-sprtbase" class="btn btn-info btn-block" data-toggle="tooltip" Title="Use this to prove the base case and the recursive step separatly">Separate base case</button>
+            <button disabled="true" id="-unroll" class="btn btn-info btn-block" data-toggle="tooltip" Title="Use this to unroll syntactically both sides of the program">Syntactic unroll</button>
+            <button disabled="true" id="-frama" class="btn btn-info btn-block" data-toggle="tooltip" Title="Use this to strengthen the proof by using abstract interpretation">Value analysis</button>
+            <button disabled="true" id="-main" class="btn btn-info btn-block" data-toggle="tooltip" Title="Use this in case you don't have a main function">Change main</button>
+            <button disabled="true" id="-nooutline_funcs" class="btn btn-info btn-block" data-toggle="tooltip" Title="Use this to prevent rvt from converting arithmetic functions to ufs. This slows the proof.">Keep arithmetics</button>
+            <!-- <button id="-timeout" class="btn btn-info btn-block" data-toggle="tooltip" Title="Use this if you wish to limit the runnning time of rvt">Set timeout</button> -->
+            <!-- <button id="-mt" class="btn btn-info btn-block" data-toggle="tooltip" Title="Use this to perform mutual termination check">Check mutual termination</button> -->
+          </div>
+        </div>
+        <div class="col-md-4">
+          <textarea id="p1" class="form-control" rows="15" id="comment"></textarea>
+        </div>
+        <div class="col-md-4">
+            <textarea id="p2" class="form-control" rows="15" id="comment"></textarea>
+        </div>
+        <div class="col-md-2">
+          <div class="dropdown">
+            <button disabled="true" id="dropsample" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Select Example
+            <span class="caret"></span></button>
+            <ul class="dropdown-menu" style="position: relative;">
+              <li><a href="#">Basecase not in sync</a></li>
+              <li><a href="#">Not in lockstep</a></li>
+              <li><a href="#">Value analysis</a></li>
+              <li><a href="#">Collatz</a></li>
+              <li><a href="#">Ackermann</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="row top-buffer">
+        <div class="col-md-2"></div>
+        <div class="col-md-8">
+            <textarea id="params" name="prms" data-toggle="tooltip" title="Hooray!" class="form-control" rows="1" id="comment"> </textarea>
+        </div>
+      </div>  
+      <div class="row top-buffer">
+        <div class="col-md-2"></div>
+        <div class="col-md-8">
+            <button disabled="true" id="send-btn" class="btn btn-primary btn-block">Send</button>
+        </div>
+      </div>  
+      
+    <img id="loading" style="display: none; position: absolute; left: 45%;" src="./assets/gears.gif">
+    <div id="error" class="alert alert-danger" style="display: none; "></div>
+    <div id="ok" class="alert alert-success" style="display: none;">RVT is ready to use</div>
+    <div class="row top-buffer">
+        <div class="col-md-2"></div>
+        <div id="output" class="col-md-6"></div>
+        <div id="legend" style="display: none;" class="col-md-4" >
+          <dl class="dl-horizontal">
+            <dt class="col-sm-1">Grey Font</dt>
+            <dd class="col-sm-5">Semantic check was not performed</dd>
+
+            <dt class="col-sm-1">Black Font</dt>
+            <dd class="col-sm-5">Semantic check performed</dd>
+
+            <dt class="col-sm-1">Green Fill Color</dt>
+            <dd class="col-sm-5">Functions are semantically equivalent</dd>
+
+            <dt class="col-sm-1">White Fill Color</dt>
+            <dd class="col-sm-5">Could not prove semantical equivalence.</dd>
+
+            <dt class="col-sm-1">Blue Line Color</dt>
+            <dd class="col-sm-5">Functions are syntactically equivalent</dd>
+
+            <dt class="col-sm-1">Black Line Color</dt>
+            <dd class="col-sm-5">Functions are not syntactically equivalent</dd>
+          </dl>
+        </div>    
+    </div> 
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="./lib/codemirror.js"></script>
+    <link rel="stylesheet" href="./lib/codemirror.css">
+    <script src="./mode/javascript/javascript.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <script src="./socket.io-client/socket.io.js"></script>
+    <script src="./viz.js"></script>
+    <script>
+    $(document).ready(function(){
+        $('[data-toggle="tooltip"]').tooltip(); 
+                
+
+    });
+
+    var pcm1 = CodeMirror.fromTextArea($('#p1')[0],
+                { value: "function myScript(){return 100;}\n",
+                  name:  "C",
+                  lineNumbers: true
+                } );
+
+    var pcm2 = CodeMirror.fromTextArea($('#p2')[0],
+                { value: "function myScript(){return 100;}\n",
+                  name:  "C",
+                  lineNumbers: true
+                } );
+
+
+      var connectionProblems = false;
+      
+      var startLoadDisplay=function(){
+        $('#loading').show();
+        $('#send-btn').attr("disabled", true);
+        $('#error').hide();
+        $('#output').hide();
+        $('#legend').hide();
+      };
+      
+      var stopLoadDisplay=function(){
+        $('#loading').hide();
+        $('#send-btn').attr("disabled", false);
+        
+      };
+      
+      function freezeScreen(){
+        $('#dropsample').attr('disabled', true);
+        $('#send-btn').attr('disabled', true);
+
+        $('#options').children().each(function () {
+            $(this).attr("disabled", true);
+        });
+      }
+
+      function unFreezeScreen(){
+        $('#dropsample').attr('disabled', false);
+        $('#send-btn').attr('disabled', false);
+
+        $('#options').children().each(function () {
+            $(this).attr("disabled", false);
+        });
+      }
+
+      function appendParams (text) {
+        var curText = $('#params').val();
+        $('#params').val(curText + ' ' + text)
+      }
+
+      $( "#-main" ).click(function() {
+        appendParams('-main <main-name>')
+      });
+      $( "#-sprtbase" ).click(function() {
+        appendParams('-sprtbase')
+      });
+      $( "#-unroll" ).click(function() {
+        appendParams('-unroll <#1> <#2>')
+      });
+      $( "#-frama" ).click(function() {
+        appendParams('-frama')
+      });
+      $( "#-mt" ).click(function() {
+        appendParams('-mt')
+      });
+      $( "#-timeout" ).click(function() {
+        appendParams('-timeout <#seconds>')
+      });
+      $( "#-nooutline_funcs" ).click(function() {
+        appendParams('-nooutline_funcs')
+      });
+
+
+      var socket = io.connect('http://localhost:3000');
+
+
+      socket.on('connect', function(){
+        if (connectionProblems){
+          $('#error').hide();
+          connectionProblems = false;
+          unFreezeScreen();
+        }
+        else{
+          socket.emit('sample_request', 'Basecase not in sync');
+        }
+      });
+
+      socket.on('disconnect', function () {
+        console.log('disconnect');
+          //$('#ok').hide();
+          $('#error').text("Lost connection to rvt!");
+          $('#error').show();
+          connectionProblems=true;
+          freezeScreen();
+      });
+
+      socket.on('reconnecting', function () {
+        console.log('reconnecting');
+          //$('#ok').hide();
+          $('#error').text("RVT seems unavailable, please contact smaorus@gmail.com for help.");
+          $('#error').show();
+          connectionProblems=true;
+          freezeScreen();
+      });
+
+      $("#send-btn" ).click(function(){
+        socket.emit('message', {p1: pcm1.getValue(), 
+                                p2: pcm2.getValue(), 
+                                prms: $('#params').val()});
+        startLoadDisplay();
+        return false;
+      });
+
+      socket.on('message', function(msg){
+                console.log('message');
+                $('#output').html(Viz(msg));
+                $('#output').show();
+                $('#legend').show();
+                stopLoadDisplay();
+      });
+
+      socket.on('wait', function(msg){
+                console.log(msg);
+                $('#error').text(msg);
+                $('#error').show();
+                stopLoadDisplay();
+      });
+
+      socket.on('sample_response', function(msg){
+                console.log('sample_response');
+                pcm1.setValue(msg.p1);
+                pcm2.setValue(msg.p2);
+                $('#params').val(msg.parameters);        
+                unFreezeScreen(); 
+      });
+
+     
+      $(".dropdown").on('click', 'li a', function(event){
+          freezeScreen();
+          var x = $(this).text();
+          socket.emit('sample_request', x);     
+
+      });
+
+      /*function addTooltipHelp () {
+        $('#params').prop('title', '-nooutline_funcs: don\'t replace arithmetic operators with outline functions\n-sprtbase: Separate base case proof\n-frama: strengthen with frama\n-main <func_name> Function name of the call graph root (default "main")\n-refined: Equal functions stay interpreted if they are non-recursive\n -noauf: Dont auto detect equal functions and replace them by UFs\n-noextufs: Dont assume pairs of external functions are UFs\n-nosem: Dont use also semantic check to detect equal functions\n-semsing: Do semantic check to a single function at a time\n-K <bound>:Unwind bound for equivalence check (default=0 means unbounded)\n-norec2uf: During semchk, do not convert recursive calls to calls to UFs.\n-array2ua: Convert arrays to uninterpreted arrays.\n-kac: Keep all code even if found to be unreachable from main\n-dk <k>: Unwind structures to depth k (default=1)\n-lb <num>: Number of calls the UFs will look back to compare inputs (default=1)\n-r  <num>: Number of records in channels and UF value arrays (default=32)\n-unroll <num1> <num2>: Whether unrolling should be performed. The two integers represent the amount of rolling required on each side\n-sprtbase: Perform seperate proofs for the base case and for the step\n-timeout <seconds>: Timeout for semchk execution\n-mt: Check mutual termination\n-completeness <#>: Completeness level (0 - 2). Default is 0.');
+      }
+   */
+    </script>
+  </body>
+</html>

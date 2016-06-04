@@ -4,4 +4,4 @@ source "$0:h"/rv_set
 set resultFileName = "$1:r"
 cat "$1" "$resultFileName" > $1.temp
 mv "$1.temp" "$resultFileName"
-\rm "$1"
+#\rm "$1"

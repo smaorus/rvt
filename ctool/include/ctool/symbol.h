@@ -141,6 +141,7 @@ class SymEntry
 
     bool    IsEquivalent(const SymEntry *) const;
 
+	bool isTypeDefStructDefinition();
   public:
     SymEntryType    type;    // what kind of entry this is.
     std::string     name;    // The name of the thing.

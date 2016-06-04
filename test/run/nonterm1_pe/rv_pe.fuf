@@ -1,0 +1,5 @@
+`P0                      P1                       Result
+`----------------------- ------------------------ ------
+Loop_infiniteLoop_while1 Loop_infiniteLoop_while1 partially-equivalent
+main                     main                     syntactically-equal partially-equivalent
+infiniteLoop             infiniteLoop             syntactically-equal partially-equivalent

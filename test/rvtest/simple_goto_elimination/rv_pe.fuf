@@ -1,0 +1,4 @@
+`P0                 P1                  Result
+`------------------ ------------------- ------
+main                main                syntactically-equal partially-equivalent
+Loop_main_do_while1 Loop_main_do_while1 syntactically-equal partially-equivalent

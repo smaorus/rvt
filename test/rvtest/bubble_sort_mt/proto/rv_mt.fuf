@@ -1,0 +1,7 @@
+`P0                        P1                         Result
+`------------------------- -------------------------- ------
+Loop_bubble_sort_for1_for1 Loop_bubble_sort_for1_for1 mutually-terminating
+Loop_bubble_sort_for1      Loop_bubble_sort_for1      
+init_array                 init_array                 mutually-terminating
+main                       main                       
+bubble_sort                bubble_sort                syntactically-equal

@@ -41,6 +41,8 @@ RV_LOC_MSGS_ENG_BEGIN
 		"  -dk <k>           Unwind structures to depth k (default=1) \n"
 		"  -lb <num>         Number of calls the UFs will look back to compare inputs (default=1)\n"
 		"  -r  <num>         Number of records in channels and UF value arrays (default=32)\n"
+		"	-unroll <num1> <num2> Whether unrolling should be performed. The two integers represent the amount of rolling required on each side"
+		"	-sprtbase <op num>	 Perform seperate proofs for the base case and for the step. The number is optional." 
 		"  -timeout <seconds> Timeout for semchk execution\n"
 		"  -mt               Check mutual termination\n"
 		"  -completeness <#> Completeness level (0 - 2). Default is 0. "
@@ -50,6 +52,7 @@ RV_LOC_MSGS_ENG_BEGIN
 	    "  -continue_on_fail    keep running even if CBMC returns an uninterpretable result.\n"
 		"  -debug <section(s)>  Emit debug prints to stderr. <section(s)> code in octal\n"
 		"  -directives <directives file name>  Directives file with channel and check point definitions\n"
+		"  -frama Use frama-c value analysis to strengthen proofs"
 		"  <side0 file name> <side1 file name>  Names of the source file for each side\n"
 		"\n"
 		"Currently only one file per side is supported.\n"
@@ -88,6 +91,7 @@ RV_LOC_MSGS_ENG_BEGIN
 	{14, "Previously mentioned -nofuf option is ignored.\n"},
 	{15, "Previously mentioned -fuf %0s option is ignored.\n"},
 	{16, "After -break a string upon which a breakpoint will be raised is expected."},
+    {17, "Unrolling parameters are wrong, there should be two of them for each side"}
 RV_LOC_MSGS_ENG_END("rv_options.cpp");
 
 RVOptions::RVOptions(int argc, char* const argv[])
@@ -179,6 +183,14 @@ bool RVOptions::parse_options(int argc, char* const argv[])
   int optc = argc - 2; /* without <side0_name> and <side1_name> */
   bool lb_set = false;
 
+  side0_unroll_threshold = -1;
+  side1_unroll_threshold = -1;
+  side0_unwind = -1;
+  side1_unwind = -1;
+  basecase_unwind_threshold = 0;
+  seperate_basecase_proof = false;
+  unitrv = false;
+  frama = false;
   if( argc < 3 )
 	return false;
 
@@ -205,6 +217,10 @@ bool RVOptions::parse_options(int argc, char* const argv[])
 	  main_name = argv[i];
 	} 
 	 else
+		if ( !strcmp(argv[i], "-unitrv")){
+			unitrv = true;
+		}
+		else
 		if( !strcmp(argv[i],"-refined") ) {
 			refined = true;
 		}
@@ -367,6 +383,50 @@ bool RVOptions::parse_options(int argc, char* const argv[])
 			return false;
 		}
 		breakOnSeq(argv[i]);
+	}
+	else if (!strcmp(argv[i], "-frama")) {
+		frama = true;
+	}
+	else if (!strcmp(argv[i], "-unroll")){ 
+		if( ++i >= optc || sscanf(argv[i],"%d",&side0_unroll_threshold) < 1 || side0_unroll_threshold < 0) {
+			rv_errstrm << RVLocMsg<17>();
+			return false;
+		}
+		if( ++i >= optc || sscanf(argv[i],"%d",&side1_unroll_threshold) < 1 || side1_unroll_threshold < 0) {
+			rv_errstrm << RVLocMsg<17>();
+			return false;
+		}
+		seperate_basecase_proof = true;
+		side0_unwind = side0_unroll_threshold;
+		side1_unwind = side1_unroll_threshold;
+
+		// When proving the base case we must convert all 
+		//RVGlob::flags(RVGlob::GLBL_OUTLINE, 0);
+		//RVGlob::flags(RVGlob::GLBL_OUTLINE_NOW, 0);
+	}
+	else if (!strcmp(argv[i], "-sprtbase")){
+		
+		
+		seperate_basecase_proof = true;
+		
+		if (side0_unroll_threshold >= 0 && side1_unroll_threshold >= 0){
+			rv_errstrm << "You can't use unrolling and seperate base case proof. When using unwinding a seperate base case proof is"
+				<<"used automatically";
+			return false;
+		}
+		
+		if( ++i >= optc || sscanf(argv[i],"%d",&basecase_unwind_threshold) < 1) {
+			// The base case unwinding threshold is optional
+			basecase_unwind_threshold = 2;
+			i--;
+		}
+
+		side1_unwind = side0_unwind = basecase_unwind_threshold;
+		side1_unroll_threshold = side0_unroll_threshold = 0;
+		// When proving the base case we must convert all 
+		//RVGlob::flags(RVGlob::GLBL_OUTLINE, 0);
+		//RVGlob::flags(RVGlob::GLBL_OUTLINE_NOW, 0);
+
 	}
 	else
 	  if( argv[i][0] == '-' ) {

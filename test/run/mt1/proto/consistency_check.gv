@@ -1,0 +1,6 @@
+digraph G{
+graph [ label = "consistency_check" , fontcolor = "blue" , bgcolor = "lightblue" ];
+S0;
+S1;
+S1->S0;
+}

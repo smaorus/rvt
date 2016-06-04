@@ -1,0 +1,24 @@
+/usr/bin/gcc -fsyntax-only .//alias.c
+/usr/bin/gcc -fsyntax-only .//alias1.c
+/usr/bin/cpp -D__FUNCTION__="<unknown>" -I /cygdrive/c/NewRVT/debug/../tools/scripts/../ansi-c-lib -x c .//alias.c .//S0.c
+/usr/bin/cpp -D__FUNCTION__="<unknown>" -I /cygdrive/c/NewRVT/debug/../tools/scripts/../ansi-c-lib -x c .//alias1.c .//S1.c
+typedef int  (*rvt_FuncPtrSubst_int__const_void_ptr_const_void_ptr)(const void  *rv_arg_0, const void  *rv_arg_1);typedef int  (*rvt_FuncPtrSubst_int__const_void_ptr_const_void_ptr)(const void  *rv_arg_2, const void  *rv_arg_3);Warning: unable to find function class to match declaration of function pointer:
+  int  (*rvt_FuncPtrSubst_int__const_void_ptr_const_void_ptr)(void  *rv_arg_0, void  *rv_arg_1)
+Warning: unable to find function class to match declaration of function pointer:
+  rvt_FuncPtrSubst_int__const_void_ptr_const_void_ptr  fncompare
+Warning: unable to find function class to match declaration of function pointer:
+  int  (*rvt_FuncPtrSubst_int__const_void_ptr_const_void_ptr)(void  *rv_arg_2, voidtypedef int  (*rvt_FuncPtrSubst_int__const_void_ptr_const_void_ptr)(void  *rv_arg_0, void  *rv_arg_1);typedef int  (*rvt_FuncPtrSubst_int__const_void_ptr_const_void_ptr)(void  *rv_arg_2, void  *rv_arg_3);  *rv_arg_3)
+Warning: unable to find function class to match declaration of function pointer:
+  rvt_FuncPtrSubst_int__const_void_ptr_const_void_ptr  fncompare
+rm: No match.
+Warning: argument "n" of function: F (side 0) has argtype: 3 
+  whereas its counterpthe value of mutual term check: 
+the value of mutual term check: 
+art " n " on side 1 has argtype: 7 (1=in,2=out,4=deref,8=array).
+Warning: allow UBS (-dk flag) for better check of functions with pointer argument(s).
+  in: F (side 0) 
+Warning: failed to generate semantic check for: F
+( F, F ) : failed
+Warning: failed to generate semantic check for: main
+( main, main ) : failed
+Output graph written to rv_out.gv

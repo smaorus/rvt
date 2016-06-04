@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cprover>
+<program>Summarizer 5.0</program>
+
+* *  Summarizer 0.1.0 - Copyright (C) 2014                  * *
+* *  (based on CBMC 5.0 (32-bit version))                   * *
+* *                    Daniel Kroening                      * *
+* *                 University of Oxford                    * *
+* *                 kroening@kroening.com                   * *
+
+Usage:                       Purpose:
+
+ summarizer [-?] [-h] [--help] show help
+ summarizer file.c ...        source file names
+
+Frontend options:
+ -I path                      set include path (C/C++)
+ -D macro                     define preprocessor macro (C/C++)
+ --preprocess                 stop after preprocessing
+ --16, --32, --64             set width of int
+ --LP64, --ILP64, --LLP64,
+   --ILP32, --LP32            set width of int, long and pointers
+ --little-endian              allow little-endian word-byte conversions
+ --big-endian                 allow big-endian word-byte conversions
+ --unsigned-char              make "char" unsigned by default
+ --show-stats                 show statistics about program
+ --show-parse-tree            show parse tree
+ --show-symbol-table          show symbol table
+ --show-goto-functions        show goto program
+ --arch                       set architecture (default: i386)
+ --os                         set operating system (default: windows)
+ --gcc                        use GCC as preprocessor
+ --no-arch                    don't set up an architecture
+ --no-library                 disable built-in abstract C library
+ --round-to-nearest           IEEE floating point rounding mode (default)
+ --round-to-plus-inf          IEEE floating point rounding mode
+ --round-to-minus-inf         IEEE floating point rounding mode
+ --round-to-zero              IEEE floating point rounding mode
+
+Program instrumentation options:
+ --bounds-check               enable array bounds checks
+ --pointer-check              enable pointer checks
+ --array-abstraction          use array and string abstraction for bounds checks
+ --div-by-zero-check          enable division by zero checks
+ --memory-leak-check          enable memory leak checks
+ --signed-overflow-check      enable arithmetic over- and underflow checks
+ --unsigned-overflow-check    enable arithmetic over- and underflow checks
+ --nan-check                  check floating-point for NaN
+ --error-label label          check that label is unreachable
+ --show-properties            show the properties
+ --no-assertions              ignore user assertions
+ --no-assumptions             ignore user assumptions
+ --inline                     inline all functions into main
+ --inline-partial nr          inline functions smaller than the given nr of instructions
+ --instrument-output f        output inferred information in goto-binary f
+
+Backend options:
+ --k-induction                use k-induction
+ --no-spurious-check          do not check spuriousness of failed assertions
+ --incremental-bmc            use incremental-bmc
+ --preconditions              compute preconditions
+ --sufficient                 sufficient preconditions (default: necessary)
+ --context-sensitive          context-sensitive analysis from entry point
+ --havoc                      havoc loops and function calls
+ --intervals                  use interval domain
+ --equalities                 use equalities and disequalities domain
+ --zones                      use zone domain
+ --octagons                   use octagon domain
+ --enum-solver                use solver based on model enumeration
+ --binsearch-solver           use solver based on binary search
+ --arrays                     do not ignore array contents
+
+Other options:
+ --version                    show version and exit
+ --xml-ui                     use XML-formatted output
+
+</cprover>

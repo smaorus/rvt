@@ -70,7 +70,9 @@ public:
 BaseType* RVRenameTree::channel_type = NULL; 
 
 
-RVRenameTree::RVRenameTree(Project* _tree, const RVSide& _side)
+
+RVRenameTree::RVRenameTree(Project* _tree, const RVSide& _side, 
+	rv_unroller* _unroller)
   : RVWalk(/*decl_to_symbol =*/ true), parsetree(_tree), side(_side)
 {
   directs = NULL;
@@ -91,7 +93,18 @@ RVRenameTree::RVRenameTree(Project* _tree, const RVSide& _side)
 
   def_rvact_vals = NULL;
   m_bSymbolForTypeName = false;
+  globally_declared_variables = new std::vector<std::string>();
+
+  if (_unroller != 0){
+	  is_unrolling_activated = true;
+	  unroller = _unroller;
+  }
+  else{
+	  is_unrolling_activated = false;
+  }
 }
+
+
 
 RVRenameTree::~RVRenameTree()
 {
@@ -229,6 +242,7 @@ bool RVRenameTree::rename_globs(HashTbl* ht, const RVDecisionParams& params,
   SymEntry* se;
   HashTblIter hit(ht);
   HashTbl new_ht;
+  string fname = this->semchk_pair->name;
 
   while( (se = hit.begin()) ) { // processes first entry and remove it
 	  const char* prefix = side.get_side_prefix();
@@ -251,8 +265,13 @@ bool RVRenameTree::rename_globs(HashTbl* ht, const RVDecisionParams& params,
 			  // Don't rename things such as __CPROVER_assume()/assert()...
 			  if (RVParse::ignore_func(se->name))
 			      do_rename = false;
+			  
 	      }
-
+		  if (m_unitrv){
+			  if (se->type == TagEntry || se->type == VarDeclEntry || se->isTypeDefStructDefinition()){
+				  do_rename = false;
+			  }
+		  }
 	      if(DBG && do_rename) {
 	    	  rv_errstrm<<"Prefix: "<<prefix<<"\n";
 	    	  se->Show(rv_errstrm); rv_errstrm<<"\n";
@@ -330,12 +349,13 @@ if(DBG) rv_errstrm << "Finish RVRenameTree::rename_all_tags() \n";
 
 bool RVRenameTree::rename_all(const RVDecisionParams& params)
 {
+	
   CHK_NULL1(parsetree, "parsetree in RVRenameTree::rename_all()");
   bool ret = true;
 
   rv_arrays().set_side(side.index());
 
-  /* we will generate check points only if directs where supplied: */
+ // /* we will generate check points only if directs where supplied: */
   if( directs )
 	ret = create_rvact_proto() && ret;
 
@@ -363,6 +383,24 @@ bool RVRenameTree::rename_all(const RVDecisionParams& params)
   return ret;
 }
 
+// When working with unitrv some of the global declarations such as global variable declarations must be shared
+// between both sides. This function locates which declarations should be shared and prints them. They aren't printed
+// anywhere else.
+bool RVRenameTree::print_mutual_global_declarations( RVTemp& temp, std::vector<std::string>* uf_names, bool mutual_term_check ) 
+{
+	Statement* first_st = get_glob_stemnt(parsetree);
+	for(Statement* st = first_st; st; st = st->next) {
+		if (global_definition(st)){
+			  if (global_variable_definition(st)){
+				  remember_global_variable_name((*((*(((DeclStemnt*) st)->decls)[0]).name)).name);
+			  }
+			  st->print(temp.get_strm(),0);
+			  temp.print("\n");
+	    }
+	}
+	
+	return true;
+}
 
 bool RVRenameTree::print_all(RVTemp& temps, bool print_decls/*=true*/, bool print_funcs/*=true*/) const
 {
@@ -375,7 +413,7 @@ bool RVRenameTree::print_all(RVTemp& temps, bool print_decls/*=true*/, bool prin
 	/* print UF prototype before recursive semchked func: */
 	if( semchk_pair && semchk_recursive && semchk_uf_sym &&
 	st->isFuncDef() && ((FunctionDef*)st) == semchk_func ) {
-	  ftp = get_symbol_type(semchk_uf_sym, semchk_uf_sym->name.data());
+		ftp = get_symbol_type(semchk_uf_sym, semchk_uf_sym->name.data());
 	  ftp->printType(temps.get_strm(), semchk_uf_sym, true, 0);
 	  temps.print(";\n");
 	}
@@ -383,11 +421,25 @@ bool RVRenameTree::print_all(RVTemp& temps, bool print_decls/*=true*/, bool prin
 	// print the right class of global components:
 	if( (st->isFuncDef() ? print_funcs : print_decls) )
 	  { 
-		  st->print(temps.get_strm(),0);
-		  temps.print("\n");
+
+		  if (m_unitrv){
+			  if (!global_definition(st)){
+				  st->print(temps.get_strm(),0);
+				  temps.print("\n");
+			  }
+		  }
+		  else{
+			  st->print(temps.get_strm(),0);
+			  temps.print("\n");
+		  }
+		  
 	}
   }
-	
+
+	if (is_unrolling_activated && print_decls){
+		temps.print(unroller->get_all_unroll_variables());
+		temps.print(unroller->get_all_unroll_helper_func_prototypes());
+	}
   return true;
 }
 
@@ -587,6 +639,9 @@ bool RVRenameTree::process_func(FunctionDef *_body)
  bool ret = true;
 
   body = _body;
+  if (is_unrolling_activated){
+	unroller->save_func_decl(body->decl);
+  }
   std::string orig_fname = body->FunctionName()->name;
   set_where( orig_fname.data() );
 
@@ -930,11 +985,17 @@ bool RVRenameTree::try_replace(Expression** pit)
 	  func_var_exp = (Variable *) tcall->function;
 	  fsymbol = func_var_exp->name;
 
+
+	  if (is_unrolling_activated && current_func_name == fsymbol->name){
+		  unroller->add_uf_function_call(fsymbol->name);
+	  }
+
 	  // In case the recursive function call is not the lower most level, 
 	  // We need to replace it with a UF
 	  // Otherwise the code that will be generated will contain a recursion
 	  // which will make the cbmc results weird ...
-	  
+
+
 	  if (is_recursive_func(fsymbol->name ) && (current_func_name == fsymbol->name)) {
 		  Decl         *tmp_decl;
 		  std::string  the_name;
@@ -1106,7 +1167,12 @@ bool RVRenameTree::process(Symbol* it)
 	/* if it is a recursive call in the body of the semchked function -
 	   use the UF symbol (the default one): */
 	if( semchk_use_uf_prefix ) {
-	  it->name = semchk_uf_sym->name;
+	  if (is_unrolling_activated){
+		  it->name = unroller->get_unroll_helper_func(it->name);
+	  }
+	  else{
+		it->name = semchk_uf_sym->name;
+	  }
 	  it->entry = semchk_uf_sym->entry;
 	  return true;
 	}
@@ -1228,6 +1294,106 @@ bool RVRenameTree::process(Decl* s0p) {
 void RVRenameTree::discharge(RVDischarger&) {
 	delete_parsetree();
 }
+
+Project* RVRenameTree::get_parse_tree()
+{
+	return parsetree;
+}
+
+
+// This function returns true when the statement is a global variable that should be shared among both sides.
+bool RVRenameTree::global_definition( Statement* st ) const
+{
+	if (!st->isDeclaration()){
+		return false;
+	}
+
+	DeclStemnt* declStemnt = (DeclStemnt*) st;
+	if (declStemnt->decls.size() == 1){
+		Decl* d = declStemnt->decls.at(0);
+
+		if (d->form->type == TT_Function){
+			return false;
+		}
+		if (d->form->type != TT_Function && d->form->storage == ST_Typedef){
+			return true;
+		}
+		if (d->storage == ST_Typedef){
+			return false;
+		}
+	}
+	return true;
+}
+
+void RVRenameTree::set_unitrv( bool unitrv )
+{
+	m_unitrv = unitrv;
+}
+
+void RVRenameTree::print_first_call_flag_variable( RVTemp& temp, std::vector<std::string>* uf_names) const
+{
+	for (unsigned int i = 0 ; i < uf_names->size() ; i++){
+		std::string uf_name = (*uf_names)[i];
+		std::string flag_name = uf_name;
+		temp.print("_Bool " + flag_name + ";\n");
+	}
+}
+
+bool RVRenameTree::global_variable_definition( Statement* st ) const
+{
+	if (!st->isDeclaration()){
+		return false;
+	}
+
+	DeclStemnt* declStemnt = (DeclStemnt*) st;
+	if (declStemnt->decls.size() == 1){
+		Decl* d = declStemnt->decls.at(0);
+
+		if (d->form->type == TT_Function){
+			return false;
+		}
+		if (d->form->storage == ST_Typedef){
+			return false;
+		}
+		if (d->storage == ST_Typedef){
+			return false;
+		}
+		if (d->name == NULL){
+			return false;
+		}
+	}
+	return true;
+}
+
+void RVRenameTree::remember_global_variable_name( std::string st ) 
+{
+	add_variable_declared_globally_for_both_sides(st);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 /* RVLoopReplaceBase functions: */

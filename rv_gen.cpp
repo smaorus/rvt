@@ -16,6 +16,8 @@
 #include "rv_dataflow.h"
 #include "rv_glob.h"
 
+#include "rv_summarizer.h"
+
 #include <stdlib.h>
 #include <fstream>
 #include <sstream>
@@ -59,6 +61,7 @@ RVGen::RVGen(RVTemp& _temps) :
 	ubs_depth = -1; 
 	look_back = 0;
 	m_pSemChecker = NULL;
+
 }
 
 RVGen::~RVGen()
@@ -162,6 +165,10 @@ ArrayType *RVGen::ptr_2_array_types(Symbol *sym, PtrType *in_pt_type, int sz) co
 		pt_type = get_symbol_type(sym, where_);
         if (pt_type->isArray()) {
         	res = static_cast<ArrayType*>(pt_type->dup0());
+			if (!res->size){
+				res->size = exp;
+			}
+
 		    add_prefix_to_type(current_side.get_side_prefix(), res);
         	return res;
         }
@@ -262,7 +269,12 @@ bool RVGen::gen_single_op(ItemOp op, RVGenCtx& ctx, std::string& by, int depth /
 			if (is_array) {
 				temps.gen_nondet_save_val_arr(item, var, type_text, arr_sz, is_long,the_arr, ACT_BY);
 			} else {
-				temps.gen_nondet_save_val(item, var, type_text, pointer, is_long, ACT_BY);
+				if (m_unitrv){
+					temps.gen_nondet_unitrv_save_val(item, var, type_text, pointer, is_long, ACT_BY);
+				}
+				else{
+					temps.gen_nondet_save_val(item, var, type_text, pointer, is_long, ACT_BY);
+				}
 			}
 		}
 		break;
@@ -280,8 +292,9 @@ bool RVGen::gen_single_op(ItemOp op, RVGenCtx& ctx, std::string& by, int depth /
 		}
 		else if( is_basetype(ctx.get_real_type(0), BT_Void) )
 			temps.gen_memcpy(var, item, RV_VOID_PTR_SIZE, ACT_BY);
-		else
+		else{
 			temps.gen_copy_val(var, item, ACT_BY, pointer);
+		}
 		break;
 
 	case COPY_S1_to_S0:
@@ -727,12 +740,13 @@ private:
 /* UF generation code: */
 /*=====================*/
 
-RVUFGen::RVUFGen(RVTemp& _temps) :
-RVGenRename(_temps)
+RVUFGen::RVUFGen(RVTemp& _temps, RVFramaSum& _summarizer_side0, RVFramaSum& _summarizer_side1, bool _seperate_basecase_proof) :
+RVGenRename(_temps), summarizer_side0(_summarizer_side0), summarizer_side1(_summarizer_side1)
 { 
 	pfp = NULL;
 	uf_strname[0] = "ERROR_SIDE0";
 	uf_strname[1] = "ERROR_SIDE1";
+	seperate_basecase_proof = _seperate_basecase_proof;
 }
 
 bool RVUFGen::is_in_arg(unsigned i)
@@ -881,6 +895,136 @@ bool RVUFGen::gen_uf_array()
 	return true;
 }
 
+bool RVReUfGen::gen_unitrv_uf_array()
+{
+	/* get function prototype: */
+	FunctionType *proto0 = (FunctionType*)pfp->side_func[0]->decl->form;
+	if( !proto0 || proto0->type != TT_Function ) {
+		rv_errstrm << "RVReUfGen::gen_unitrv_uf_array(): bad prototype for side 0 function: " 
+			<< pfp->side_name[0] << " .\n";
+		return false;
+	}
+
+	// generating the #define statement
+	temps.gen_max_array_size(pfp->name);
+	
+	//generating the recording arrays for all inputs (both local and global)
+	gen_all_recording_arrays(proto0, pfp->name);
+	
+	// generating the arrays that will record the outputs of the side 0 function so that incase both sides are equivalent
+	// the values recorded will be used on side1
+	gen_all_output_recording_arrays(proto0, pfp->name);
+
+	// generating the mark arrays that unitrv will assert when running
+	gen_mark_arrays(pfp->name);
+
+	// generating the count variable 
+	gen_count_variable(pfp->name);
+
+	if (get_is_mutual_termination_set()){
+		// generating a boolean variable that will tell the uf on side 0 that this is its first call so that it will initialize
+		// all variables.
+		gen_first_call_to_uf_flag(pfp->name);
+	}
+
+	temps.flush();
+}
+
+void RVReUfGen::gen_first_call_to_uf_flag( std::string name )
+{
+	BaseType* p = new BaseType(BT_Bool);
+
+	Symbol* sym = new Symbol();
+	sym->name = get_first_call_flag_name(name) + ";";
+
+	std::ostringstream type_strm;
+	p->printType(type_strm, sym, true, 0);
+	std::string s = type_strm.str();
+
+	temps.print(s + "\n");
+}
+
+void RVReUfGen::gen_count_variable( std::string name )
+{
+	BaseType* p = new BaseType(BT_Int);
+
+	Symbol* sym = new Symbol();
+	sym->name = get_unitrv_count_var_name(name) + ";";
+
+	std::ostringstream type_strm;
+	p->printType(type_strm, sym, true, 0);
+	std::string s = type_strm.str();
+
+	temps.print(s + "\n");
+}
+
+void RVReUfGen::gen_mark_arrays( std::string name )
+{
+	gen_mark_array(name, "0");
+	gen_mark_array(name, "1");
+}
+
+void RVReUfGen::gen_mark_array( std::string name, std::string side )
+{
+	BaseType* p = new BaseType(BT_Int);
+
+	Symbol* sym = new Symbol();
+	sym->name = get_mark_array_dereferencing(name, side);
+
+	std::ostringstream type_strm;
+	p->printType(type_strm, sym, true, 0);
+	std::string s = type_strm.str();
+
+	temps.print(s + "\n");
+}
+
+void RVReUfGen::gen_all_recording_arrays( FunctionType * proto0, const std::string& ufname )
+{
+	temps.print("\n//Recording arrays for local parameter input\n");
+	for(int i = 0; i < proto0->nArgs; i++){
+		Decl* d = proto0->args[i];
+		//if( is_out_arg(i)){
+			print_array_for_parameter(d, ufname);
+		//}
+	}
+
+	// now we create the global ones.
+
+	temps.print("\n//Recording arrays for global input\n");
+	SymbolVector vec = pfp->side_func[0]->fnode.read;
+
+	SymbolVector::const_iterator  it;
+	FORVEC(it,(vec)) {
+		if( ignore_in_global(*it, 0) ) continue;
+		/* gen code to save its value in UFarr: */
+		Decl *d = (*it)->entry->uVarDecl;
+		print_array_for_parameter(d, ufname);
+	}   
+	
+}
+
+//todo: add the ufnam to the recording array name
+void RVReUfGen::print_array_for_parameter(Decl* d, const std::string& ufname )
+{
+	Type* sub;
+	if (d->form->type == TT_Base){
+		sub = d->form;
+	}
+	else if (d->form->type == TT_Pointer){
+		sub = ((PtrType*) d->form)->subType;
+	}
+	
+	string var_name = UNITRV_SPECIAL_MUTUAL_TERMINATION_TOKEN + ufname + "_" + d->name->name + "[" + temps.uf_array_size_name(ufname) + "];";
+	Symbol* newsym = new Symbol();
+	newsym->name = var_name;
+	std::ostringstream type_strm;
+	sub->printType(type_strm, newsym, true, 0);
+	std::string s = type_strm.str();
+
+	temps.print(s + "\n");
+}
+
+
 std::string RVUFGen::item_prefix()
 {
 	return uf_strname[current_side.index()];
@@ -1008,7 +1152,7 @@ typedef struct { // change tag: NULL_DEREF_IN_UF
 /// The solution is explained in change_tags.txt
 /// <param name="counter">if we have multiple UFs calls, we need to add a counter to the name to avoid colisions (e.g. if the variable 'x' is an output of both 'f' and 'g')</param>
 ///</summary>
-void RVUFGen::gen_side0_cbmc_uf(int counter)
+void RVUFGen::gen_side0_cbmc_uf(int counter, bool rec_func_uf)
 {
 	string location(__FUNCTION__);
 	Decl *decl;
@@ -1059,6 +1203,7 @@ void RVUFGen::gen_side0_cbmc_uf(int counter)
 		//DIMAXXX RVGenCtx ctx(decl->name, decl->form, decl->name->name, "", true, false, m_where, this);
 
 		RVGenCtx ctx(m_where, true, this);
+		ctx.set_unitrv(m_unitrv);
     	ctx.add_lane(decl->name, decl->form, decl->name->name, SIDE0, "");
 
 		gen_item_or_struct_op(ADD, ctx, location);
@@ -1068,6 +1213,7 @@ void RVUFGen::gen_side0_cbmc_uf(int counter)
 		}
 	}
 	// for each input global:
+	
 	vec = &pfp->side_func[0]->fnode.read;
 	FORVEC(it,(*vec)) {
 		if( ignore_in_global(*it, 0) ) continue;	// globals that are read-only are ignored.
@@ -1075,7 +1221,12 @@ void RVUFGen::gen_side0_cbmc_uf(int counter)
 		//DIMAXXX RVGenCtx ctx1(decl->name, decl->form, decl->name->name, "", true, true, m_where, this);
         
         RVGenCtx ctx(m_where, true, this);
-    	ctx.add_lane(decl->name, decl->form, decl->name->name, SIDE0, SIDE0.get_side_prefix());
+		ctx.set_unitrv(m_unitrv);
+		string global_var_prefix = "";
+		if (!m_unitrv){
+			global_var_prefix = SIDE0.get_side_prefix();
+		}
+    	ctx.add_lane(decl->name, decl->form, decl->name->name, SIDE0, global_var_prefix);
 
 		gen_item_or_struct_op(ADD, ctx, location);
 		if (ctx.is_pointer(0)&& !ctx.is_array(0)) {
@@ -1124,6 +1275,7 @@ void RVUFGen::gen_side0_cbmc_uf(int counter)
 		//DIMAXXX RVGenCtx ctx(decl->name, decl->form, decl->name->name, "", false, false, m_where, this);
 
 		RVGenCtx ctx(m_where, false, this);
+		ctx.set_unitrv(m_unitrv);
     	ctx.add_lane(decl->name, decl->form, decl->name->name, SIDE0, "");
 
 		if (ctx.is_aggregate()) is_aggregate = true;
@@ -1138,7 +1290,13 @@ void RVUFGen::gen_side0_cbmc_uf(int counter)
 		//DIMAXXX RVGenCtx ctx(decl->name, decl->form, decl->name->name, "", false, true, m_where, this);
 
 		RVGenCtx ctx(m_where, false, this);
-    	ctx.add_lane(decl->name, decl->form, decl->name->name, SIDE0, SIDE0.get_side_prefix());
+		ctx.set_unitrv(m_unitrv);
+		string global_var_prefix = "";
+		if (!m_unitrv){
+			global_var_prefix = SIDE0.get_side_prefix();
+		}
+
+    	ctx.add_lane(decl->name, decl->form, decl->name->name, SIDE0, global_var_prefix);
 
 		if (ctx.is_aggregate()) is_aggregate = true;
 		gen_item_or_struct_op(ADD, ctx, location);	
@@ -1170,8 +1328,10 @@ void RVUFGen::gen_side0_cbmc_uf(int counter)
 	}
 	temps.print("\n  /* CBMC-UF side 0: */ \n");
 
-	// generate func prototype: 	
+	add_prefix_if_required_side0(pfp, "rvs0_");
+	
 	pfp->side_func[0]->decl->print(proto_strm, true, 0);
+	
 	temps.print(ren[0]->convert_ids( proto_strm.str() ));	
 	temps.gen_uf_head(ren[0]->convert_ids(ret_type_strm.str()), pretvar);		
 	
@@ -1187,6 +1347,11 @@ void RVUFGen::gen_side0_cbmc_uf(int counter)
 	}
 
 	temps.separate_uf_streams();
+
+	if (seperate_basecase_proof && rec_func_uf){
+		print_basecase_flag_update();
+	}
+
 	if (arr_P_out.length() > 0) {
 		temps.print("  static unsigned char rv_call_counter = 0;\n");	
 		temps.print(arr_P_out); 
@@ -1218,6 +1383,8 @@ void RVUFGen::gen_side0_cbmc_uf(int counter)
 	}
 
 	temps.unite_uf_streams();
+	//This is where the summary should go.
+	temps.print("__CPROVER_assume(" + summarizer_side0.getIntervalCondition(pfp->name) + ");");
 	temps.gen_uf_tail(pretvar);
 }
 
@@ -1225,7 +1392,7 @@ void RVUFGen::gen_side0_cbmc_uf(int counter)
 /// Based on the CBMC UF macros. Generates the UF for side 1.
 /// <param name="counter">if we have multiple UFs calls, we need to add a counter to the name to avoid colisions (e.g. if the variable 'x' is an output of both 'f' and 'g')</param>
 ///</summary>
-void RVUFGen::gen_side1_cbmc_uf(int counter)
+void RVUFGen::gen_side1_cbmc_uf(int counter, bool rec_func_uf)
 {
 	string location(__FUNCTION__);
 	Decl *decl, *side0_decl; 
@@ -1288,7 +1455,12 @@ void RVUFGen::gen_side1_cbmc_uf(int counter)
 		//DIMAXXX RVGenCtx ctx(decl->name,side0_decl->form, side0_decl->name->name, "", decl->form, decl->name->name, SIDE1, true, true, m_where, this);
 
 		RVGenCtx ctx(m_where, true, this, SIDE1);
-		ctx.add_lane(decl->name, decl->form, decl->name->name, SIDE1, SIDE1.get_side_prefix());
+		string global_var_prefix = "";
+		if (!m_unitrv){
+			global_var_prefix = SIDE1.get_side_prefix();
+		}
+
+		ctx.add_lane(decl->name, decl->form, decl->name->name, SIDE1, global_var_prefix);
 
 		gen_item_or_struct_op(ADD, ctx, location);	
 		if (ctx.is_pointer(0) && !ctx.is_array(0)) {
@@ -1358,7 +1530,11 @@ void RVUFGen::gen_side1_cbmc_uf(int counter)
 		//DIMAXXX RVGenCtx ctx(decl->name, side0_decl->form, side0_decl->name->name, "", decl->form, decl->name->name, SIDE1, false, true, m_where, this);
 
 		RVGenCtx ctx(m_where, false, this, SIDE1);
-		ctx.add_lane(decl->name, decl->form, decl->name->name, SIDE1, SIDE1.get_side_prefix());
+		string global_var_prefix = "";
+		if (!m_unitrv){
+			global_var_prefix = SIDE1.get_side_prefix();
+		}
+		ctx.add_lane(decl->name, decl->form, decl->name->name, SIDE1, global_var_prefix);
 
 		if (ctx.is_aggregate()) is_aggregate = true;
 		gen_item_or_struct_op(ADD, ctx, location);	
@@ -1395,8 +1571,9 @@ void RVUFGen::gen_side1_cbmc_uf(int counter)
 
 
 	temps.print("\n  /* CBMC-UF side 1: */ \n");
-
-	// generate func prototype: 	
+	
+	add_prefix_if_required_side1(pfp, "rvs1_");
+	
 	pfp->side_func[1]->decl->print(proto_strm, true, 0);	
 
 	temps.print(ren[1]->convert_ids( proto_strm.str() ));
@@ -1416,6 +1593,10 @@ void RVUFGen::gen_side1_cbmc_uf(int counter)
 		temps.print("  }\n");  
 	}
 	
+	if (seperate_basecase_proof && rec_func_uf ){
+		print_basecase_flag_update();
+	}
+
 	temps.separate_uf_streams();  // we separate streams because the following involves both declarations and code. 
 	temps.print(arr_eq_decl);
 
@@ -1451,7 +1632,184 @@ void RVUFGen::gen_side1_cbmc_uf(int counter)
 	}
 	m_vars.clear();	
 	temps.unite_uf_streams(); // This prints the stream in order: declaraions; code.
+
+	temps.print("__CPROVER_assume(" + summarizer_side1.getIntervalCondition(pfp->name) + ");");
+
+
 	temps.gen_uf_tail(pretvar);
+}
+
+
+bool RVReUfGen::gen_unitrv_side0_uf()
+{
+	string location(__FUNCTION__);
+	bool ret = true;
+	int i;
+	Decl *decl;
+	bool pointer;
+	SymbolVector *vec;
+	SymbolVector::const_iterator  it;
+	std::ostringstream proto_strm;
+	std::ostringstream ret_type_strm;
+	const std::string *pretvar = &uf_retvar;
+	std::string item_pref;
+
+	RVGenCtx::reset_local_var_count();
+
+	current_side = SIDE0;
+	m_where = pfp->side_name[0].data();
+	//item_pref = item_prefix(); // gotta change this function
+
+	//item_pref = unitrv_item_prefix();
+
+	temps.print("\n /*** uninterpreted function side 0: ***/ \n");
+
+	/* generate 0 side func prototype: */
+	FunctionType *proto0 = (FunctionType*)pfp->side_func[0]->decl->form;
+	if( !proto0 || proto0->type != TT_Function ) {
+		rv_errstrm << "RVUFGen::gen_side0_uf(): bad prototype for side 0 function: " 
+			<< pfp->side_name[0] << " .\n";
+		return false;
+	}
+	add_prefix_if_required_side0(pfp, "rvs0_");
+	pfp->side_func[0]->decl->print(proto_strm, true, 0);
+	CHK_NULL1( ren[0], "ren[0] in RVUFGen::gen_side0_uf()");
+
+	//temps.separate_uf_streams();
+	temps.print( ren[0]->convert_ids( proto_strm.str() ));
+
+	/* if the function returns void: */
+	if( is_basetype(proto0->subType, BT_Void) )
+		pretvar = NULL;  /* gen no retvar */
+	else {
+		pointer = is_pointer(proto0->subType, m_where);
+		if( pointer )  /* returns non tokenized pointer: */
+			rv_errstrm << "Warning: return value of UF \"" << pfp->side_name[0].data() 
+			<< "\" (side 0) is a pointer !\n";
+
+		proto0->subType->printType( ret_type_strm, NULL, true, 0);
+	}
+	temps.gen_uf_head( ren[0]->convert_ids(ret_type_strm.str()), pretvar);
+
+
+	indent = 1;
+
+	temps.print(" /* Zeroing both mark arrays and count variable for unitrv mutual termination check */\n");
+
+	//gen_initializing_of_unitrv_mutual_termination_variables();
+
+
+	temps.print("  /* save values of input arguments: */\n");
+	/* for each input arg: */
+	for(i = 0; i < proto0->nArgs; i++) {
+		/* gen code to save its value in UFarr: */
+		decl = proto0->args[i];
+		if( !is_in_arg(i) || !decl || !decl->name ) continue;
+		item_pref = unitrv_item_prefix(decl->name->name);
+		string type_prefix = get_variable_prefix(decl->form);
+		temps.print("	" + item_pref + " = " + type_prefix + decl->name->name + ";\n");
+		/*gen_unitrv_record_data_line(decl->name->name);*/
+
+		/*RVGenCtx ctx(decl->name, decl->form, decl->name->name, item_pref, true, false, m_where, this);		
+		ret = gen_item_or_struct_op(COPY_S1_to_S0, ctx, location) && ret;*/
+	}
+	//item_pref = item_prefix();
+	/* for each input global: */
+	temps.print("  /* save values of input globals: */\n");
+	vec = &pfp->side_func[0]->fnode.read;
+	FORVEC(it,(*vec)) {
+		if( ignore_in_global(*it, 0) ) continue;
+		/* gen code to save its value in UFarr: */
+		decl = (*it)->entry->uVarDecl;
+		item_pref = unitrv_item_prefix(decl->name->name);
+		RVGenCtx ctx(decl->name, decl->form, decl->name->name, item_pref, true, true, m_where, this);
+		ret = gen_item_or_struct_op(COPY_S1_to_S0, ctx, location) && ret;
+	}   
+
+
+	temps.print("\n  /* generate and save values of output arguments and globals: */\n");
+	/* for each output arg: */
+	for(i = 0; i < proto0->nArgs; i++) {
+		decl = proto0->args[i];
+		if( !is_out_arg(i) || !decl || !decl->name ) continue;
+		
+		item_pref = unitrv_output_item_prefix(decl->name->name);
+
+
+		RVGenCtx ctx(decl->name,decl->form, decl->name->name, item_pref, false, false, m_where, this);
+		if( !ctx.check_out_arg(1) ) continue;
+
+		// pointer arg value must be changed in place - 
+		//  allocating new place won't change the value visible from outside.
+		dont_alloc_root = true;
+		//temps.gen_nondet_save_val("left", "right", 
+		ret = gen_item_or_struct_op(NONDET_SAVE, ctx, location) && ret;
+	}
+
+	/* for the return value: */
+	//decl = proto0->args[proto0->nArgs - 1];
+	//item_pref = unitrv_output_item_prefix(decl->name->name);
+
+	if(pretvar) {
+		temps.print("\n  /* generate and save value for the functino output : */\n");
+		Symbol* retvalsym= new Symbol();
+		retvalsym->name = *pretvar;
+
+		Decl* decl = new Decl(retvalsym);
+		decl->form = proto0->subType;
+
+		item_pref = unitrv_output_item_prefix(decl->name->name);
+		
+
+		RVGenCtx ctx((Symbol *) NULL,proto0->subType, *pretvar, item_pref,	false, false, m_where, this);
+		ret = gen_item_or_struct_op(NONDET_SAVE, ctx, location) && ret;
+	}
+
+	///* Now printing the return variable */
+	
+
+
+	//RVGenCtx ctx(decl->name,decl->form, decl->name->name, item_pref, false, false, m_where, this);
+	////if( !ctx.check_out_arg(1) ) continue;
+
+	//// pointer arg value must be changed in place - 
+	////  allocating new place won't change the value visible from outside.
+	//dont_alloc_root = true;
+	////temps.gen_nondet_save_val("left", "right", 
+	//ret = gen_item_or_struct_op(NONDET_SAVE, ctx, location) && ret;
+
+	/* for each output global: */
+	vec = &pfp->side_func[0]->fnode.written;
+	FORVEC(it,(*vec)) {
+		decl = (*it)->entry->uVarDecl;
+		item_pref = unitrv_output_item_prefix(decl->name->name);
+		RVGenCtx ctx(decl->name,decl->form, decl->name->name, item_pref, false, true, m_where, this);
+		ret = gen_item_or_struct_op(NONDET_SAVE, ctx, location) && ret;
+	}
+
+	std::string count_var_name = get_count_var_name(pfp->name);
+	print_unitrv_mark_array_flagging(pfp->name, "0", count_var_name);
+
+	gen_unitrv_uf_inc_count(pfp->name);
+	
+	//temps.print(proto_strm.str());
+	temps.gen_uf_tail(pretvar);
+	temps.flush();
+	
+	return ret;
+}
+
+void RVReUfGen::gen_unitrv_record_data_line( std::string name )
+{//todo: gotta figure out how their function figures our pointers and shit like that
+	std::string ufname = pfp->side_name[0];
+	std::string line = UNITRV_SPECIAL_MUTUAL_TERMINATION_TOKEN + ufname +"_" + name + "[" + UNITRV_SPECIAL_MUTUAL_TERMINATION_TOKEN + ufname + "_count] = *" + name + ";\n";
+	temps.print(line);
+}
+
+
+std::string RVReUfGen::unitrv_item_prefix( std::string name )
+{
+	return UNITRV_SPECIAL_MUTUAL_TERMINATION_TOKEN + pfp->side_name[0] + "_" + name + "[" + UNITRV_SPECIAL_MUTUAL_TERMINATION_TOKEN + pfp->side_name[0] + "_count]";
 }
 
 bool RVUFGen::gen_side0_uf()
@@ -1483,7 +1841,7 @@ bool RVUFGen::gen_side0_uf()
 			<< pfp->side_name[0] << " .\n";
 		return false;
 	}
-
+	add_prefix_if_required_side0(pfp, "rvs0_");
 	pfp->side_func[0]->decl->print(proto_strm, true, 0);
 	CHK_NULL1( ren[0], "ren[0] in RVUFGen::gen_side0_uf()");
 
@@ -1563,6 +1921,111 @@ bool RVUFGen::gen_side0_uf()
 	return ret;
 }
 
+bool RVReUfGen::gen_unitrv_side1_uf( bool seq_equiv_to_cps )
+{
+	string location(__FUNCTION__);
+	bool ret = true;
+	int i;
+	Decl *decl, *side0_decl;
+	bool pointer;
+	bool gen_seq_equiv_code = false;
+	SymbolVector *vec;
+	SymbolVector::const_iterator  it;
+	std::ostringstream proto_strm;
+	std::ostringstream ret_type_strm;
+	const std::string *pretvar = &uf_retvar;
+	std::string item_pref;
+
+	current_side = SIDE1;
+	m_where = pfp->side_name[1].data();
+	gen_seq_equiv_code = seq_equiv_to_cps && pfp->has_cps_in_subtrees();
+	item_pref = item_prefix();
+
+	temps.print("\n/*** uninterpreted function side 1: ***/ \n");
+
+	/* gen 1 side func prototype. */
+	FunctionType *proto1 = (FunctionType*)(pfp->side_func[1]->decl->form);
+	if(!proto1 || proto1->type != TT_Function){
+		rv_errstrm << "RVUFGen::gen_side1_uf(): bad prototype for side 1 function: " << pfp->side_name[1] << " .\n";
+		return false;
+	}
+	add_prefix_if_required_side1(pfp, "rvs1_");
+	pfp->side_func[1]->decl->print(proto_strm, true, 0);
+	CHK_NULL1( ren[1], "ren[1] in RVUFGen::gen_side1_uf()");
+	temps.print(ren[1]->convert_ids(proto_strm.str()));
+	/* if the function returns void: */
+	if( is_basetype(proto1->subType, BT_Void) )
+		pretvar = NULL;  /* gen no retvar */
+	else {
+
+		pointer = is_pointer(proto1->subType, m_where);
+		if( pointer )  /* returns non tokenized pointer: */
+			rv_errstrm << "Warning: return value of UF \"" << pfp->side_name[1].data() 
+			<< "\" (side 0) is a pointer !\n";
+
+		proto1->subType->printType( ret_type_strm, NULL, true, 0);
+	}
+	temps.gen_uf_head(ren[1]->convert_ids(ret_type_strm.str()), pretvar);
+	//gen_no_aliasing_assertions(proto1);
+	/* gen main search and compare loop (according to look_back): */
+	unsigned actual_look_back = (gen_seq_equiv_code ? 1 : look_back);
+	//temps.gen_uf_search_head(pfp->name, actual_look_back);
+	gen_unitrv_uf_search_head(pfp->name, actual_look_back);
+
+	indent = 2;
+	first_compare = true; /* the next compare we gen is the first one */
+	/* for each input arg/global - compare to saved value:*/
+	for(i = 0;i < proto1->nArgs;i++){
+		decl = proto1->args[i];
+		if(!is_in_arg(i) || !decl || !decl->name)
+			continue;
+		side0_decl = related_side0_arg(i);
+
+		item_pref = get_unitrv_found_access(side0_decl->name->name);
+		string var_prefix = get_variable_prefix(side0_decl->form);
+		temps.print("		equal = equal && " + var_prefix + decl->name->name + " == " + item_pref + ";\n");
+		first_compare = false;
+		/*side0_decl = related_side0_arg(i);
+		RVGenCtx ctx(decl->name, side0_decl->form, side0_decl->name->name, item_pref, decl->form, decl->name->name, SIDE1, true, false, m_where, this);
+		ret = gen_item_or_struct_op(COMPARE, ctx, location) && ret;*/
+	}
+
+	/* for each input global: */
+	vec = &pfp->side_func[1]->fnode.read;
+	FORVEC(it,(*vec)) {
+		if( ignore_in_global(*it, 1) ) continue;
+		decl = (*it)->entry->uVarDecl;
+		item_pref = get_unitrv_found_access(decl->name->name);
+		side0_decl = related_side0_global(decl->name, true);
+		RVGenCtx ctx(decl->name,side0_decl->form, side0_decl->name->name, item_pref,
+			decl->form, decl->name->name, 
+			SIDE1, true, true, m_where, this);
+		ret = gen_item_or_struct_op( COMPARE, ctx, location ) && ret;
+	}
+	if(first_compare)
+		/* if no arguments/globals to compare: */
+		temps.print("    equal = 1;\n"); /* compare always succeeds. */
+
+	temps.gen_uf_search_tail(gen_unitrv_mark_array_flagging(pfp->name, "1", "rv_uf_ind"));
+	/*item_pref = item_prefix();
+	string found_item_pref(item_pref);
+	found_item_pref.replace(item_pref.find(rv_uf_ind), rv_uf_ind.length(), "found_ind");*/
+	ret = gen_unitrv_input_found_case(proto1, vec, pretvar, gen_seq_equiv_code) && ret;
+
+	temps.print("\n  } else {\n\n"); /* no matching input values were found */
+
+	ret = gen_input_not_found_case(proto1, vec, pretvar, gen_seq_equiv_code) && ret;
+
+	temps.print("\n  }\n");
+	
+	/* write return code and close the function */
+	temps.gen_uf_tail(pretvar);
+
+
+	temps.flush();
+}
+
+
 bool RVUFGen::gen_side1_uf(bool seq_equiv_to_cps)
 {
 	string location(__FUNCTION__);
@@ -1591,7 +2054,8 @@ bool RVUFGen::gen_side1_uf(bool seq_equiv_to_cps)
         rv_errstrm << "RVUFGen::gen_side1_uf(): bad prototype for side 1 function: " << pfp->side_name[1] << " .\n";
         return false;
     }
-    pfp->side_func[1]->decl->print(proto_strm, true, 0);
+	add_prefix_if_required_side1(pfp, "rvs1_");
+	pfp->side_func[1]->decl->print(proto_strm, true, 0);
     CHK_NULL1( ren[1], "ren[1] in RVUFGen::gen_side1_uf()");
     temps.print(ren[1]->convert_ids(proto_strm.str()));
     /* if the function returns void: */
@@ -1790,14 +2254,16 @@ string RVUFGen::get_on_found_action(unsigned look_back_, const string& item_pref
 
 
 
-void RVUFGen::gen_one_uf(RVFuncPair *_pfp, bool seq_equiv_to_cps)
+void RVUFGen::gen_one_uf(RVFuncPair *_pfp, bool seq_equiv_to_cps, bool rec_func_uf)
 {	
 	assert(_pfp);
 	pfp = _pfp;
 	pfp->unite_argtypes();
 	
-	gen_one_uf_in_both_sides(seq_equiv_to_cps);
+	gen_one_uf_in_both_sides(seq_equiv_to_cps ,rec_func_uf);
 
+	is_created_mutual_termination_tokens = true;
+	
 	pfp = NULL;	// needed!
 	return;
 }
@@ -1810,15 +2276,16 @@ void RVUFGen::gen_one_uf(RVFuncPair *_pfp, bool seq_equiv_to_cps)
 ///                               side 1 will be sought among all the
 ///                               parameters passed to side 0
 ///</param>
-void RVUFGen::gen_one_uf_in_both_sides(bool seq_equiv_to_cps)
+void RVUFGen::gen_one_uf_in_both_sides(bool seq_equiv_to_cps, bool rec_func_uf)
 {
 
 
 
 #ifdef CBMC_UF
 	static int counter = 0;
-	gen_side0_cbmc_uf(counter); 
-	gen_side1_cbmc_uf(counter); 
+	//RVSummarizer sum(pfp);
+	gen_side0_cbmc_uf(counter, rec_func_uf); 
+	gen_side1_cbmc_uf(counter, rec_func_uf); 
 	++counter;
 #else
 	std::string& name = pfp->name;
@@ -1856,6 +2323,10 @@ void RVUFGen::gen_ufs(bool seq_equiv_to_cps)
 				first = false;
 			}
 			gen_one_uf(pfp, seq_equiv_to_cps);
+			
+			if (get_is_mutual_termination_set()){
+				gen_initializing_of_unitrv_mutual_termination_variables_function(pfp);
+			}
 		}
 	}	
 }
@@ -1901,7 +2372,7 @@ void RVUFGen::generate_aux(void)
   temps.gen_close_func();
 }
 
-void RVUFGen::determineLoopBackDepths(const string& ofpath, RVMain& main) const {
+void RVUFGen::determineLoopBackDepths(const string& ofpath, RVMain& main, std::string fname) const {
 	if (uf_name_list.empty()) return;
 
 	//Pre-compile ofpath and store the result into ofpath#pp.c . 
@@ -1921,8 +2392,10 @@ void RVUFGen::determineLoopBackDepths(const string& ofpath, RVMain& main) const 
 	RVTypePropIgnoreNondet type_prop;
     if (!type_prop.process_all(pt, RVSide("rv.c")))	return;
 	Statement* glob = RVCtool::get_glob_stemnt(pt);
+	SymEntry *mainSymEntry1 = RVCtool::lookup_function(RV_SEMCHK0_PREFIX + fname, pt);
+	SymEntry *mainSymEntry2 = RVCtool::lookup_function(RV_SEMCHK1_PREFIX + fname, pt);
 	SymEntry *mainSymEntry = RVCtool::lookup_function("main", pt);
-
+	
 	//Prepare the inter-procedural analysis that counts the maximal call chain for every UF
 	RVFuncCallCountAnalysis a(glob, 1);
 	list<string>::const_iterator it;
@@ -1934,13 +2407,46 @@ void RVUFGen::determineLoopBackDepths(const string& ofpath, RVMain& main) const 
 	}
 
 	//Run analysis and process its results:
-	determineK(a, mainSymEntry, ofBuf);
+
+	if (m_unitrv){
+		determineKWithoutMain(a, mainSymEntry1, mainSymEntry2, ofBuf);
+	}
+	else{
+		determineK(a, mainSymEntry, ofBuf);
+	}
+
+	
 
 	//Write back the file stored in the memory
 	ofBuf.output();
 
 	//Delete the result file of the pre-compilation
 	remove(cpp_ofpath.data());
+}
+
+bool RVUFGen::determineKWithoutMain( RVFuncCallCountAnalysis& a, SymEntry * const mainSymEntry1, SymEntry * mainSymEntry2, RVTextFileBuffer& ofBuf ) const
+{
+	bool ret = true;
+	list<string>::const_iterator it;
+	for (it = uf_name_list.begin(); it != uf_name_list.end(); ++it) {
+		unsigned int k = max(
+			a.countCalls(mainSymEntry1, SIDE0.insert_side_ufprefix(*it)),
+			a.countCalls(mainSymEntry2, SIDE1.insert_side_ufprefix(*it)));
+		assert(k > 0 && k < INT_MAX);
+		if (k >= temps.get_max_records()) {
+			ret = false;
+			continue;
+		}
+
+		string newDef =
+			temps.uf_array_size_name_definition(*it, k, "determined by RVT");
+		string oldDef =
+			temps.uf_array_size_name_definition(*it, temps.get_max_records());
+		ofBuf.replaceInLine(oldDef, newDef);
+
+		m_pSemChecker->set_K(k + 1);
+	}
+	return ret;
 }
 
 bool RVUFGen::determineK(RVFuncCallCountAnalysis& a,
@@ -1970,14 +2476,54 @@ bool RVUFGen::determineK(RVFuncCallCountAnalysis& a,
 	return ret;
 }
 
+void RVGenRename::set_unitrv( bool unitrv )
+{
+	m_unitrv = unitrv;
+}
+bool RVGenRename::is_variable_declared_globally_for_both_sides(std::string name){
+	return (m_apRenTree)[0]->is_variable_declared_globally_for_both_sides(name);
+}
+
+void RVGenRename::add_prefix_if_required_side0( RVFuncPair * pfp, std::string prefix )
+{
+	
+	if(pfp->side_func[0]->decl->name->name.substr(0, prefix.size()) == prefix) {
+		return;
+	}
+
+	pfp->side_func[0]->decl->name->name = prefix + pfp->side_func[0]->decl->name->name;
+	return;
+}
+
+void RVGenRename::add_prefix_if_required_side1( RVFuncPair * pfp, std::string prefix )
+{
+	if(pfp->side_func[1]->decl->name->name.substr(0, prefix.size()) == prefix) {
+		return;
+	}
+
+	pfp->side_func[1]->decl->name->name = prefix + pfp->side_func[1]->decl->name->name;
+	return;
+}
+
+void RVGenRename::add_prefix_if_required(Decl* d, std::string prefix, int side){
+	if(d->name->name.substr(0, prefix.size()) == prefix) {
+		return;
+	}
+
+	d->name->name = prefix + d->name->name;
+	return;
+}
+
+
+
 
 
 
 /* RVReUfGen code */
 /*================*/
 
-RVReUfGen::RVReUfGen(RVTemp& _temps)
-  : RVUFGen(_temps)
+RVReUfGen::RVReUfGen(RVTemp& _temps, RVFramaSum& _summarizer_side0, RVFramaSum& _summarizer_side1, bool _seperate_basecase_proof)
+  : RVUFGen(_temps, _summarizer_side0, _summarizer_side1, _seperate_basecase_proof)
 {
 }
 
@@ -2073,13 +2619,401 @@ void RVReUfGen::gen_one_uf_in_both_sides(bool seq_equiv_to_cps)
 	const std::string& name = pfp->name;
 
 	uf_name_list.push_back(name);
-	uf_strname[0] = temps.uf_array_name(name) + "[" + temps.uf_count_name(name,0) + "].";
-	uf_strname[1] = temps.uf_array_name(name) + "[" + rv_uf_ind + "].";
-	gen_uf_array();
+	
+	if (m_unitrv){
+		//uf_strname[0] = temps.unitrv_uf_array_name(name) + "[" + temps.uf_count_name(name,0) + "].";
+		//uf_strname[1] = temps.unitrv_uf_array_name(name) + "[" + rv_uf_ind + "].";
+		gen_unitrv_uf_array();
+		gen_unitrv_side0_uf();
+		gen_unitrv_side1_uf(seq_equiv_to_cps);
+	}
+	else{
+		uf_strname[0] = temps.uf_array_name(name) + "[" + temps.uf_count_name(name,0) + "].";
+		uf_strname[1] = temps.uf_array_name(name) + "[" + rv_uf_ind + "].";
+		gen_uf_array();
+		gen_side0_uf();
+		gen_side1_uf(seq_equiv_to_cps);
+	}
 
-	gen_side0_uf();
-	gen_side1_uf(seq_equiv_to_cps);
+	
 }
+
+void RVReUfGen::gen_unitrv_uf_inc_count( std::string name )
+{
+	std::string t("	");
+	temps.print(t + UNITRV_SPECIAL_MUTUAL_TERMINATION_TOKEN + name + "_count++;");
+}
+
+void RVReUfGen::gen_unitrv_uf_search_head( std::string ufname, unsigned look_back )
+{
+	std::string rv_counter_type = "int";
+	stringstream outstreamP;
+	(outstreamP) <<
+		"  _Bool found = 0;\n" <<
+		"  _Bool equal = 1;\n" <<
+		"  " << rv_counter_type << " found_ind = -1;\n";
+
+	if( look_back > 1 ) {
+		(outstreamP) << 
+			"  " << rv_counter_type << " rv_uf_ind = " << get_unitrv_count_var_name(ufname) <<"+"<< look_back-1 <<";\n" <<
+			"  " << rv_counter_type << " rv_uf_cnt = 0;\n" <<
+			"  if( rv_uf_ind > " << get_unitrv_count_var_name(ufname) <<"-1 )\n" <<
+			"    rv_uf_ind = " << get_unitrv_count_var_name(ufname) <<"-1;\n" <<
+			"  for(; rv_uf_cnt < " << 2*look_back-1 << " && rv_uf_ind >= 0; ++rv_uf_cnt, ++rv_uf_ind) {\n";
+
+	} else
+		if( look_back == 1 ) {
+			/* look only at the same index on side 0 (if exists): */
+			(outstreamP) << 
+				"  " << rv_counter_type << " rv_uf_ind = " << get_unitrv_count_var_name(ufname) <<";\n" <<
+				"  if( " << get_unitrv_count_var_name(ufname) << " && rv_uf_ind > " << get_unitrv_count_var_name(ufname) << "-1 )\n" <<
+				"    rv_uf_ind = " << get_unitrv_count_var_name(ufname) <<"-1;\n" <<
+				"// Make sure that side0 was called at least once \n" <<
+				"  if( " << get_unitrv_count_var_name(ufname)  << ")\n" <<
+				"  {\n";
+		} else
+			if( look_back == 0 ) { 
+				/* search all values of side 0: */
+				(outstreamP) << 
+					"  " << rv_counter_type << " rv_uf_ind = " << get_unitrv_count_var_name(ufname) << "-1;\n" <<
+					"  for(; rv_uf_ind >= 0; rv_uf_ind--) {\n";
+			}
+
+	temps.print(outstreamP.str());
+}
+
+std::string RVUFGen::get_unitrv_count_var_name( std::string name )
+{
+	return UNITRV_SPECIAL_MUTUAL_TERMINATION_TOKEN + name + "_count";
+}
+
+std::string RVReUfGen::gen_unitrv_mark_array_flagging( std::string name, std::string side, std::string index_var_name )
+{
+	
+	std::string mark_array_flagging_line= UNITRV_SPECIAL_MUTUAL_TERMINATION_TOKEN + name + "_call_mark_array" + side + "[" + index_var_name +"] = 1;\n";
+	return mark_array_flagging_line;
+}
+
+void RVReUfGen::print_unitrv_mark_array_flagging( std::string name, std::string side, std::string index_var_name )
+{
+	std::string mark_array_flagging_line = "	" + gen_unitrv_mark_array_flagging(name, side, index_var_name);
+	temps.print(mark_array_flagging_line);
+}
+
+bool RVReUfGen::gen_unitrv_input_found_case( FunctionType * proto1, SymbolVector * vec, const std::string* pretvar, bool gen_seq_equiv_code )
+{
+	assert(pfp != NULL);
+	bool ret = false;
+
+	if (pfp->is_equal_semantics()) {
+		temps.print("   /* Sides 0 and 1 are partially equivalent.\n"
+				    "    * Returning the results of side 0: */\n");
+
+		string location(__FUNCTION__);
+		int i;
+		Decl *decl = NULL, *side0_decl = NULL;
+		bool ret = true;
+		SymbolVector::const_iterator it;
+		std::string item_pref;
+
+		/* if input values matching - retrive output values: */
+		for(i = 0;i < proto1->nArgs;i++){
+			decl = proto1->args[i];
+			if(!is_out_arg(i) || !decl || !decl->name)
+				continue;
+			item_pref = get_unitrv_found_access_output(decl->name->name);//unitrv_item_prefix(decl->name->name);
+			side0_decl = related_side0_arg(i);
+			
+			temps.print("	*" + decl->name->name + " = " + item_pref + ";\n");
+			//RVGenCtx ctx(decl->name, ((PtrType*)side0_decl->form)->subType, side0_decl->name->name, item_pref, decl->form, decl->name->name, SIDE1, false, false, m_where, this);
+			//
+			//// pointer arg value must be changed in place - dont alloc
+			//dont_alloc_root = true;
+			//ret = gen_item_or_struct_op(COPY_S0_to_S1, ctx, location) && ret;
+		}
+		/* retrive output globals: */
+		vec = &pfp->side_func[1]->fnode.written;
+		FORVEC(it,(*vec)) {
+			decl = (*it)->entry->uVarDecl;
+			side0_decl = related_side0_global(decl->name, false);
+			//proto1->
+			RVGenCtx ctx(decl->name, side0_decl->form, side0_decl->name->name, item_pref,
+				decl->form, decl->name->name,
+				1, false, true, m_where, this);
+			ret = gen_item_or_struct_op( COPY_S0_to_S1, ctx, location ) && ret;
+		}
+		/* retrive return code if exists: */
+		if( pretvar ) {
+
+			FunctionType *proto0 = (FunctionType*)pfp->side_func[1]->decl->form;
+			Symbol* retvalsym= new Symbol();
+			retvalsym->name = *pretvar;
+
+			Decl* decl = new Decl(retvalsym);
+			decl->form = proto0->subType;
+
+			item_pref = get_unitrv_found_access_output(decl->name->name);
+			RVGenCtx ctx((Symbol *) NULL ,proto0->subType, *pretvar, item_pref,
+				proto1->subType, *pretvar,
+				1, false, false, m_where, this);
+			ret = gen_item_or_struct_op( COPY_S0_to_S1, ctx, location ) && ret;
+		}
+
+		return ret;
+	}
+	else {
+		temps.print("   /* Sides 0 and 1 are not known to be partially equivalent.\n"
+				    "    * Returning some results unrelated to the side 0: */\n");
+
+
+		string location(__FUNCTION__);
+		Decl *decl = NULL;
+		bool  ret = true;
+		SymbolVector::const_iterator  it;
+
+ 		if( gen_seq_equiv_code ) {
+			/* <<=== FIN
+			- get list of check-points in this func
+			- for each check point
+			gen nondet vale ndval
+			send it to its chanel: RVSAVE(&cp_channel,1,ndval);
+			save it in its place in the uf_array.
+			*/
+			return ret;
+		}
+
+		/* gen nondet output values: */
+		for(int i = 0;i < proto1->nArgs;i++){
+			decl = proto1->args[i];
+			if(!is_out_arg(i) || !decl || !decl->name)
+				continue;
+
+			RVGenCtx ctx(m_where, false, this);
+			ctx.add_lane(decl->name, decl->form, decl->name->name, 1, "");
+			if(!ctx.check_out_arg(0))
+				continue;
+
+			// pointer arg value must changed in place - dont alloc
+			dont_alloc_root = true;
+			ret = gen_item_or_struct_op(NONDET, ctx, location) && ret;
+		}
+
+		/* nondet output globals: */
+		vec = &pfp->side_func[1]->fnode.written;
+		FORVEC(it,(*vec)) {
+    		decl = (*it)->entry->uVarDecl;
+    		RVGenCtx ctx(m_where, false, this);
+    		ctx.add_lane(decl->name,decl->form, decl->name->name, 1, SIDE1.get_side_prefix());
+    		ret = gen_item_or_struct_op( NONDET, ctx, location ) && ret;
+		}
+
+		if( pretvar ) {
+    		RVGenCtx ctx(m_where, false, this);
+    		ctx.add_lane((Symbol *) NULL,proto1->subType, *pretvar, 1, "");
+    		ret = gen_item_or_struct_op( NONDET, ctx, location ) && ret;
+		}
+
+		return ret;
+		}
+
+	return  ret;
+}
+
+void RVUFGen::gen_initializing_of_unitrv_mutual_termination_variables_function(RVFuncPair *_pfp){
+	pfp = _pfp;
+	
+	std::string mark_array_side0 = get_mark_array_name(pfp->name, "0");
+	std::string mark_array_side1 = get_mark_array_name(pfp->name, "1");
+	std::string count_var_name = get_unitrv_count_var_name(pfp->name);
+	std::string first_call_flag_var_name = get_first_call_flag_name(pfp->name);
+
+	std::string func_name = "initialize_mutual_termination_tokens_";
+	std::string func_name_full =  UNITRV_SPECIAL_MUTUAL_TERMINATION_TOKEN + func_name + pfp->name;
+	temps.print("void " + func_name_full + "(){\n");
+	
+	temps.print("	int rvt_token_i = 0;\n");
+	temps.print("		for (rvt_token_i = 0 ; rvt_token_i < " + temps.uf_array_size_name(pfp->name) + " ; rvt_token_i++){\n");
+	temps.print("			" + mark_array_side0 + "[rvt_token_i] = 0;\n");
+	temps.print("			" + mark_array_side1 + "[rvt_token_i] = 0;\n");
+	temps.print("		}\n");
+	temps.print("		" + count_var_name + " = 0;\n");
+	temps.print("		" + first_call_flag_var_name + " = 0;\n");
+	temps.print("\n");
+	
+	temps.print("}\n");
+}
+
+void RVUFGen::gen_initializing_of_unitrv_mutual_termination_variables()
+{
+	std::string mark_array_side0 = get_mark_array_name(pfp->name, "0");
+	std::string mark_array_side1 = get_mark_array_name(pfp->name, "1");
+	std::string count_var_name = get_unitrv_count_var_name(pfp->name);
+	std::string first_call_flag_var_name = get_first_call_flag_name(pfp->name);
+
+	temps.print("	int rvt_token_i = 0;\n");
+	temps.print("	if (" + first_call_flag_var_name + "){\n");
+	temps.print("		for (rvt_token_i = 0 ; rvt_token_i < " + temps.uf_array_size_name(pfp->name) + " ; rvt_token_i++){\n");
+	temps.print("			" + mark_array_side0 + "[rvt_token_i] = 0;\n");
+	temps.print("			" + mark_array_side1 + "[rvt_token_i] = 0;\n");
+	temps.print("		}\n");
+	temps.print("		" + count_var_name + " = 0;\n");
+	temps.print("		" + first_call_flag_var_name + " = 0;\n");
+	temps.print("	}\n\n");
+
+}
+
+std::string RVReUfGen::get_mark_array_dereferencing( std::string name, std::string side )
+{
+	return get_mark_array_name(name, side) + "[" + temps.uf_array_size_name(name) + "];";
+}
+
+std::string RVUFGen::get_mark_array_name( std::string name, std::string side )
+{
+	return UNITRV_SPECIAL_MUTUAL_TERMINATION_TOKEN + name + "_call_mark_array" + side;
+}
+
+std::string RVUFGen::get_first_call_flag_name( std::string name )
+{
+	return UNITRV_SPECIAL_MUTUAL_TERMINATION_TOKEN + name + "_first_call_to_uf_flag";
+}
+
+void RVUFGen::print_basecase_flag_update()
+{
+	stringstream ss;
+	ss << "\t" << GLOBAL_BASECASE_FALG_NAME << "++;\n";
+	temps.print(ss.str());
+}
+
+
+std::string RVReUfGen::get_count_var_name( std::string name )
+{
+	return UNITRV_SPECIAL_MUTUAL_TERMINATION_TOKEN + name + "_count";
+}
+
+std::string RVReUfGen::get_unitrv_found_access( std::string name )
+{
+	return UNITRV_SPECIAL_MUTUAL_TERMINATION_TOKEN + pfp->side_name[0] + "_" + name + "[rv_uf_ind]";
+}
+
+
+std::string RVReUfGen::get_unitrv_found_access_output( std::string name )
+{
+	return UNITRV_SPECIAL_MUTUAL_TERMINATION_TOKEN + pfp->side_name[0] + "_" + name + "_output[rv_uf_ind]";
+}
+
+
+
+void RVReUfGen::gen_all_output_recording_arrays( FunctionType * proto0, std::string name )
+{
+	temps.print("\n//Output arrays for local input\n");
+	for(int i = 0; i < proto0->nArgs; i++){
+		Decl* d = proto0->args[i];
+		//gen_uf_item_decl(proto0->args[i], is_in_arg(i), is_out_arg(i), nUfStructItems);
+		print_output_array_for_parameter(d, name);
+	}
+
+	temps.print("\n//Output arrays for global input\n");
+	SymbolVector vec = pfp->side_func[0]->fnode.read;
+
+	SymbolVector::const_iterator  it;
+	FORVEC(it,(vec)) {
+		if( ignore_in_global(*it, 0) ) continue;
+		/* gen code to save its value in UFarr: */
+		Decl *d = (*it)->entry->uVarDecl;
+		print_output_array_for_parameter(d, name);
+	}   
+	
+	if( !is_basetype(proto0->subType, BT_Void)){
+		std::string s = uf_retvar;
+		
+		Symbol* retvalsym= new Symbol();
+		retvalsym->name = s;
+		
+		Decl* d = new Decl(retvalsym);
+		d->form = proto0->subType;
+
+		temps.print("\n//Output array for function output\n");
+		print_output_array_for_parameter(d, name);
+	}
+}
+
+void RVReUfGen::print_output_array_for_parameter( Decl* d, std::string name )
+{
+	Type* sub;
+	if (d->form->type == TT_Pointer){
+		sub = ((PtrType*) d->form)->subType;
+	}
+	else{
+		sub = d->form;
+	}
+
+	string var_name = UNITRV_SPECIAL_MUTUAL_TERMINATION_TOKEN + name + "_" + d->name->name + "_output[" + temps.uf_array_size_name(name) + "];";
+	Symbol* newsym = new Symbol();
+	newsym->name = var_name;
+	std::ostringstream type_strm;
+	sub->printType(type_strm, newsym, true, 0);
+	std::string s = type_strm.str();
+
+	temps.print(s + "\n\n");
+}
+
+std::string RVReUfGen::unitrv_output_item_prefix( std::string name )
+{
+	return UNITRV_SPECIAL_MUTUAL_TERMINATION_TOKEN + pfp->side_name[0] + "_" + name + "_output[" + UNITRV_SPECIAL_MUTUAL_TERMINATION_TOKEN + pfp->side_name[0] + "_count]";
+}
+
+std::string RVReUfGen::get_variable_prefix( Type * form )
+{
+	if (form->isBaseType()){
+		return "";
+	}
+	else{
+		return "*";
+	}
+
+	return "";
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2092,12 +3026,16 @@ void RVReUfGen::gen_one_uf_in_both_sides(bool seq_equiv_to_cps)
 RVMainGen::RVMainGen(RVTemp& _temps, Project* _sides[2], const std::string& _main_name)
 	: RVGenRename(_temps, _sides), main_name(_main_name)
 {
+	//adjust_all_functions_to_unitrv(_sides[0]);
+	//adjust_all_functions_to_unitrv(_sides[1]);
+	
 	sides[0] = _sides[0];
 	sides[1] = _sides[1];
 	arg_prefix[0] = SIDE0.get_side_prefix();
 	arg_prefix[1] = SIDE1.get_side_prefix();
 	main_pair = NULL;
 	has_retvar = false;
+	input_assumption = "";
 }
 
 bool RVMainGen::is_out_arg(unsigned i)
@@ -2253,8 +3191,21 @@ void RVMainGen::gen_arg_alloc_side(FunctionType *proto, const RVSide& side)
 
 	for(int i = 0; i < proto->nArgs; i++) {
 		decl = proto->args[i]->dup();
+		
+		if (m_unitrv){
+			std::string prefix = "rvs";
+			if (side.index() == 0){
+				prefix += "0";
+			}
+			else{
+				prefix += "1";
+			}
+			prefix += "_";
+			add_prefix_if_required(decl, prefix, side.index());
+		}
 		//is_out = is_out_arg(i);
 		RVGenCtx ctx(m_where, 0);
+		ctx.set_unitrv(m_unitrv);
 		//if( is_out  || is_aggregate_arg(i)) {
 		assert(decl && decl->name);
 		ctx.add_lane(decl->name,decl->form, decl->name->name, side, arg_prefix[side.index()]);
@@ -2308,16 +3259,19 @@ bool RVMainGen::gen_equal_nondet_globals()
 			
 		temps.print("//nondet values for side 0:\n");
 		RVGenCtx ctx0(m_where, true);
+		ctx0.set_unitrv(m_unitrv);
 		ctx0.add_lane(sym0,tp0, sym0->name, SIDE0, arg_prefix[0]);
 		ret = gen_item_or_struct_op(NONDET, ctx0, location) && ret;
 		temps.print("//alloc for side 1:\n");
 		RVGenCtx ctx1(m_where, true);
+		ctx1.set_unitrv(m_unitrv);
 		ctx1.add_lane(sym1,tp1, sym1->name, SIDE1, arg_prefix[1]);
 		ret = gen_item_or_struct_op(ALLOC, ctx1, location) && ret;
 
 		temps.print("//copy leaves from side 0 to 1:\n");
 		/* copy sym0 value to sym1 */
 		RVGenCtx ctx2(m_where, true);
+		ctx2.set_unitrv(m_unitrv);
 		ctx2.add_lane(sym0,tp0, sym0->name, 0, arg_prefix[0]);
 		ctx2.add_lane(sym1,tp1, sym1->name, 1, arg_prefix[1]);
 		ret = gen_item_or_struct_op(COPY_S0_to_S1, ctx2, location) && ret;
@@ -2386,7 +3340,7 @@ bool RVMainGen::gen_main_call(const RVSide& side, bool check_output)
 
 		if( !first )
 			temps.print(", ");
-			temps.print(arg_text); 
+		temps.print(arg_text); 
 
 		first = false;
 	}
@@ -2421,7 +3375,7 @@ bool RVMainGen::gen_args_equality(int nItems, Decl **items0, Decl **items1, bool
 
 		bool is_out = before ? 1 : is_out_arg(i);
 		RVGenCtx ctx(m_where, !is_out);
-		
+		ctx.set_unitrv(m_unitrv);
 		ctx.add_lane(decl0->name,tp0, decl0->name->name, 0, arg_prefix[0]);
 		ctx.add_lane(decl1->name,tp1, decl1->name->name, 1, arg_prefix[1]);
 
@@ -2476,6 +3430,7 @@ bool RVMainGen::gen_globals_check_output()
 
 		first_compare = true; 
 		RVGenCtx ctx(m_where, false);
+		ctx.set_unitrv(m_unitrv);
 		temps.print("// for asserting global equality:\n");
 		ctx.add_lane(sym0,tp0, sym0->name, 0, arg_prefix[0]);
 		ctx.add_lane(sym1,tp1, sym1->name, 1, arg_prefix[1]);		
@@ -2498,7 +3453,7 @@ FunctionType* RVMainGen::get_main_proto(int side)
 	return (FunctionType*)ret;
 }
 
-void RVMainGen::gen_main(bool reach_equiv_check)
+void RVMainGen::gen_main(bool reach_equiv_check, int first_side_to_call)
 {	
 	std::string location(__FUNCTION__);
 	std::string type_text0, type_text1;
@@ -2507,6 +3462,7 @@ void RVMainGen::gen_main(bool reach_equiv_check)
 	proto0 = get_main_proto(0);
 	proto1 = get_main_proto(1);
 
+	
 	if( !proto0 || !proto1 )	fatal_error("Internal: can't get prototype(s) of main_pair function(s) :",	m_where, false);
 
 	/* gen main head + 2Xretval */
@@ -2532,7 +3488,7 @@ void RVMainGen::gen_main(bool reach_equiv_check)
 	// by the time we reached the checked functions (f,f'), the global may have been modified, so the initial value of 0 is not relevant.
 	
 	gen_equal_nondet_globals(); 	
-
+	temps.flush();
 	if (reach_equiv_check) {
 		temps.print("\n  /* run each side's main() */\n");
 		gen_main_call(0, true);
@@ -2549,6 +3505,7 @@ void RVMainGen::gen_main(bool reach_equiv_check)
 	
 			/* should work OK from simple values, tokens and structs: */
 			RVGenCtx ctx(m_where, false);
+			ctx.set_unitrv(m_unitrv);
 			ctx.add_lane((Symbol *) NULL, proto0->subType, uf_retvar+"0", 0, "");
 			ctx.add_lane((Symbol *) NULL, proto1->subType, uf_retvar+"1", 1, "");
 			gen_item_or_struct_op(ASSERT_EQ, ctx, location);
@@ -2558,14 +3515,27 @@ void RVMainGen::gen_main(bool reach_equiv_check)
 		gen_globals_check_output();
 
 		temps.print("\n  /* run each side's main() */\n");
-		gen_main_call(0, true);
-		gen_main_call(1, true);
+		
+		temps.print("\n  /* add any pre-computed assumption on the input */\n  ");
+		temps.print("__CPROVER_assume(" + input_assumption + ");");
+		temps.print("\n");
+
+		gen_main_call(first_side_to_call, true);
+		gen_main_call(1 - first_side_to_call, true);
 
 		temps.unite_assert_stream(); // this one subsumes unite_uf_stream();
 	}
 	
 	temps.print("\n  return 0;\n}\n");
 }
+
+void RVMainGen::set_input_assumption( const std::string& baseCasePredicate )
+{
+	input_assumption = baseCasePredicate;
+}
+
+
+
 
 
 /* RVGenRename code */

@@ -45,6 +45,7 @@
 
 #include <ctool/dup.h>
 #include <ctool/Traversal.h>
+#include <string>
 
 class Decl;
 class Type;
@@ -172,9 +173,14 @@ class Expression : public DupableExpression
 	
     virtual ~Expression();
 
+	virtual std::vector<Expression*>* getSubExpressions() const {return new std::vector<Expression*>();}
+
+	
     virtual void accept(Traversal *) = 0;
 
     virtual int precedence() const { return 16; }
+	
+	virtual void replaceSubExpression(Expression* existingExpression, Expression* replacement) {}
 
     virtual Expression *dup0() const = 0;
 
@@ -208,8 +214,8 @@ class Constant : public Expression
   public:
     Constant( ConstantType ct, const Location& l );
     virtual ~Constant();
- 
-    virtual Expression *dup0() const = 0;
+	
+	virtual Expression *dup0() const = 0;
     virtual void print(std::ostream& out) const = 0;
 
     ConstantType    ctype;   
@@ -223,7 +229,7 @@ class IntConstant : public Constant
     IntConstant( long val, bool b, const Location& l );
     virtual ~IntConstant();
  
-    virtual void accept(Traversal *t) { t->traverse_int(this);}
+	virtual void accept(Traversal *t) { t->traverse_int(this);}
 
     Expression *dup0() const;
     void print(std::ostream& out) const;
@@ -239,7 +245,7 @@ class UIntConstant : public Constant
     UIntConstant( ulong val, bool b, const Location& l );
     virtual ~UIntConstant();
  
-    virtual void accept(Traversal *t) { t->traverse_uint(this);}
+	virtual void accept(Traversal *t) { t->traverse_uint(this);}
 
     Expression *dup0() const;
     void print(std::ostream& out) const;
@@ -255,7 +261,7 @@ class FloatConstant : public Constant
     FloatConstant(const std::string& val, const Location& l );
     virtual ~FloatConstant();
  
-    virtual void accept(Traversal *t) { t->traverse_float(this);}
+	virtual void accept(Traversal *t) { t->traverse_float(this);}
 
     Expression *dup0() const;
     void print(std::ostream& out) const;
@@ -288,7 +294,7 @@ class StringConstant : public Constant
 
     virtual void accept(Traversal *t) { t->traverse_string(this);}
 
-    int length() const;
+	int length() const;
 
     Expression *dup0() const;
     void print(std::ostream& out) const;
@@ -306,7 +312,7 @@ class ArrayConstant : public Constant
 
     virtual void accept(Traversal *t) { t->traverse_array(this);}
 
-    void addElement( Expression *expr);
+	void addElement( Expression *expr);
 
     Expression *dup0() const;
     void print(std::ostream& out) const;
@@ -325,7 +331,7 @@ class EnumConstant : public Constant
 
     virtual void accept(Traversal *t) { t->traverse_enum(this);}
 
-    Expression *dup0() const;
+	Expression *dup0() const;
     void print(std::ostream& out) const;
 
     Symbol        *name;    // The constant itself.
@@ -337,14 +343,17 @@ class Variable : public Expression
 {
   public:
     Variable(Symbol *varname, const Location& l );
+	Variable(std::string varName, const Location& l, SymEntry* symEntry);
    ~Variable();
 
     virtual void accept(Traversal *t) { t->traverse_variable(this);}
 
-    Expression *dup0() const;
+	Expression *dup0() const;
     void print(std::ostream& out) const;
 
     Symbol    *name;
+  private:
+	void init(Symbol *varname, const Location& l);
 };
 
 // o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o
@@ -355,6 +364,10 @@ class FunctionCall : public Expression
    ~FunctionCall();
     
     virtual void accept(Traversal *t) { t->traverse_call(this);}
+
+	virtual void replaceSubExpression(Expression* existingExpression, Expression* replacement) {function = replacement;}
+
+	std::vector<Expression*>* getSubExpressions() const;
 
     int  nArgs() const { return args.size(); }
 
@@ -379,7 +392,11 @@ class UnaryExpr : public Expression
 
     virtual void accept(Traversal *t) { t->traverse_unary(this);}
 
-    int precedence() const;
+	virtual void replaceSubExpression(Expression* existingExpression, Expression* replacement) {_operand = replacement;}
+
+	std::vector<Expression*>* getSubExpressions() const;
+
+	int precedence() const;
 
     Expression *operand() const { return _operand; }
 
@@ -403,6 +420,10 @@ class BinaryExpr : public Expression
    ~BinaryExpr();
 
     virtual void accept(Traversal *t) { t->traverse_binary(this);}
+
+	virtual void replaceSubExpression(Expression* existingExpression, Expression* replacement);
+
+	std::vector<Expression*>* getSubExpressions() const;
 
     Expression *leftExpr() const { return _leftExpr; }
     Expression *rightExpr() const { return _rightExpr; }
@@ -432,6 +453,10 @@ class TrinaryExpr : public Expression
 
     virtual void accept(Traversal *t) { t->traverse_trinary(this);}
 
+	virtual void replaceSubExpression(Expression* existingExpression, Expression* replacement);
+
+	std::vector<Expression*>* getSubExpressions() const;
+
     Expression *condExpr() const { return _condExpr; }
     Expression *trueExpr() const { return _trueExpr; }
     Expression *falseExpr() const { return _falseExpr; }
@@ -458,7 +483,7 @@ class AssignExpr : public BinaryExpr
 
     virtual void accept(Traversal *t) { t->traverse_assign(this);}
 
-    Expression *lValue() const { return leftExpr(); }
+	Expression *lValue() const { return leftExpr(); }
     Expression *rValue() const { return rightExpr(); }
 
     AssignOp op() const { return aOp; }
@@ -481,7 +506,7 @@ class RelExpr : public BinaryExpr
 
     virtual void accept(Traversal *t) { t->traverse_rel(this);}
 
-    int precedence() const;
+	int precedence() const;
 
     RelOp op() const { return rOp; }
 
@@ -500,6 +525,10 @@ class CastExpr : public Expression
    ~CastExpr();
 
     virtual void accept(Traversal *t) { t->traverse_cast(this);}
+
+	virtual void replaceSubExpression(Expression* existingExpression, Expression* replacement) {expr = replacement;}
+
+	std::vector<Expression*>* getSubExpressions() const;
 
     Type *castType() { return castTo; }
 
@@ -524,6 +553,10 @@ class SizeofExpr : public Expression
 
     virtual void accept(Traversal *t) { t->traverse_sizeof(this);}
 
+	virtual void replaceSubExpression(Expression* existingExpression, Expression* replacement) {expr = replacement;}
+
+	std::vector<Expression*>* getSubExpressions() const;
+
     int precedence() const { return 15; }
 
     Expression *dup0() const;
@@ -547,6 +580,10 @@ class IndexExpr : public Expression
    ~IndexExpr();
     
     virtual void accept(Traversal *t) { t->traverse_index(this);}
+	
+	virtual void replaceSubExpression(Expression* existingExpression, Expression* replacement);
+
+	std::vector<Expression*>* getSubExpressions() const;
 
     //addSubscript( Expression *sub );
     Expression *subscript(int i);

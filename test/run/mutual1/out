@@ -1,0 +1,56 @@
+/usr/bin/gcc -fsyntax-only ./mutual.c
+/usr/bin/gcc -fsyntax-only ./mutual1.c
+/usr/bin/cpp -D__FUNCTION__="<unknown>" -I /cygdrive/c/NewRVT/Debug/../tools/scripts/../ansi-c-lib -x c ./mutual.c ./S0.c
+/usr/bin/cpp -D__FUNCTION__="<unknown>" -I /cygdrive/c/NewRVT/Debug/../tools/scripts/../ansi-c-lib -x c ./mutual1.c ./S1.c
+rm: No match.
+dos2unix: converting file S0.opb to Unix format ...
+/usr/bin/cpp -D__FUNCTION__="<unknown>" -I /cygdrive/c/NewRVT/Debug/../tools/scripts/../ansi-c-lib -x c ./semchks/M.rv.c ./semchks/M.rv.cpp.c
+running goto-cc M.rv.c
+running goto-instrument --div-by-zero-check --pointer-check --bounds-check --assert-to-assume a.out M.exe
+Reading GOTO program from a.out
+Function Pointer Removal
+Partial Inlining
+Pointer Analysis
+Adding Pointer Checks
+Writing GOTO program to M.exe
+running cbmc --unwind 10 M.exe
+path before cbmc = /cygdrive/c/NewRVT/Debug/../tools/scripts/../external/cygwin /usr/local/bin /usr/bin /cygdrive/c/jruby-1.6.3/bin /cygdrive/c/Program Files/Common Files/Microsoft Shared/Windows Live /cygdrive/c/Program Files (x86)/Common Files/Microsoft Shared/Windows Live /cygdrive/c/Ruby186/bin /cygdrive/c/windows/system32 /cygdrive/c/windows /cygdrive/c/windows/System32/Wbem /cygdrive/c/windows/System32/WindowsPowerShell/v1.0 /cygdrive/c/Program Files/Hewlett-Packard/Drive Encryption /cygdrive/c/Program Files (x86)/Bitvise Tunnelier /cygdrive/c/Program Files (x86)/Microsoft SQL Server/100/Tools/Binn /cygdrive/c/Program Files/Microsoft SQL Server/100/Tools/Binn /cygdrive/c/Program Files/Microsoft SQL Server/100/DTS/Binn /cygdrive/c/Program Files (x86)/Microsoft ASP.NET/ASP.NET Web Pages/v1.0 /cygdrive/c/Program Files (x86)/Windows Live/Shared C /jruby-1.6.3/bin /cygdrive/c/Program Files/TortoiseSVN/bin /cygdrive/c/Program Files/doxygen/bin /cygdrive/c/Program Files (x86)/Windows Kits/8.0/Windows Performance Toolkit /cygdrive/c/Program Files/Microsoft SQL Server/110/Tools/Binn /cygdrive/c/jruby-1.6.3/bin C /Windows/System32/java.exe /usr/lib/lapack
+/cygdrive/c/NewRVT/Debug/../tools/scripts/../external/cygwin/cbmc
+-- End semantic check (semchk).
+/usr/bin/cpp -D__FUNCTION__="<unknown>" -I /cygdrive/c/NewRVT/Debug/../tools/scripts/../ansi-c-lib -x c ./semchks/F.rv.c ./semchks/F.rv.cpp.c
+running goto-cc F.rv.c
+running goto-instrument --div-by-zero-check --pointer-check --bounds-check --assert-to-assume a.out F.exe
+Reading GOTO program from a.out
+Function Pointer Removal
+Partial Inlining
+Pointer Analysis
+Adding Pointer Checks
+Writing GOTO program to F.exe
+running cbmc --unwind 10 F.exe
+path before cbmc = /cygdrive/c/NewRVT/Debug/../tools/scripts/../external/cygwin /usr/local/bin /usr/bin /cygdrive/c/jruby-1.6.3/bin /cygdrive/c/Program Files/Common Files/Microsoft Shared/Windows Live /cygdrive/c/Program Files (x86)/Common Files/Microsoft Shared/Windows Live /cygdrive/c/Ruby186/bin /cygdrive/c/windows/system32 /cygdrive/c/windows /cygdrive/c/windows/System32/Wbem /cygdrive/c/windows/System32/WindowsPowerShell/v1.0 /cygdrive/c/Program Files/Hewlett-Packard/Drive Encryption /cygdrive/c/Program Files (x86)/Bitvise Tunnelier /cygdrive/c/Program Files (x86)/Microsoft SQL Server/100/Tools/Binn /cygdrive/c/Program Files/Microsoft SQL Server/100/Tools/Binn /cygdrive/c/Program Files/Microsoft SQL Server/100/DTS/Binn /cygdrive/c/Program Files (x86)/Microsoft ASP.NET/ASP.NET Web Pages/v1.0 /cygdrive/c/Program Files (x86)/Windows Live/Shared C /jruby-1.6.3/bin /cygdrive/c/Program Files/TortoiseSVN/bin /cygdrive/c/Program Files/doxygen/bin /cygdrive/c/Program Files (x86)/Windows Kits/8.0/Windows Performance Toolkit /cygdrive/c/Program Files/Microsoft SQL Server/110/Tools/Binn /cygdrive/c/jruby-1.6.3/bin C /Windows/System32/java.exe /usr/lib/lapack
+/cygdrive/c/NewRVT/Debug/../tools/scripts/../external/cygwin/cbmc
+-- End semantic check (semchk).
+( M, M ) : passed
+( F, F ) : passed
+( __CPROVER_printf_1, __CPROVER_printf_1 ) : passed
+( putchar, putchar ) : passed
+( __CPROVER_printf_0, __CPROVER_printf_0 ) : passed
+Warning: allow UBS (-dk flag) for better check of functions with pointer argument(s).
+  in: Loop_main_for1 (side 0) 
+/usr/bin/cpp -D__FUNCTION__="<unknown>" -I /cygdrive/c/NewRVT/Debug/../tools/scripts/../ansi-c-lib -x c ./semchks/Loop_main_for1.rv.c ./semchks/Loop_main_for1.rv.cpp.c
+running goto-cc Loop_main_for1.rv.c
+running goto-instrument --div-by-zero-check --pointer-check --bounds-check --assert-to-assume a.out Loop_main_for1.exe
+Reading GOTO program from a.out
+Function Pointer Removal
+Partial Inlining
+Pointer Analysis
+Adding Pointer Checks
+Writing GOTO program to Loop_main_for1.exe
+running cbmc --unwind 10 Loop_main_for1.exe
+path before cbmc = /cygdrive/c/NewRVT/Debug/../tools/scripts/../external/cygwin /usr/local/bin /usr/bin /cygdrive/c/jruby-1.6.3/bin /cygdrive/c/Program Files/Common Files/Microsoft Shared/Windows Live /cygdrive/c/Program Files (x86)/Common Files/Microsoft Shared/Windows Live /cygdrive/c/Ruby186/bin /cygdrive/c/windows/system32 /cygdrive/c/windows /cygdrive/c/windows/System32/Wbem /cygdrive/c/windows/System32/WindowsPowerShell/v1.0 /cygdrive/c/Program Files/Hewlett-Packard/Drive Encryption /cygdrive/c/Program Files (x86)/Bitvise Tunnelier /cygdrive/c/Program Files (x86)/Microsoft SQL Server/100/Tools/Binn /cygdrive/c/Program Files/Microsoft SQL Server/100/Tools/Binn /cygdrive/c/Program Files/Microsoft SQL Server/100/DTS/Binn /cygdrive/c/Program Files (x86)/Microsoft ASP.NET/ASP.NET Web Pages/v1.0 /cygdrive/c/Program Files (x86)/Windows Live/Shared C /jruby-1.6.3/bin /cygdrive/c/Program Files/TortoiseSVN/bin /cygdrive/c/Program Files/doxygen/bin /cygdrive/c/Program Files (x86)/Windows Kits/8.0/Windows Performance Toolkit /cygdrive/c/Program Files/Microsoft SQL Server/110/Tools/Binn /cygdrive/c/jruby-1.6.3/bin C /Windows/System32/java.exe /usr/lib/lapack
+/cygdrive/c/NewRVT/Debug/../tools/scripts/../external/cygwin/cbmc
+-- End semantic check (semchk).
+( Loop_main_for1, Loop_main_for1 ) : passed
+( main, main ) : failed
+( puts, puts ) : passed
+Output graph written to rv_out.gv

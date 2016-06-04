@@ -1,0 +1,4 @@
+`P0  P1   Result
+`--- ---- ------
+sum  sum  mutually-terminating
+main main syntactically-equal mutually-terminating

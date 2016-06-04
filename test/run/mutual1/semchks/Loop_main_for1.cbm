@@ -1,0 +1,56 @@
+Reading GOTO program from file
+Adding CPROVER library
+Function Pointer Removal
+Partial Inlining
+Generic Property Instrumentation
+Starting Bounded Model Checking
+Unwinding loop c::rvs1_F.0 iteration 1 file Loop_main_for1.rv.c line 223 function rvs1_F
+Unwinding loop c::rvs1_F.0 iteration 2 file Loop_main_for1.rv.c line 223 function rvs1_F
+Unwinding loop c::rvs1_F.0 iteration 3 file Loop_main_for1.rv.c line 223 function rvs1_F
+Unwinding loop c::rvs1_F.0 iteration 4 file Loop_main_for1.rv.c line 223 function rvs1_F
+Unwinding loop c::rvs1_F.0 iteration 5 file Loop_main_for1.rv.c line 223 function rvs1_F
+Unwinding loop c::rvs1_F.0 iteration 6 file Loop_main_for1.rv.c line 223 function rvs1_F
+Unwinding loop c::rvs1_F.0 iteration 7 file Loop_main_for1.rv.c line 223 function rvs1_F
+Unwinding loop c::rvs1_F.0 iteration 8 file Loop_main_for1.rv.c line 223 function rvs1_F
+Unwinding loop c::rvs1_F.0 iteration 9 file Loop_main_for1.rv.c line 223 function rvs1_F
+Unwinding loop c::rvs1_F.0 iteration 10 file Loop_main_for1.rv.c line 223 function rvs1_F
+Unwinding loop c::rvs1___CPROVER_printf_1.0 iteration 1 file Loop_main_for1.rv.c line 293 function rvs1___CPROVER_printf_1
+Unwinding loop c::rvs1___CPROVER_printf_1.0 iteration 2 file Loop_main_for1.rv.c line 293 function rvs1___CPROVER_printf_1
+Unwinding loop c::rvs1___CPROVER_printf_1.0 iteration 3 file Loop_main_for1.rv.c line 293 function rvs1___CPROVER_printf_1
+Unwinding loop c::rvs1___CPROVER_printf_1.0 iteration 4 file Loop_main_for1.rv.c line 293 function rvs1___CPROVER_printf_1
+Unwinding loop c::rvs1___CPROVER_printf_1.0 iteration 5 file Loop_main_for1.rv.c line 293 function rvs1___CPROVER_printf_1
+Unwinding loop c::rvs1___CPROVER_printf_1.0 iteration 6 file Loop_main_for1.rv.c line 293 function rvs1___CPROVER_printf_1
+Unwinding loop c::rvs1___CPROVER_printf_1.0 iteration 7 file Loop_main_for1.rv.c line 293 function rvs1___CPROVER_printf_1
+Unwinding loop c::rvs1___CPROVER_printf_1.0 iteration 8 file Loop_main_for1.rv.c line 293 function rvs1___CPROVER_printf_1
+Unwinding loop c::rvs1___CPROVER_printf_1.0 iteration 9 file Loop_main_for1.rv.c line 293 function rvs1___CPROVER_printf_1
+Unwinding loop c::rvs1___CPROVER_printf_1.0 iteration 10 file Loop_main_for1.rv.c line 293 function rvs1___CPROVER_printf_1
+Unwinding loop c::rv_check.0 iteration 1 file Loop_main_for1.rv.c line 337 function rv_check
+Unwinding loop c::rv_check.0 iteration 2 file Loop_main_for1.rv.c line 337 function rv_check
+Unwinding loop c::rv_check.0 iteration 3 file Loop_main_for1.rv.c line 337 function rv_check
+Unwinding loop c::rv_check.0 iteration 4 file Loop_main_for1.rv.c line 337 function rv_check
+Unwinding loop c::rv_check.0 iteration 5 file Loop_main_for1.rv.c line 337 function rv_check
+Unwinding loop c::rv_check.0 iteration 6 file Loop_main_for1.rv.c line 337 function rv_check
+Unwinding loop c::rv_check.0 iteration 7 file Loop_main_for1.rv.c line 337 function rv_check
+Unwinding loop c::rv_check.0 iteration 8 file Loop_main_for1.rv.c line 337 function rv_check
+Unwinding loop c::rv_check.0 iteration 9 file Loop_main_for1.rv.c line 337 function rv_check
+Unwinding loop c::rv_check.0 iteration 10 file Loop_main_for1.rv.c line 337 function rv_check
+Unwinding loop c::rv_check.1 iteration 1 file Loop_main_for1.rv.c line 341 function rv_check
+Unwinding loop c::rv_check.1 iteration 2 file Loop_main_for1.rv.c line 341 function rv_check
+Unwinding loop c::rv_check.1 iteration 3 file Loop_main_for1.rv.c line 341 function rv_check
+Unwinding loop c::rv_check.1 iteration 4 file Loop_main_for1.rv.c line 341 function rv_check
+Unwinding loop c::rv_check.1 iteration 5 file Loop_main_for1.rv.c line 341 function rv_check
+Unwinding loop c::rv_check.1 iteration 6 file Loop_main_for1.rv.c line 341 function rv_check
+Unwinding loop c::rv_check.1 iteration 7 file Loop_main_for1.rv.c line 341 function rv_check
+Unwinding loop c::rv_check.1 iteration 8 file Loop_main_for1.rv.c line 341 function rv_check
+Unwinding loop c::rv_check.1 iteration 9 file Loop_main_for1.rv.c line 341 function rv_check
+Unwinding loop c::rv_check.1 iteration 10 file Loop_main_for1.rv.c line 341 function rv_check
+size of program expression: 897 assignments
+simple slicing removed 11 assignments
+Generated 26 VCC(s), 26 remaining after simplification
+Passing problem to propositional reduction
+Running propositional reduction
+Solving with MiniSAT2 with simplifier
+53532 variables, 157895 clauses
+SAT checker: negated claim is UNSATISFIABLE, i.e., holds
+Runtime decision procedure: 1.683s
+VERIFICATION SUCCESSFUL

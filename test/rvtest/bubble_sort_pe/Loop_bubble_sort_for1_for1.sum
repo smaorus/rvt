@@ -1,0 +1,448 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cprover>
+<program>Summarizer 5.0</program>
+<message type="STATUS-MESSAGE">
+  <text>SUMMARIZER version 0.1.0 (based on CBMC 5.0)</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Parsing .\bubble_sort1.c.rec.c</text>
+</message>
+
+<message type="WARNING">
+  <text>bubble_sort1.c.rec.c</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Converting</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Type-checking bubble_sort1.c.rec</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Generating GOTO Program</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Adding CPROVER library</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Generic Property Instrumentation</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Function Pointer Removal</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Context-sensitive analysis from _start</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Using intervals domain with binary search solver</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Computing SSA of main</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Simplifying</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Computing SSA of _start</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Simplifying</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Computing SSA of __CPROVER_initialize</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Simplifying</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Computing SSA of bubble_sort</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Simplifying</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Computing SSA of init_array</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Simplifying</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Computing SSA of Loop_bubble_sort_for1</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Simplifying</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Computing SSA of Loop_bubble_sort_for1_for1</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Simplifying</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>
+Summarizing function _start</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Checking precondition of __CPROVER_initialize</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Function __CPROVER_initialize not analyzed yet</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Computing calling context for function __CPROVER_initialize</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Recursively summarizing function __CPROVER_initialize</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Analyzing function __CPROVER_initialize</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Computing summary</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>
+Summary for function __CPROVER_initialize
+params: 
+globals_in: __CPROVER_threads_exited a __CPROVER_malloc_is_new_array __CPROVER_dead_object __CPROVER_deallocated __CPROVER_malloc_object __CPROVER_memory_leak __CPROVER_rounding_mode __CPROVER_malloc_size __CPROVER_next_thread_id __CPROVER_pipe_count __CPROVER_thread_id 
+globals_out: __CPROVER_threads_exited#19 a#23 __CPROVER_malloc_is_new_array#16 __CPROVER_dead_object#12 __CPROVER_deallocated#14 __CPROVER_malloc_object#21 __CPROVER_memory_leak#17 __CPROVER_rounding_mode#13 __CPROVER_malloc_size#15 __CPROVER_next_thread_id#20 __CPROVER_pipe_count#22 __CPROVER_thread_id#18 
+forward precondition: TRUE
+forward transformer: __CPROVER_rounding_mode#13 &lt;= 0 &amp;&amp; -((signed __CPROVER_bitvector[33])__CPROVER_rounding_mode#13) &lt;= 0 &amp;&amp; __CPROVER_malloc_size#15 &lt;= 0u &amp;&amp; -((signed __CPROVER_bitvector[33])__CPROVER_malloc_size#15) &lt;= 0 &amp;&amp; __CPROVER_next_thread_id#20 &lt;= 0ul &amp;&amp; -((signed __CPROVER_bitvector[33])__CPROVER_next_thread_id#20) &lt;= 0 &amp;&amp; __CPROVER_pipe_count#22 &lt;= 0u &amp;&amp; -((signed __CPROVER_bitvector[33])__CPROVER_pipe_count#22) &lt;= 0 &amp;&amp; __CPROVER_thread_id#18 &lt;= 0ul &amp;&amp; -((signed __CPROVER_bitvector[33])__CPROVER_thread_id#18) &lt;= 0
+forward invariant: TRUE
+backward precondition: not computed
+backward postcondition: not computed
+backward transformer: not computed
+backward invariant: not computed</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Checking precondition of main</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Function main not analyzed yet</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Computing calling context for function main</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Recursively summarizing function main</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Checking precondition of init_array</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Function init_array not analyzed yet</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Computing calling context for function init_array</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Recursively summarizing function init_array</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Analyzing function init_array</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Computing summary</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>
+Summary for function init_array
+params: n 
+globals_in: 
+globals_out: init_array#return_value#39 
+forward precondition: n &lt;= 5 &amp;&amp; -((signed __CPROVER_bitvector[33])n) &lt;= -5
+forward transformer: n &lt;= 5 &amp;&amp; -((signed __CPROVER_bitvector[33])n) &lt;= -5 ==&gt; init_array#return_value#39 &lt;= 0 &amp;&amp; -((signed __CPROVER_bitvector[33])init_array#return_value#39) &lt;= 0
+forward invariant: n &lt;= 5 &amp;&amp; -((signed __CPROVER_bitvector[33])n) &lt;= -5 ==&gt; TRUE
+backward precondition: not computed
+backward postcondition: not computed
+backward transformer: not computed
+backward invariant: not computed</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Checking precondition of bubble_sort</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Function bubble_sort not analyzed yet</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Computing calling context for function bubble_sort</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Recursively summarizing function bubble_sort</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Checking precondition of Loop_bubble_sort_for1</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Function Loop_bubble_sort_for1 not analyzed yet</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Computing calling context for function Loop_bubble_sort_for1</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Recursively summarizing function Loop_bubble_sort_for1</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Checking precondition of Loop_bubble_sort_for1_for1</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Function Loop_bubble_sort_for1_for1 not analyzed yet</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Computing calling context for function Loop_bubble_sort_for1_for1</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Recursively summarizing function Loop_bubble_sort_for1_for1</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Checking precondition of Loop_bubble_sort_for1_for1</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Havoc recursive function call to Loop_bubble_sort_for1_for1</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Analyzing function Loop_bubble_sort_for1_for1</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Computing summary</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>
+Summary for function Loop_bubble_sort_for1_for1
+params: a i rvp_j 
+globals_in: 
+globals_out: Loop_bubble_sort_for1_for1#return_value#phi88 
+forward precondition: i &lt;= 2147483647 &amp;&amp; -((signed __CPROVER_bitvector[33])i) &lt;= 2147483648
+forward transformer: i &lt;= 2147483647 &amp;&amp; -((signed __CPROVER_bitvector[33])i) &lt;= 2147483648 ==&gt; Loop_bubble_sort_for1_for1#return_value#phi88 &lt;= 255 &amp;&amp; -((signed __CPROVER_bitvector[9])Loop_bubble_sort_for1_for1#return_value#phi88) &lt;= 0
+forward invariant: i &lt;= 2147483647 &amp;&amp; -((signed __CPROVER_bitvector[33])i) &lt;= 2147483648 ==&gt; TRUE
+backward precondition: not computed
+backward postcondition: not computed
+backward transformer: not computed
+backward invariant: not computed</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Checking precondition of Loop_bubble_sort_for1</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Havoc recursive function call to Loop_bubble_sort_for1</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Analyzing function Loop_bubble_sort_for1</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Computing summary</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>
+Summary for function Loop_bubble_sort_for1
+params: a sz rvp_i 
+globals_in: 
+globals_out: Loop_bubble_sort_for1#return_value#phi63 
+forward precondition: sz &lt;= 5 &amp;&amp; -((signed __CPROVER_bitvector[33])sz) &lt;= -5
+forward transformer: sz &lt;= 5 &amp;&amp; -((signed __CPROVER_bitvector[33])sz) &lt;= -5 ==&gt; Loop_bubble_sort_for1#return_value#phi63 &lt;= 255 &amp;&amp; -((signed __CPROVER_bitvector[9])Loop_bubble_sort_for1#return_value#phi63) &lt;= 0
+forward invariant: sz &lt;= 5 &amp;&amp; -((signed __CPROVER_bitvector[33])sz) &lt;= -5 ==&gt; TRUE
+backward precondition: not computed
+backward postcondition: not computed
+backward transformer: not computed
+backward invariant: not computed</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Analyzing function bubble_sort</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Computing summary</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>
+Summary for function bubble_sort
+params: a sz 
+globals_in: 
+globals_out: 
+forward precondition: sz &lt;= 5 &amp;&amp; -((signed __CPROVER_bitvector[33])sz) &lt;= -5
+forward transformer: sz &lt;= 5 &amp;&amp; -((signed __CPROVER_bitvector[33])sz) &lt;= -5 ==&gt; TRUE
+forward invariant: sz &lt;= 5 &amp;&amp; -((signed __CPROVER_bitvector[33])sz) &lt;= -5 ==&gt; TRUE
+backward precondition: not computed
+backward postcondition: not computed
+backward transformer: not computed
+backward invariant: not computed</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Analyzing function main</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Computing summary</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>
+Summary for function main
+params: 
+globals_in: 
+globals_out: main#return_value#4 
+forward precondition: TRUE
+forward transformer: TRUE
+forward invariant: TRUE
+backward precondition: not computed
+backward postcondition: not computed
+backward transformer: not computed
+backward invariant: not computed</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Analyzing function _start</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Computing summary</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>
+Summary for function _start
+params: 
+globals_in: 
+globals_out: 
+forward precondition: TRUE
+forward transformer: TRUE
+forward invariant: TRUE
+backward precondition: not computed
+backward postcondition: not computed
+backward transformer: not computed
+backward invariant: not computed</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Checking properties of main</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Checking properties of _start</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Checking properties of __CPROVER_initialize</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Checking properties of bubble_sort</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Checking properties of init_array</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Checking properties of Loop_bubble_sort_for1</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Checking properties of Loop_bubble_sort_for1_for1</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>** statistics: </text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>  number of solver instances: 7</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>  number of solver calls: 124</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>  number of summaries used: 6</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text/>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text/>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>** 0 of 0 unknown</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>** 0 of 0 failed</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>VERIFICATION SUCCESSFUL</text>
+</message>
+
+<cprover-status>SUCCESS</cprover-status>
+
+</cprover>

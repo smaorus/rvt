@@ -1,0 +1,262 @@
+F.rv.c
+Adding CPROVER library
+
+initing this guy ("symbol" "type" ("pointer" "subtype" ("signedbv" "width" ("32") "#c_type" ("signed_int")) "#location" ("" "file" ("F.rv.c") "line" ("79") "function" (""))) "identifier" ("unitrv::n$argument_input"))
+First symex 1
+First symex 2
+Modified: unitrv::$return_value
+
+initing this guy ("symbol" "type" ("pointer" "subtype" ("signedbv" "width" ("32") "#c_type" ("signed_int")) "#location" ("" "file" ("F.rv.c") "line" ("79") "function" (""))) "identifier" ("unitrv::n$argument_input"))
+Global input: c::__CPROVER_malloc_size
+Global input: c::__CPROVER_malloc_object
+Global input: c::__CPROVER_deallocated
+Global input: c::__CPROVER_dead_object
+Harness:
+        // 0 file from pointer to array
+        n$argument_input = myarray1;
+        // 1 no location
+        $return_value=chk0_F(n$argument_input);
+        // 2 file harness-save-outputs
+        $return_value$f1_output = $return_value;
+        // 3 no location
+        $return_value=chk1_F(n$argument_input);
+        // 4 file harness-assertions
+        ASSERT $return_value$f1_output == $return_value
+        // 5 no location
+        END_FUNCTION
+Symex on harness
+
+Thread 0 file from pointer to array
+ASSIGNMENT (STATE)
+n$argument_input!0#1 == myarray1
+Guard: TRUE
+--------------
+Thread 0
+LOCATION
+Guard: TRUE
+--------------
+Thread 0
+FUNCTION_CALL
+Guard: TRUE
+--------------
+Thread 0
+ASSIGNMENT (STATE)
+n!0@1#1 == myarray1
+Guard: TRUE
+--------------
+Thread 0 file F.rv.c line 82 function chk0_F
+DECL
+a!0@1#1
+Guard: TRUE
+--------------
+Thread 0 file F.rv.c line 83 function chk0_F
+ASSIGNMENT (STATE)
+a!0@1#2 == myarray1
+Guard: TRUE
+--------------
+Thread 0 file F.rv.c line 84 function chk0_F
+ASSUME
+!(POINTER_OBJECT(&myarray1) == POINTER_OBJECT(__CPROVER_deallocated#0))
+Guard: TRUE
+--------------
+Thread 0 file F.rv.c line 84 function chk0_F
+ASSUME
+!(POINTER_OBJECT(&myarray1) == POINTER_OBJECT(__CPROVER_dead_object#0))
+Guard: TRUE
+--------------
+Thread 0 file F.rv.c line 84 function chk0_F
+ASSUME
+!(__CPROVER_malloc_size#0 < 4) || !(POINTER_OBJECT(&myarray1) == POINTER_OBJECT(__CPROVER_malloc_object#0))
+Guard: TRUE
+--------------
+Thread 0 file F.rv.c line 84 function chk0_F
+ASSUME
+!(4 * INFINITY() < 4)
+Guard: TRUE
+--------------
+Thread 0 file F.rv.c line 84 function chk0_F
+SHARED WRITE
+myarray1#1
+Guard: TRUE
+--------------
+Thread 0 file F.rv.c line 84 function chk0_F
+ASSIGNMENT (STATE)
+myarray1#1 == myarray1#0 WITH [0:=2]
+Guard: TRUE
+--------------
+Thread 0 file F.rv.c line 85 function chk0_F
+LOCATION
+Guard: TRUE
+--------------
+Thread 0 file F.rv.c line 85 function chk0_F
+SHARED WRITE
+$return_value#1
+Guard: TRUE
+--------------
+Thread 0 file F.rv.c line 85 function chk0_F
+ASSIGNMENT (STATE)
+$return_value#1 == 0
+Guard: TRUE
+--------------
+Thread 0 file F.rv.c line 86 function chk0_F
+ASSIGNMENT (PHI)
+a!0@1#4 == myarray1
+Guard: TRUE
+--------------
+Thread 0 file F.rv.c line 86 function chk0_F
+FUNCTION_RETURN
+Guard: TRUE
+--------------
+Thread 0 file harness-save-outputs
+SHARED WRITE
+$return_value$f1_output#1
+Guard: TRUE
+--------------
+Thread 0 file harness-save-outputs
+ASSIGNMENT (STATE)
+$return_value$f1_output#1 == 0
+Guard: TRUE
+--------------
+Thread 0
+LOCATION
+Guard: TRUE
+--------------
+Thread 0
+FUNCTION_CALL
+Guard: TRUE
+--------------
+Thread 0
+ASSIGNMENT (STATE)
+n!0@1#1 == myarray1
+Guard: TRUE
+--------------
+Thread 0 file F.rv.c line 93 function chk1_F
+ASSUME
+!(POINTER_OBJECT(&myarray1) == POINTER_OBJECT(__CPROVER_deallocated#0))
+Guard: TRUE
+--------------
+Thread 0 file F.rv.c line 93 function chk1_F
+ASSUME
+!(POINTER_OBJECT(&myarray1) == POINTER_OBJECT(__CPROVER_dead_object#0))
+Guard: TRUE
+--------------
+Thread 0 file F.rv.c line 93 function chk1_F
+ASSUME
+!(__CPROVER_malloc_size#0 < 4) || !(POINTER_OBJECT(&myarray1) == POINTER_OBJECT(__CPROVER_malloc_object#0))
+Guard: TRUE
+--------------
+Thread 0 file F.rv.c line 93 function chk1_F
+ASSUME
+!(4 * INFINITY() < 4)
+Guard: TRUE
+--------------
+Thread 0 file F.rv.c line 93 function chk1_F
+LOCATION
+Guard: TRUE
+--------------
+Thread 0 file F.rv.c line 95 function chk1_F
+ASSIGNMENT (GUARD)
+\guard#1 == myarray1#1[0] <= 0
+Guard: TRUE
+--------------
+Thread 0 file F.rv.c line 95 function chk1_F
+LOCATION
+Guard: \guard#1
+--------------
+Thread 0 file F.rv.c line 95 function chk1_F
+SHARED WRITE
+$return_value#2
+Guard: \guard#1
+--------------
+Thread 0 file F.rv.c line 95 function chk1_F
+ASSIGNMENT (STATE)
+$return_value#2 == 1
+Guard: \guard#1
+--------------
+Thread 0 file F.rv.c line 98 function chk1_F
+ASSIGNMENT (PHI)
+$return_value#3 == 0
+Guard: TRUE
+--------------
+Thread 0 file F.rv.c line 98 function chk1_F
+ASSUME
+!\guard#1 ==> !(POINTER_OBJECT(&myarray1) == POINTER_OBJECT(__CPROVER_deallocated#0))
+Guard: !\guard#1
+--------------
+Thread 0 file F.rv.c line 98 function chk1_F
+ASSUME
+!\guard#1 ==> !(POINTER_OBJECT(&myarray1) == POINTER_OBJECT(__CPROVER_dead_object#0))
+Guard: !\guard#1
+--------------
+Thread 0 file F.rv.c line 98 function chk1_F
+ASSUME
+!\guard#1 ==> !(__CPROVER_malloc_size#0 < 4) || !(POINTER_OBJECT(&myarray1) == POINTER_OBJECT(__CPROVER_malloc_object#0))
+Guard: !\guard#1
+--------------
+Thread 0 file F.rv.c line 98 function chk1_F
+ASSUME
+!\guard#1 ==> !(4 * INFINITY() < 4)
+Guard: !\guard#1
+--------------
+Thread 0 file F.rv.c line 98 function chk1_F
+ASSUME
+!\guard#1 ==> !overflow("-", int, myarray1#1[0], 1)
+Guard: !\guard#1
+--------------
+Thread 0 file F.rv.c line 98 function chk1_F
+SHARED WRITE
+myarray1#2
+Guard: !\guard#1
+--------------
+Thread 0 file F.rv.c line 98 function chk1_F
+ASSIGNMENT (STATE)
+myarray1#2 == myarray1#1 WITH [0:=-1 + myarray1#1[0]]
+Guard: !\guard#1
+--------------
+Thread 0 file F.rv.c line 99 function chk1_F
+LOCATION
+Guard: !\guard#1
+--------------
+Thread 0 file F.rv.c line 99 function chk1_F
+SHARED WRITE
+$return_value#4
+Guard: !\guard#1
+--------------
+Thread 0 file F.rv.c line 99 function chk1_F
+ASSIGNMENT (STATE)
+$return_value#4 == 0
+Guard: !\guard#1
+--------------
+Thread 0 file F.rv.c line 100 function chk1_F
+ASSIGNMENT (PHI)
+$return_value#5 == (\guard#1 ? 1 : 0)
+Guard: TRUE
+--------------
+Thread 0 file F.rv.c line 100 function chk1_F
+ASSIGNMENT (PHI)
+myarray1#3 == (\guard#1 ? myarray1#1 : myarray1#2)
+Guard: TRUE
+--------------
+Thread 0 file F.rv.c line 100 function chk1_F
+FUNCTION_RETURN
+Guard: TRUE
+--------------
+Thread 0 file harness-assertions
+ASSERT
+$return_value#5 == 0
+assertion
+Guard: TRUE
+--------------
+Thread 0
+FUNCTION_RETURN
+Guard: TRUE
+--------------
+
+warning: ignoring infinity
+  * type: signedbv
+      * width: 32
+Post-processing
+Solving with MiniSAT 2.2.0 with simplifier
+1030 variables, 1993 clauses
+SAT checker inconsistent: negated claim is UNSATISFIABLE, i.e., holds
+PROGRAMS ARE EQUIVALENT

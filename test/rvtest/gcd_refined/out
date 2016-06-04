@@ -1,0 +1,5 @@
+/usr/bin/gcc -fsyntax-only .//gcd_refined.c
+/usr/bin/gcc -fsyntax-only .//gcd_refined1.c
+/usr/bin/cpp -D__FUNCTION__="<unknown>" -I /cygdrive/c/NewRVT/debug/../tools/scripts/../ansi-c-lib -x c .//gcd_refined.c .//S0.c
+
+RVT fatal error: Failed cpp command 

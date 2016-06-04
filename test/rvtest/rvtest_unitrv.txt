@@ -1,0 +1,287 @@
+#This is a configuration file for regression testing of rvt.
+#Since rvt is a command line tool with a well defined output, it can be easily
+#covered with regression tests.
+#
+#Directives:
+# @rvt [args] file_side0 file_side1 
+#   - run rvt with the given arguments over the given source files; 
+#     it also checks that rvt does not modify the source files, but the latter
+#     check can be switched off with @set may_change_sources = 1
+# @compare [files]
+#   - compares the actual content of each of the listed files vs its expected
+#     content.
+# @set variable = [value]
+#   - assigns %value% to %variable%; the new values are up-to-date only for
+#     running the current test; afterwards the changes are forgotten
+#     Predefined variables and their default values:
+#     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#       difflags = ""          (flags for diff command used in @compare)
+#       may_change_sources = 0 (1 means rvt may change the verified sources)
+#       rvt                    (the path to the tested rvt executable)
+#       run_dir                (the directory from where rvtest.pl is launched)
+#     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# @set variable += [value]
+#   - appends %value% to the current value of the %variable%
+# @eval variable = [command]
+#   - assignes the output of c-shell %command% or a series of commands separated
+#     with ; or | to the %variable%; if you want to run a built in csh command
+#     you should use: @eval ... = sh -c '[command] ... '
+# @eval variable += [command]
+#   - like the previous, but it appends the output to the value of %variable%
+# @get(variable)
+#   - this directive is found in a midst of other commands; it is substituted
+#
+
+
+     with the value of %variable%
+##
+#
+#
+#Test nested_while_mt - basic mut. term. check for nested while loops.
+#
+@test  nested_while_mt
+@rvt  -unitrv -nofuf -mt nested_while.c nested_while1.c
+@compare  rv_mt.fuf
+#
+##
+#Test alias_pe - part. equiv check for basic aliasing test
+#
+@test  alias_pe
+@rvt  -unitrv alias.c alias1.c
+@compare  rv_pe.fuf
+#
+#Test loopb_mt -    mut. term. testing for loops with accesses to struct fields
+#                   through pointers. 
+#
+@test  loopb_mt
+@rvt  -unitrv -dk 2 -mt loopb.c loopb1.c
+@compare  rv_mt.fuf
+#
+##
+#Test mutual_alias_pe - Completeness level testing for partial equiv. check:
+#                       this test contains a case when some function f' calls
+#                       a function of MSCC m', while its counterpart function
+#                       f calls no function from MSCC m. 
+# @test mutual_alias_pe
+# @rvt -unitrv -completeness 1 mutual_alias.c mutual_alias1.c
+# @compare rv_pe.fuf
+#
+#
+#
+#Test mutual_alias_mt - mut. term. check that finds no m-term pairs.
+#
+@test  mutual_alias_mt
+@rvt  -unitrv -continue_on_fail -dk 2 -fuf rv_pe.fuf -mt mutual_alias.c mutual_alias1.c
+@compare  rv_mt.fuf rv_out.gv
+#
+##
+#Test bubble_sort_pe - part. equiv. check
+#          1. Tests new CBMC mechanism for handling static arrays
+#          2. Tests loop prototypes (read-only vars are such, indeed)
+#
+@test  bubble_sort_pe
+@rvt  -unitrv bubble_sort.c bubble_sort1.c
+@compare  rv_pe.fuf rv_log
+#
+#
+#Test mccarthy_mt - mut. term. check for McCarthy91 problem.
+#
+@test  mccarthy_mt
+@rvt  -unitrv -mt mccarthy.c mccarthy1.c
+@compare  rv_mt.fuf
+#
+#
+#Test peqmutual - testing basic rvt functionality for detecting partially
+#                 equivalent pairs of functions with mutual recursion:
+@test peqmutual
+@rvt  -unitrv mutual.c mutual1.c
+@compare rv_out.gv
+#
+#
+#
+#Test collatz_mt - mut. term. check for the open Collatz problem 
+#                  where no function is assumed part.equiv.
+#
+@test  collatz_mt
+@rvt  -unitrv -nooutline_funcs -mt -nofuf collatz.c collatz1.c
+@compare  rv_mt.fuf rv_out.gv
+
+
+#Test gcd - not refined; running with nooutline_funcs significantly prolongs 
+#           the run time of CBMC      
+@test gcd
+@rvt  -unitrv gcd.c gcd1.c
+@compare rv_out.gv
+
+#Test gcd_refined - run with -refined flag
+@test gcd_refined
+@rvt -unitrv -refined -nooutline_funcs gcd_refined.c gcd_refined1.c
+@compare rv_out.gv
+#
+#
+#Test glob_write_only_mt - Mutual term. check: see #TD1 in change_tags.txt
+#                          mutually terminating progs in spite of their semantic unequivalence.
+@test glob_write_only_mt
+@rvt -unitrv -mt rec_soundness.c  rec_soundness1.c
+@compare rv_mt.fuf rv_out.gv
+#
+#
+#Test peq1 - testing basic rvt functionality for detecting partially equivalent
+#            pairs of functions:
+@test peq1
+@rvt -unitrv try_side0.c try1_side1.c
+@set difflags = -i -E
+#the same effect could have been achieved with: 
+# @eval difflags += sh -c 'echo -i -E'
+#or: 
+# @set difflags = sh -c 'echo -i -E @get(difflags)'
+@compare *.gv
+
+#Test mutual1 - testing basic rvt functionality for detecting mutually
+#               terminating pairs of partially equivalent functions 
+#               with mutual recursion:
+@test mutual1
+@rvt -unitrv -fuf rv_pe.fuf -K 10 -mt mutual.c mutual1.c
+@compare rv_out.gv
+#
+#
+#Test mt1 - testing basic rvt functionality for detecting mutually termination of
+#           partially equivalent pairs of functions:
+@test mt1
+@rvt -unitrv -debug 7777777 -fuf rv_pe.fuf -K 3 -mt -lb 0 try_side0.c try1_side1.c
+@eval difflags += sh -c 'echo -i -E'
+@compare *.gv
+#
+#
+#Test gcd_refined_mt - mut. term. check for refined GCD.
+#
+@test  gcd_refined_mt
+@rvt  -unitrv -mt -nooutline_funcs -refined gcd_refined.c gcd_refined1.c
+@compare  rv_mt.fuf
+#
+#
+
+#Test struct - 
+@test struct
+@rvt -unitrv -nooutline_funcs struct.c struct1.c
+@compare rv_out.gv
+#
+
+
+#Test nested_while - 
+@test nested_while
+@rvt -unitrv nested_while.c nested_while1.c
+@compare rv_out.gv
+
+#Test glob_write_only_pe - Partial equiv. check: see #TD1 in change_tags.txt
+@test glob_write_only_pe
+@rvt -unitrv rec_soundness.c  rec_soundness1.c
+@compare rv_pe.fuf
+#Test bug15_pe - Partial equiv. check: see #TD15 in change_tags.txt 
+#remark: the test currently fails because main.rv.c fails verification 
+@test bug15_pe
+@rvt -unitrv -nooutline_funcs bug15.c bug15tag.c
+@compare rv_pe.fuf
+
+#
+#Test ackermann_pe - part. equiv. check
+#          2 similar implementations of Ackermann function.
+#          
+@test  ackermann_pe
+@rvt  -unitrv ackermann.c ackermann1.c
+@compare  rv_pe.fuf
+#
+#
+#
+#Test ackermann_mt - mut. term. check
+#          Two similar implementations of Ackermann function
+#
+@test  ackermann_mt
+@rvt  -unitrv -mt -fuf rv_pe.fuf ackermann.c ackermann1.c
+@compare  rv_mt.fuf rv_out.gv
+#
+#
+
+
+#
+#
+#Test collatz_pe - part. equiv. check for the open Collatz problem
+#
+@test  collatz_pe
+@rvt  -unitrv -nooutline_funcs collatz.c collatz1.c
+@compare  rv_pe.fuf rv_out.gv
+#
+#
+#
+#Test bubble_sort_mt - mut. term. check for bubble sorting - bugs to be fixed!
+#
+@test  bubble_sort_mt
+@rvt  -unitrv -continue_on_fail -mt bubble_sort.c bubble_sort1.c
+@compare  rv_mt.fuf rv_out.gv
+#
+#
+
+#
+
+#
+#
+#Test mccarthy_pe - part.equiv. check for McCarthy-91 problem.
+#
+@test  mccarthy_pe
+@rvt -unitrv  mccarthy.c mccarthy1.c
+@compare  rv_pe.fuf
+#
+#
+
+#
+#
+#Test alias_mt - basic mut. term. check for programs with pointer aliasing.
+#
+@test  alias_mt
+@rvt  -unitrv -mt alias.c alias1.c
+@compare  rv_mt.fuf
+#
+#
+#
+#Test nonterm1_pe - part. equiv. check for two programs with an infinite loop.
+#
+@test  nonterm1_pe
+@rvt  -unitrv nonterm.c nonterm1.c
+@compare  rv_pe.fuf
+#
+#
+#
+#Test nonterm1_mt - mut. term. check for two programs with an infinite loop
+#                   when part. equiv. result does not matter.
+#
+@test  nonterm1_mt
+@rvt  -unitrv -mt nonterm.c nonterm1.c
+@compare  rv_mt.fuf
+#
+#
+#
+#Test c99test_pe -  basic part. equiv. testing of C99 compliance:
+#                   variables can be declared anywhere including inside for(...).
+#
+@test  c99test_pe
+@rvt  -unitrv -debug 100000 -nooutline_funcs -c99 c99test.c c99test1.c
+@compare  rv_pe.fuf UninitVar-Loop_f_for1_side0.gv UninitVar-Loop_f_for1_side1.gv
+#
+#
+#
+#Test c99test_mt -  basic mut. term. testing of C99 compliance:
+#                   variables can be declared anywhere including inside for(...).
+#
+@test  c99test_mt
+@rvt  -unitrv -nooutline_funcs -c99 -mt c99test.c c99test1.c
+@compare  rv_mt.fuf
+#
+#
+
+#
+#
+#Test bugb_mt -     mut. term. test made after a bug.
+#
+@test  bugb_mt
+@rvt  -unitrv -dk 3 -mt bugb.c bugb1.c
+@compare  rv_mt.fuf

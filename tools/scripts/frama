@@ -1,0 +1,1 @@
+/usr/local/bin/frama-c -val /cygdrive/c/frama-test/frama-c-Sodium-20150201/share/builtin.c frama.c  > frama_out.txt

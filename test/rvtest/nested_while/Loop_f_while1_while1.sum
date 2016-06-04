@@ -1,0 +1,412 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cprover>
+<program>Summarizer 5.0</program>
+<message type="STATUS-MESSAGE">
+  <text>SUMMARIZER version 0.1.0 (based on CBMC 5.0)</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Parsing .\nested_while1.c.rec.c</text>
+</message>
+
+<message type="WARNING">
+  <text>nested_while1.c.rec.c</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Converting</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Type-checking nested_while1.c.rec</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Generating GOTO Program</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Adding CPROVER library</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Generic Property Instrumentation</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Function Pointer Removal</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Context-sensitive analysis from _start</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Using intervals domain with binary search solver</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Computing SSA of f</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Simplifying</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Computing SSA of main</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Simplifying</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Computing SSA of _start</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Simplifying</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Computing SSA of __CPROVER_initialize</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Simplifying</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Computing SSA of Loop_f_while1</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Simplifying</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Computing SSA of Loop_f_while1_while1</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Simplifying</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>
+Summarizing function _start</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Checking precondition of __CPROVER_initialize</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Function __CPROVER_initialize not analyzed yet</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Computing calling context for function __CPROVER_initialize</text>
+</message>
+
+Aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+binsearch-solver00A0E5C8<message type="STATUS-MESSAGE">
+  <text>Recursively summarizing function __CPROVER_initialize</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Analyzing function __CPROVER_initialize</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Computing summary</text>
+</message>
+
+Aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+enum-solver00A0E668<message type="STATUS-MESSAGE">
+  <text>enter analyzer
+done analyzer
+
+Summary for function __CPROVER_initialize
+params: 
+globals_in: __CPROVER_threads_exited __CPROVER_malloc_is_new_array __CPROVER_dead_object __CPROVER_deallocated __CPROVER_malloc_object __CPROVER_memory_leak __CPROVER_rounding_mode g __CPROVER_malloc_size __CPROVER_next_thread_id __CPROVER_pipe_count __CPROVER_thread_id 
+globals_out: __CPROVER_threads_exited#35 __CPROVER_malloc_is_new_array#32 __CPROVER_dead_object#28 __CPROVER_deallocated#30 __CPROVER_malloc_object#37 __CPROVER_memory_leak#33 __CPROVER_rounding_mode#29 g#39 __CPROVER_malloc_size#31 __CPROVER_next_thread_id#36 __CPROVER_pipe_count#38 __CPROVER_thread_id#34 
+forward precondition: TRUE
+forward transformer: __CPROVER_rounding_mode#29 &lt;= 0 &amp;&amp; -((signed __CPROVER_bitvector[33])__CPROVER_rounding_mode#29) &lt;= 0 &amp;&amp; g#39 &lt;= 0 &amp;&amp; -((signed __CPROVER_bitvector[33])g#39) &lt;= 0 &amp;&amp; __CPROVER_malloc_size#31 &lt;= 0u &amp;&amp; -((signed __CPROVER_bitvector[33])__CPROVER_malloc_size#31) &lt;= 0 &amp;&amp; __CPROVER_next_thread_id#36 &lt;= 0ul &amp;&amp; -((signed __CPROVER_bitvector[33])__CPROVER_next_thread_id#36) &lt;= 0 &amp;&amp; __CPROVER_pipe_count#38 &lt;= 0u &amp;&amp; -((signed __CPROVER_bitvector[33])__CPROVER_pipe_count#38) &lt;= 0 &amp;&amp; __CPROVER_thread_id#34 &lt;= 0ul &amp;&amp; -((signed __CPROVER_bitvector[33])__CPROVER_thread_id#34) &lt;= 0
+forward invariant: TRUE
+backward precondition: not computed
+backward postcondition: not computed
+backward transformer: not computed
+backward invariant: not computed</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Checking precondition of main</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Function main not analyzed yet</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Computing calling context for function main</text>
+</message>
+
+Aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+binsearch-solver00A3BE80<message type="STATUS-MESSAGE">
+  <text>Recursively summarizing function main</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Checking precondition of f</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Function f not analyzed yet</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Computing calling context for function f</text>
+</message>
+
+Aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+binsearch-solver00A3C0D8<message type="STATUS-MESSAGE">
+  <text>Recursively summarizing function f</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Checking precondition of Loop_f_while1</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Function Loop_f_while1 not analyzed yet</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Computing calling context for function Loop_f_while1</text>
+</message>
+
+Aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+binsearch-solver00AA2FA8<message type="STATUS-MESSAGE">
+  <text>Recursively summarizing function Loop_f_while1</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Checking precondition of Loop_f_while1_while1</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Function Loop_f_while1_while1 not analyzed yet</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Computing calling context for function Loop_f_while1_while1</text>
+</message>
+
+Aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+binsearch-solver00A59D90<message type="STATUS-MESSAGE">
+  <text>Recursively summarizing function Loop_f_while1_while1</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Analyzing function Loop_f_while1_while1</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Computing summary</text>
+</message>
+
+Aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+binsearch-solver01D3B398<message type="STATUS-MESSAGE">
+  <text>enter analyzer
+done analyzer
+
+Summary for function Loop_f_while1_while1
+params: i rvp_x rvp_rvretval 
+globals_in: g 
+globals_out: g#phi82 Loop_f_while1_while1#return_value#phi82 
+forward precondition: g &lt;= 2147483647 &amp;&amp; -((signed __CPROVER_bitvector[33])g) &lt;= 2147483648 &amp;&amp; i &lt;= 2147483647 &amp;&amp; -((signed __CPROVER_bitvector[33])i) &lt;= 2147483648
+forward transformer: g &lt;= 2147483647 &amp;&amp; -((signed __CPROVER_bitvector[33])g) &lt;= 2147483648 &amp;&amp; i &lt;= 2147483647 &amp;&amp; -((signed __CPROVER_bitvector[33])i) &lt;= 2147483648 ==&gt; g#phi82 &lt;= 2147483647 &amp;&amp; -((signed __CPROVER_bitvector[33])g#phi82) &lt;= 2147483648 &amp;&amp; Loop_f_while1_while1#return_value#phi82 &lt;= 123 &amp;&amp; -((signed __CPROVER_bitvector[9])Loop_f_while1_while1#return_value#phi82) &lt;= 0
+forward invariant: g &lt;= 2147483647 &amp;&amp; -((signed __CPROVER_bitvector[33])g) &lt;= 2147483648 &amp;&amp; i &lt;= 2147483647 &amp;&amp; -((signed __CPROVER_bitvector[33])i) &lt;= 2147483648 ==&gt; TRUE
+backward precondition: not computed
+backward postcondition: not computed
+backward transformer: not computed
+backward invariant: not computed</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Checking precondition of Loop_f_while1</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Havoc recursive function call to Loop_f_while1</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Analyzing function Loop_f_while1</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Computing summary</text>
+</message>
+
+Aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+binsearch-solver00B63390<message type="STATUS-MESSAGE">
+  <text>enter analyzer
+done analyzer
+
+Summary for function Loop_f_while1
+params: rvp_i rvp_x rvp_rvretval 
+globals_in: g 
+globals_out: g#phi65 Loop_f_while1#return_value#phi65 
+forward precondition: TRUE
+forward transformer: g#phi65 &lt;= 2147483647 &amp;&amp; -((signed __CPROVER_bitvector[33])g#phi65) &lt;= 2147483648 &amp;&amp; Loop_f_while1#return_value#phi65 &lt;= 255 &amp;&amp; -((signed __CPROVER_bitvector[9])Loop_f_while1#return_value#phi65) &lt;= 0
+forward invariant: TRUE
+backward precondition: not computed
+backward postcondition: not computed
+backward transformer: not computed
+backward invariant: not computed</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Analyzing function f</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Computing summary</text>
+</message>
+
+Aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+binsearch-solver00B63390<message type="STATUS-MESSAGE">
+  <text>enter analyzer
+done analyzer
+
+Summary for function f
+params: x 
+globals_in: 
+globals_out: f#return_value#phi17 
+forward precondition: x &lt;= 2147483647 &amp;&amp; -((signed __CPROVER_bitvector[33])x) &lt;= 2147483648
+forward transformer: x &lt;= 2147483647 &amp;&amp; -((signed __CPROVER_bitvector[33])x) &lt;= 2147483648 ==&gt; f#return_value#phi17 &lt;= 2147483647 &amp;&amp; -((signed __CPROVER_bitvector[33])f#return_value#phi17) &lt;= 2147483648
+forward invariant: x &lt;= 2147483647 &amp;&amp; -((signed __CPROVER_bitvector[33])x) &lt;= 2147483648 ==&gt; TRUE
+backward precondition: not computed
+backward postcondition: not computed
+backward transformer: not computed
+backward invariant: not computed</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Analyzing function main</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Computing summary</text>
+</message>
+
+Aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+binsearch-solver00B63368<message type="STATUS-MESSAGE">
+  <text>enter analyzer
+done analyzer
+
+Summary for function main
+params: 
+globals_in: 
+globals_out: main#return_value#20 
+forward precondition: TRUE
+forward transformer: TRUE
+forward invariant: TRUE
+backward precondition: not computed
+backward postcondition: not computed
+backward transformer: not computed
+backward invariant: not computed</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Analyzing function _start</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Computing summary</text>
+</message>
+
+Aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+binsearch-solver00B63340<message type="STATUS-MESSAGE">
+  <text>enter analyzer
+done analyzer
+
+Summary for function _start
+params: 
+globals_in: 
+globals_out: 
+forward precondition: TRUE
+forward transformer: TRUE
+forward invariant: TRUE
+backward precondition: not computed
+backward postcondition: not computed
+backward transformer: not computed
+backward invariant: not computed</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Checking properties of f</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Checking properties of main</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Checking properties of _start</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Checking properties of __CPROVER_initialize</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Checking properties of Loop_f_while1</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>Checking properties of Loop_f_while1_while1</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>** statistics: </text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>  number of solver instances: 6</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>  number of solver calls: 176</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>  number of summaries used: 5</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text/>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text/>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>** 0 of 0 unknown</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>** 0 of 0 failed</text>
+</message>
+
+<message type="STATUS-MESSAGE">
+  <text>VERIFICATION SUCCESSFUL</text>
+</message>
+
+<cprover-status>SUCCESS</cprover-status>
+
+</cprover>

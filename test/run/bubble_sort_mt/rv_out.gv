@@ -1,0 +1,42 @@
+digraph G{
+subgraph G0{ 
+side0[label = P0]
+node[color = black];
+Loop_bubble_sort_for1_for10[label = "Loop_bubble_sort_for1_for1",fontcolor = "black"];
+Loop_bubble_sort_for10[label = "Loop_bubble_sort_for1",fontcolor = "black"];
+init_array0[label = "init_array",fontcolor = "black"];
+main0[label = "main",fontcolor = "grey"];
+bubble_sort0[label = "bubble_sort",fontcolor = "grey"];
+Loop_bubble_sort_for1_for10[shape = "octagon",  style = "filled", fillcolor = "green"]
+Loop_bubble_sort_for10[shape = "ellipse",  style = "filled", fillcolor = "green"]
+init_array0[shape = "octagon",  style = "filled", fillcolor = "green"]
+main0[shape = "ellipse",  style = "filled", fillcolor = "green"]
+bubble_sort0[shape = "ellipse", color = "blue", style = "filled", fillcolor = "white"]
+Loop_bubble_sort_for10->Loop_bubble_sort_for1_for10[style = dotted]
+Loop_bubble_sort_for1_for10->Loop_bubble_sort_for1_for10[style = dotted]
+bubble_sort0->Loop_bubble_sort_for10[style = dotted]
+Loop_bubble_sort_for10->Loop_bubble_sort_for10[style = dotted]
+main0->init_array0
+main0->bubble_sort0
+}
+subgraph G1{ 
+side1[label = P1]
+node[color = black];
+Loop_bubble_sort_for1_for11[label = "Loop_bubble_sort_for1_for1",fontcolor = "black"];
+Loop_bubble_sort_for11[label = "Loop_bubble_sort_for1",fontcolor = "black"];
+init_array1[label = "init_array",fontcolor = "black"];
+main1[label = "main",fontcolor = "grey"];
+bubble_sort1[label = "bubble_sort",fontcolor = "grey"];
+Loop_bubble_sort_for1_for11[shape = "octagon",  style = "filled", fillcolor = "green"]
+Loop_bubble_sort_for11[shape = "ellipse",  style = "filled", fillcolor = "green"]
+init_array1[shape = "octagon",  style = "filled", fillcolor = "green"]
+main1[shape = "ellipse",  style = "filled", fillcolor = "green"]
+bubble_sort1[shape = "ellipse", color = "blue", style = "filled", fillcolor = "white"]
+Loop_bubble_sort_for11->Loop_bubble_sort_for1_for11[style = dotted]
+Loop_bubble_sort_for1_for11->Loop_bubble_sort_for1_for11[style = dotted]
+bubble_sort1->Loop_bubble_sort_for11[style = dotted]
+Loop_bubble_sort_for11->Loop_bubble_sort_for11[style = dotted]
+main1->init_array1
+main1->bubble_sort1
+}
+}

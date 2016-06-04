@@ -6,6 +6,9 @@
 #include <rv_traversal.h>
 #include <rv_genctx.h>
 #include <rv_semchecker.h>
+#include "rv_replace.h"
+#include "rv_summarizer.h"
+#include "rv_framasum.h"
 #include <vector>
 #include <list>
 
@@ -16,6 +19,7 @@ class RVMain;
 class RVGenCtx;
 class RVRenameTree;
 
+#define GLOBAL_BASECASE_FALG_NAME "rv_unroll_helper_basecase_flag"
 
 #define COPY_VAL COPY_S0_to_S1
 class RVGen : public RVCtool
@@ -53,10 +57,28 @@ class RVGen : public RVCtool
 
 	static void add_prefix_to_type(const char* prefix, Type* form);
 
+	bool get_is_created_mutual_termination_tokens() { return is_created_mutual_termination_tokens; }
+	
+	void set_is_mutual_termination_tokens_created(bool v) {is_created_mutual_termination_tokens = v;}
+
+	void set_is_mutual_termination_set( bool mutual_term_check ) 
+	{
+		is_mutual_termination_set = mutual_term_check;
+	}
+
+	bool get_is_mutual_termination_set() 
+	{
+		return is_mutual_termination_set;
+	}
+
+	
+
   protected:
+
 	RVTemp&    temps;
 	int        indent;
 	int        local_count;
+	bool m_unitrv;
 
 	int        look_back;
 
@@ -66,6 +88,9 @@ class RVGen : public RVCtool
 
 	int        ubs_depth;
 	bool dont_alloc_root;
+
+	bool is_created_mutual_termination_tokens;
+	bool is_mutual_termination_set;
 
 	SymbolVector read_only_globals[2];
 
@@ -123,13 +148,17 @@ class RVGenRename : public RVGen
 	RVRenameTree *m_apRenTree[2];
 
   public:
-	RVGenRename(RVTemp& _temps);    
+	  RVGenRename(RVTemp& _temps);    
 	RVGenRename(RVTemp& _temps, Project* _sides[2]);
 	virtual ~RVGenRename();
 
 	void set_rens(Project* _sides[2], RVRenameTree *apRenTree[2]);
 	virtual std::string convert_type(std::string type_text, int side);
-
+	void add_prefix_if_required_side0(RVFuncPair * pfp, std::string prefix);
+	void add_prefix_if_required_side1(RVFuncPair * pfp, std::string prefix);
+	void add_prefix_if_required(Decl* d, std::string prefix, int side);
+	void set_unitrv( bool unitrv );
+	bool is_variable_declared_globally_for_both_sides(std::string name);
   private:
 	void init_ren(Project* prj, const RVSide& side);
 };
@@ -151,9 +180,12 @@ class RVUFGen : public RVGenRename
   protected:
 		
     RVFuncPair *pfp;
-    std::vector<std::string> UF_names, array_out_names, array_in_names;
+	RVFramaSum& summarizer_side0;
+	RVFramaSum& summarizer_side1;
+	std::vector<std::string> UF_names, array_out_names, array_in_names;
     std::string uf_strname[2];
     std::list<std::string> uf_name_list;
+	bool seperate_basecase_proof;
 
     Decl *related_side0_global(Symbol *glob, bool in);
     Decl *related_side0_arg(int arg_num);
@@ -169,12 +201,15 @@ class RVUFGen : public RVGenRename
     bool gen_uf_array();
     virtual void gen_reach_equiv_flag(unsigned & ) {}
 
-    void gen_side0_cbmc_uf(int counter);
-    void gen_side1_cbmc_uf(int counter);
+    void gen_side0_cbmc_uf(int counter, bool rec_func_uf = false);
+
+	void print_basecase_flag_update();
+
+	void gen_side1_cbmc_uf(int counter, bool rec_func_uf = false);
 
     bool gen_side0_uf();
     bool gen_side1_uf(bool seq_equiv_to_cps);
-    virtual void gen_one_uf_in_both_sides(bool seq_equiv_to_cps);
+    virtual void gen_one_uf_in_both_sides(bool seq_equiv_to_cps, bool rec_func_uf = false);
     virtual bool gen_input_found_case(const FunctionType *proto1, const std::string& item_pref, const SymbolVector *vec, const std::string *pretvar);
     virtual bool gen_input_not_found_case(const FunctionType *proto1, const SymbolVector *vec, const std::string *pretvar, bool gen_seq_equiv_code);
     virtual std::string get_on_found_action(unsigned look_back_, const std::string& item_pref) const;
@@ -188,23 +223,31 @@ class RVUFGen : public RVGenRename
     virtual bool determineK(RVFuncCallCountAnalysis& a,
     		                SymEntry* const startFunc,
      		                RVTextFileBuffer& ofBuf) const;
+	std::string get_mark_array_name( std::string name, std::string side );
+	std::string get_unitrv_count_var_name( std::string name );
+	std::string get_first_call_flag_name( std::string name );
 
 public:
-    RVUFGen(RVTemp &_temps);
+    RVUFGen(RVTemp &_temps, RVFramaSum& _summarizer_side0, RVFramaSum& _summarizer_side1, bool _seperate_basecase_proof);
     virtual ~RVUFGen() {}
 
     void gen_ufs(bool seq_equiv_to_cps);
     void gen_dummies(bool in);
-    void gen_one_uf(RVFuncPair *pfp, bool seq_equiv_to_cps);
+    void gen_one_uf(RVFuncPair *pfp, bool seq_equiv_to_cps, bool rec_func_uf = false);
 	void generate_aux();
-	virtual void determineLoopBackDepths(const std::string& ofpath, RVMain& main) const;
+	virtual void determineLoopBackDepths(const std::string& ofpath, RVMain& main, std::string fname) const;
+	bool determineKWithoutMain( RVFuncCallCountAnalysis& a, SymEntry * const mainSymEntry1, SymEntry * mainSymEntry2, RVTextFileBuffer& ofBuf ) const;
+
+	void gen_initializing_of_unitrv_mutual_termination_variables_function(RVFuncPair *_pfp);
+	void gen_initializing_of_unitrv_mutual_termination_variables();
+	
 };
 
-
+#define UNITRV_SPECIAL_MUTUAL_TERMINATION_TOKEN "rvt_token_"
 
 class RVReUfGen : public RVUFGen {
 public:
-	RVReUfGen(RVTemp& _temps);
+	RVReUfGen(RVTemp& _temps, RVFramaSum& _summarizer_side0,  RVFramaSum& _summarizer_side1, bool _seperate_basecase_proof);
 	virtual ~RVReUfGen() {}
 
 protected:
@@ -215,6 +258,44 @@ protected:
 	virtual void generate_channel_inits(void);
 	virtual void generate_channel_compares(void);
     virtual void gen_one_uf_in_both_sides(bool seq_equiv_to_cps);
+	bool gen_unitrv_uf_array();
+	void gen_all_recording_arrays( FunctionType * proto0, const std::string& ufname );
+
+	void print_array_for_parameter(Decl* d, const std::string& ufname );
+	void gen_mark_arrays( std::string name );
+	void gen_mark_array( std::string name, std::string side );
+
+	std::string get_mark_array_dereferencing( std::string name, std::string side );
+
+	
+
+	void gen_count_variable( std::string name );
+
+	
+	void gen_first_call_to_uf_flag( std::string name );
+
+	
+	bool gen_unitrv_side0_uf();
+	std::string unitrv_item_prefix(std::string name);
+	void gen_unitrv_record_data_line( std::string name );
+	void gen_unitrv_uf_inc_count( std::string name );
+	bool gen_unitrv_side1_uf( bool seq_equiv_to_cps );
+	void gen_unitrv_uf_search_head( std::string name, unsigned actual_look_back );
+	std::string gen_unitrv_mark_array_flagging( std::string name, std::string side, std::string index_var_name );
+
+	std::string get_count_var_name( std::string name );
+
+	void print_unitrv_mark_array_flagging( std::string name, std::string side, std::string index_var_name );
+	bool gen_unitrv_input_found_case( FunctionType * proto1, SymbolVector * vec, const std::string* pretvar, bool gen_seq_equiv_code );
+	std::string get_unitrv_found_access( std::string name );
+	void gen_all_output_recording_arrays( FunctionType * proto0, std::string name );
+	void print_output_array_for_parameter( Decl* d, std::string name );
+	std::string unitrv_output_item_prefix( std::string name );
+	std::string get_unitrv_found_access_output( std::string name );
+	std::string get_variable_prefix( Type * form );
+	
+
+
 };
 
 #include <rv_funcdfs.h>
@@ -255,15 +336,17 @@ class RVMainGen : public RVGenRename
 	bool gen_args_equality(int nItems, Decl **items0, Decl **items1, bool before);
 	bool gen_globals_check_output();
 
+	string input_assumption;
   public:
 	RVMainGen(RVTemp& _temps, Project* _sides[2], const std::string& _main_name);
 	virtual ~RVMainGen() {}
 
 	bool check_mains(bool semchk);
-	void gen_main(bool reach_eq_chk);
+	void gen_main(bool reach_eq_chk, int first_side_to_call = 0);
 
 
 	RVFuncPair* get_main_pair() { return main_pair; }
+	void set_input_assumption( const std::string& assumption );
 };
 
 

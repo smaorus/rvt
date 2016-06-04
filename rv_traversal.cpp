@@ -290,25 +290,14 @@ void RvTraversal::traverse_array(ArrayType *arr)
 		arr->printType(out,NULL,true,0);
 
 	}
-
-	if (arr->size && arr->size->etype == ET_Constant) {
-		Constant *c = (Constant *) arr->size;
-
-		current_array_dimension  = get_array_dimension(arr);
-
-		if (c->ctype ==  CT_Int) {
-		   IntConstant *tmp = (IntConstant *) c;
-		   if (DBG_TRV) out << "CT_INT size of array is " << tmp->lng << "\n";
-		   current_fixed_array_size = (int) tmp->lng; // hold the current size
-		}
-
-		if (c->ctype ==  CT_UInt) {
-		   UIntConstant *tmp = (UIntConstant *) c;
-		   if (DBG_TRV) out << "CT_UINT size of array is " << tmp->ulng << "\n";
-		   current_fixed_array_size = (int) tmp->ulng; // hold the current size
-		}
-	} else
+	int arraySize = -1;
+	if (try_calc_constant_array_size_expression(arr->size, &arraySize)){
+		current_fixed_array_size = arraySize;
+	} 
+	else {
 		warn("ARRAY traverse should not be here\n", "RvTraversal::traverse_array");
+	}
+
 }
 
 void RvTraversal::traverse_bit_field(BitFieldType *bfld)
@@ -1431,4 +1420,63 @@ void RvTraversal::prt_scopelevel(int level)
 	   case BLOCK_SCOPE    : out << "BLOCK_SCOPE\n"; break;    // really, 4 or more.
 	   default             : out << "in default " << level << "\n";break;
 	}
+}
+
+bool RvTraversal::try_calc_constant_array_size_expression( Expression * exp, int* result )
+{
+	if (!exp){
+		return false;
+	}
+
+	ExpressionType type = exp->etype;
+	if (type == ET_Constant){
+		*result = extract_integer_from_constant( (Constant*) exp);
+		return true;
+	} 
+	if (type == ET_BinaryExpr){
+		BinaryExpr* binaryExpr = (BinaryExpr*) exp;
+		Expression* left = binaryExpr->_leftExpr;
+		Expression* right = binaryExpr->_rightExpr;
+
+		int leftNum, rightNum;
+		if (!try_calc_constant_array_size_expression(left, &leftNum) || 
+			!try_calc_constant_array_size_expression(right, &rightNum)){
+				return false;
+		}
+
+		*result = calc_expression(leftNum, rightNum, binaryExpr->bOp);
+
+		return true;
+	}
+
+	return false;
+}
+
+bool RvTraversal::expression_is_legal_for_constant_value_calculation( Expression * exp )
+{
+	return exp->etype == ET_BinaryExpr || exp->etype == ET_Constant;
+}
+
+int RvTraversal::extract_integer_from_constant( Constant* constExpr )
+{
+	if (constExpr->ctype ==  CT_Int){
+		return ((IntConstant*) constExpr)->lng;
+	}
+	if (constExpr->ctype ==  CT_UInt){
+		return ((UIntConstant*) constExpr)->ulng;
+	}
+}
+
+int RvTraversal::calc_expression( int leftNum, int rightNum, BinaryOp bOp )
+{
+	switch(bOp){
+		case BO_Plus:
+			  return leftNum + rightNum;
+		case BO_Minus:
+			  return leftNum - rightNum;
+		case BO_Mult:
+			  return leftNum * rightNum;
+	}
+
+	return -1;
 }

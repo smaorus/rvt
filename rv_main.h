@@ -38,6 +38,12 @@ class RVMain
 	std::string fuf_fname;
 	enum {UNSET, BY_USER, AUTOSET, SET_NO} m_fufSet;
 
+	bool frama;
+	int side0_unroll_threshold, side1_unroll_threshold;
+	int side0_unwind, side1_unwind;
+	bool seperate_basecase_proof;
+	int basecase_unwind_threshold;
+
 	int delta_dk;
 	int semchk_timeout;
 
@@ -60,7 +66,9 @@ class RVMain
 	bool test_ctool;     /* Only parse side 0 and print it (debug only). */
 
 	int omega_total_bound;  /* Omega bound on -dk value for whole program. */
-
+	
+	bool unitrv; // Should we perform sem check with unitrv or cbmc. 
+	
 	int  ubs_depth_k;   /* how deep we unwind UBS arguments and return value. */	
 	bool refined; //ofer: used in rv_decompose.cpp. Whether to keep equal but nonrecursive functions interpreted.
 	char completeness; // ofer: level of comppleteness, given by the user. Default is 0. in various locations we can try harder to prove equivalence on the expanse of run-time.
@@ -87,7 +95,7 @@ class RVMain
 	RVBoolStatus relate_globals_from_rel_file(void);
 	void relate_globals_of_same_name();
 	void sort_global_vectors(int side);
-	RVBoolStatus convert_loops_to_rec(void);
+	RVBoolStatus convert_loops_to_rec(bool is_basecase = false);
 	RVBoolStatus create_call_graph(int side, bool collect_arrays = false);
 	void filter_common_read_only_globals();
 
@@ -110,6 +118,9 @@ class RVMain
 	virtual ~RVMain() {}
 
 	RVIntStatus main(void);
+
+	RVBoolStatus eliminateGotoStatements();
+
 
 	void set_K(int k) {if (k > K) K = k;}
 	bool is_refined() const {return refined;}
@@ -134,6 +145,11 @@ class RVMain
 	unsigned countMaxCallChain(const RVSide& side,
 			                   const std::string* pFromFunc,
 			                   const std::string& callee);
+	RVBoolStatus reprocessAfterGotoElimination();
+
+	void saveGotolessFiles( std::string side1_no_gotos, std::string side0_no_gotos );
+	RVBoolStatus reprocessGotolessFiles( std::string side1_no_gotos, std::string side0_no_gotos );
+
 };
 
 #endif /* RV_MAIN_H */

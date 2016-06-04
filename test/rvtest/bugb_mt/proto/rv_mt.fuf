@@ -1,0 +1,6 @@
+`P0           P1            Result
+`------------ ------------- ------
+Loop_g_while1 Loop_g_while1 mutually-terminating
+main          main          syntactically-equal mutually-terminating
+getA          getA          syntactically-equal mutually-terminating
+g             g             syntactically-equal mutually-terminating

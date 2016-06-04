@@ -1,0 +1,18 @@
+/usr/bin/gcc -fsyntax-only .//nonterm.c
+/usr/bin/gcc -fsyntax-only .//nonterm1.c
+/usr/bin/cpp -D__FUNCTION__="<unknown>" -I /cygdrive/c/NewRVT/debug/../tools/scripts/../ansi-c-lib -x c .//nonterm.c .//S0.c
+/usr/bin/cpp -D__FUNCTION__="<unknown>" -I /cygdrive/c/NewRVT/debug/../tools/scripts/../ansi-c-lib -x c .//nonterm1.c .//S1.c
+float  rv_mult(float  x, float  y);float  rv_mult(float  x, float  y);float  rv_mult(float  x, float  y);float  rv_mult(float  x, float  y);Unable to open fuf file: ".\rv_pe.fuf"
+rm: No match.
+Warning: allow UBS (-dk flag) for better check of functions with pointer argument(s).
+  in: Loop_infiniteLthe value of mutual term check: 
+oop_while1 (side 0) 
+Setting environment for using Microsoft Visual Studio 2010 x86 tools.
+-- Begin semantic check (semchk) ( .//semchks// Loop_infiniteLoop_while1 chk0_Loop_infiniteLoop_while1 chk1_Loop_infiniteLoop_while1 1 )
+running vcvars64
+Setting environment for using Microsoft Visual Studio 2010 x86 tools.
+running unitrv
+( Loop_infiniteLoop_while1, Loop_infiniteLoop_while1 ) : passed
+( infiniteLoop, infiniteLoop ) : passed
+( main, main ) : passed
+Output graph written to rv_out.gv

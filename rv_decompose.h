@@ -5,7 +5,7 @@
 #include <vector>
 #include <string>
 #include "rv_tuple.h"
-
+#include "rv_framasum.h"
 
 class RVMain;
 
@@ -30,15 +30,7 @@ public:
        /// <param name="givenNames0"> names of functions, side 0 </param>
        /// <param name="givenNames1"> names of functions, side 1 </param>
 	   /// <param name="semchecker"> callback object for semantic check </param>
-       void Decompose_main(
-           unsigned int CG0_SIZE, unsigned int CG1_SIZE,
-           const std::list<Edge>& edges_0, const std::list<Edge>& edges_1,
-	       const std::list<int>& loop_functions_0, const std::list<int>& loop_functions_1,
-           const std::list<Match>& mapf,
-           const std::list<int>& syntactic_equivalent_list,
-           const std::vector<std::string>& givenNames0, const std::vector<std::string>& givenNames1,
-           RVMain& semchecker
-       );
+	   void Decompose_main( unsigned int CG0_SIZE, unsigned int CG1_SIZE, const std::list<Edge>& edges_0, const std::list<Edge>& edges_1, const std::list<int>& loop_functions_0, const std::list<int>& loop_functions_1, const std::list<Match>& mapf, const std::list<int>& syntactic_equivalent_list, const std::vector<std::string>& givenNames0, const std::vector<std::string>& givenNames1, RVMain& semchecker, std::string side0_fpath, std::string side1_fpath );
 };
 
 #endif

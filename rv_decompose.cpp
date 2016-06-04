@@ -722,7 +722,8 @@ public:
 			if (!(dag1.get_is_SCC_recursive(j)))
 			{
 				int f = dag1.get_SCC_line(j).front();
-				if (!is_mapped1(f)) dag1.set_doomed(j, true);
+				if (!is_mapped1(f))
+					dag1.set_doomed(j, true);
 			}
 			if (dag1.is_doomed(j)) continue;
 
@@ -938,7 +939,7 @@ public:
 		if (out.empty())
 			return;
 
-		ofstream outfile(partial_equiv_check ? "rv_pe.fuf" : "rv_mt.fuf", ios_base::out);
+		ofstream outfile(partial_equiv_check ? "rv_pe.fuf" : "rv_mt.fuf");
 		outfile << string_min_length("`P0", col0_maxLen) << string_min_length("P1", col1_maxLen) << "Result" << EOL;
 		outfile << "`" << string_min_length(" ", col0_maxLen-1, false, '-') << string_min_length(" ", col1_maxLen, false, '-') << "------" << EOL;
 		for(list<ThreeStrings>::const_iterator it = out.begin(); it != out.end(); ++it)
@@ -1056,7 +1057,7 @@ public:
 		else return false;
 	}
 
-	bool Check(int f0, const vector<int>& S, const DAG& dag0, const DAG& dag1) const
+	bool Check(int f0, const vector<int>& S, const DAG& dag0, const DAG& dag1, std::string side0_fpath, std::string side1_fpath) const
 	{
 		RVSemChecker semchecker(m_semchecker);
 		Console::WriteLine("Check (", f0, ",", mapf0[f0], ")");
@@ -1092,7 +1093,7 @@ public:
 		Console::WriteLine("failed.");
 		Console::WriteLine("Semantic equivalence check:");
 		Console::WriteLine("-*-*-*-*-*-*-*  In  -*-*-*-*-*-*-*-*-*-*-");
-		RVCommands::ResCode res = semchecker.check_semantic_equivalence(f0, uf);  // !!
+		RVCommands::ResCode res = semchecker.check_semantic_equivalence(f0, uf, side0_fpath, side1_fpath);  // !!
 		Console::WriteLine("-*-*-*-*-*-*-*  Out -*-*-*-*-*-*-*-*-*-*-");
 		return res == RVCommands::SUCCESS;
 	}
@@ -1110,7 +1111,7 @@ public:
 			  	        << (result? "passed" : "failed"));
 	}
 	
-	void decompose(DAG& dag0, DAG& dag1, const vector<string> &names0, const vector<string> &names1)
+	void decompose(DAG& dag0, DAG& dag1, const vector<string> &names0, const vector<string> &names1, std::string side0_fpath, std::string side1_fpath)
 	{
 		// assumes DAG is sorted bottom up
 		vector<int> S;
@@ -1155,7 +1156,7 @@ public:
 			if (!dag0.get_is_SCC_recursive(scc_index))
 			{ // trivial MSSCs
 				S.clear(); // This is the only difference from the recursive case.
-				if (Check(scc0[0], S, dag0, dag1/*, cg0, cg1*/)) {
+				if (Check(scc0[0], S, dag0, dag1/*, cg0, cg1*/, side0_fpath, side1_fpath)) {
 					mark_equivalent(scc0[0]);
 					report(scc0[0], true, names0, names1);
 				}
@@ -1185,14 +1186,14 @@ public:
 							}
 							else
 							{
-								ok_flag = Check(S[i], S, dag0, dag1);
+								ok_flag = Check(S[i], S, dag0, dag1, side0_fpath, side1_fpath);
 								if (ok_flag) {
 									save_solutions[S[i]].resize(S.size());
 									save_solutions[S[i]].assign(S.begin(), S.end());
 								}
 							}
 						}
-						else ok_flag = Check(S[i], S, dag0, dag1);
+						else ok_flag = Check(S[i], S, dag0, dag1, side0_fpath, side1_fpath);
 						if (!ok_flag)
 						{
 							failing_node = S[i];
@@ -1543,15 +1544,7 @@ static void add_recursive_calls(list<Edge>& edges, const list<int>& loop_functio
 /// <param name="givenNames0"> names of functions, side 0 </param>
 /// <param name="givenNames1"> names of functions, side 1 </param>
 /// <param name="semchecker"> reference to the object to perform the semantic checks </param>
-void RVT_Decompose::Decompose_main(
-		unsigned int CG0_SIZE, unsigned int CG1_SIZE,
-		const list<Edge>& edges_0, const list<Edge>& edges_1,
-		const list<int>& loop_functions_0, const list<int>& loop_functions_1,
-		const list<Match>& mapf,
-		const list<int>& syntactic_equivalent_list,
-		const vector<string>& givenNames0, const vector<string>& givenNames1,
-		RVMain& semchecker
-)
+void RVT_Decompose::Decompose_main( unsigned int CG0_SIZE, unsigned int CG1_SIZE, const std::list<Edge>& edges_0, const std::list<Edge>& edges_1, const std::list<int>& loop_functions_0, const std::list<int>& loop_functions_1, const std::list<Match>& mapf, const std::list<int>& syntactic_equivalent_list, const std::vector<std::string>& givenNames0, const std::vector<std::string>& givenNames1, RVMain& semchecker, std::string side0_fpath, std::string side1_fpath )
 {
 	assert(givenNames0.size() == CG0_SIZE && givenNames1.size() == CG1_SIZE);
 	mygraph cg0(CG0_SIZE), cg1(CG1_SIZE);
@@ -1580,7 +1573,7 @@ void RVT_Decompose::Decompose_main(
 		fatal_error("main(): SCC mapping is cyclic.");
 	sl.declare_syntactic_equivalent(syntactic_equivalent_list);
 
-	sl.decompose(dag0, dag1, givenNames0, givenNames1); // This is the main workhorse.
+	sl.decompose(dag0, dag1, givenNames0, givenNames1, side0_fpath, side1_fpath); // This is the main workhorse.
 
 	// generating the graph:
 	ofstream dotty(RV_DOTTY_FILE, ios_base::out);

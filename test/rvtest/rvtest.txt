@@ -34,6 +34,27 @@
 #
 #
 #
+#
+#Test gcd_refined_mt - mut. term. check for refined GCD.
+#
+#@test  gcd_refined_mt
+##@rvt  -mt -nooutline_funcs -refined gcd_refined.c gcd_refined1.c
+#@compare  rv_mt.fuf
+#
+#
+
+#Test mt1 - testing basic rvt functionality for detecting mutually termination of
+#           partially equivalent pairs of functions:
+#@test mt1
+#@rvt -debug 7777777 -fuf rv_pe.fuf -K 3 -mt -lb 0 try_side0.c try1_side1.c
+#@eval difflags += sh -c 'echo -i -E'
+#@compare *.gv
+#
+#Test nested_while - 
+@test nested_while
+@rvt nested_while.c nested_while1.c
+@compare rv_out.gv
+#
 #Test peq1 - testing basic rvt functionality for detecting partially equivalent
 #            pairs of functions:
 @test peq1
@@ -45,36 +66,26 @@
 # @set difflags = sh -c 'echo -i -E @get(difflags)'
 @compare *.gv
 #
-#Test mt1 - testing basic rvt functionality for detecting mutually termination of
-#           partially equivalent pairs of functions:
-@test mt1
-@rvt -debug 7777777 -fuf rv_pe.fuf -K 3 -mt -lb 0 try_side0.c try1_side1.c
-@eval difflags += sh -c 'echo -i -E'
-@compare *.gv
-#
+
 #Test peqmutual - testing basic rvt functionality for detecting partially
 #                 equivalent pairs of functions with mutual recursion:
-@test peqmutual
-@rvt  mutual.c mutual1.c
-@compare rv_out.gv
+#@test peqmutual
+#@rvt  mutual.c mutual1.c
+#@compare rv_out.gv
 #
 #Test mutual1 - testing basic rvt functionality for detecting mutually
 #               terminating pairs of partially equivalent functions 
 #               with mutual recursion:
-@test mutual1
-@rvt -fuf rv_pe.fuf -K 10 -mt mutual.c mutual1.c
-@compare rv_out.gv
+#@test mutual1
+#@rvt -fuf rv_pe.fuf -K 10 -mt mutual.c mutual1.c
+#@compare rv_out.gv
 #
 #Test struct - 
 @test struct
 @rvt -nooutline_funcs struct.c struct1.c
 @compare rv_out.gv
 #
-#Test nested_while - 
-@test nested_while
-@rvt nested_while.c nested_while1.c
-@compare rv_out.gv
-#
+
 #Test gcd - not refined; running with nooutline_funcs significantly prolongs 
 #           the run time of CBMC      
 @test gcd
@@ -165,14 +176,7 @@
 @compare  rv_mt.fuf rv_out.gv
 #
 #
-#
-#Test gcd_refined_mt - mut. term. check for refined GCD.
-#
-@test  gcd_refined_mt
-@rvt  -mt -nooutline_funcs -refined gcd_refined.c gcd_refined1.c
-@compare  rv_mt.fuf
-#
-#
+
 #
 #Test nested_while_mt - basic mut. term. check for nested while loops.
 #

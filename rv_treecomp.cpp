@@ -124,8 +124,8 @@ bool RVTreeComp::eq_expr(const Expression* s0pUser, const Expression* s1pUser) c
 	    return false;
 
 	  if( is_enum0 ) {
-	if( !eq_enum_idents(e0p, e1p) )
-	  return false;
+		if( !eq_enum_idents(e0p, e1p) )
+		return false;
 	  }
 	  else {  // it is a var symbol
 	/* Can't interchange global and local vars: */
@@ -136,8 +136,17 @@ bool RVTreeComp::eq_expr(const Expression* s0pUser, const Expression* s1pUser) c
 	Decl* vd1 = get_type_decl( s1p->name );
 	if( !eq_type( vd0->form, vd1->form ) )
 	  return false;
+
+	int vd0_funcdef_parameter_index = get_funcdef_parameter_index(s0p -> name, current_func0);
+	int vd1_funcdef_parameter_index = get_funcdef_parameter_index(s1p -> name, current_func1);
+	if (vd1_funcdef_parameter_index != vd0_funcdef_parameter_index){
+		return false;
+	}
+
+
 	if( !eq_expr( vd0->initializer, vd1->initializer ) )
 	  return false;
+
 	  }
 
 	  /* below when detected a global - let the user ack <<=== */
@@ -921,11 +930,17 @@ bool RVTreeComp::eq_stmt(const Statement* s0pUser, const Statement* s1pUser) con
 }
 
 
+
 bool RVTreeComp::eq_block(const Block* s0pUser, const Block* s1pUser) const
 {
   Statement *st0, *st1;
   CHK_EQ_NULL;
   if(DBG){s0pUser->print(rv_errstrm,0);rv_errstrm<<"\n";}
+
+  if (s0pUser -> isFuncDef() && s1pUser -> isFuncDef()){
+	  RVCtool::current_func0 = (FunctionType*)((FunctionDef*) s0pUser) -> decl -> form;
+	  RVCtool::current_func1 = (FunctionType*)((FunctionDef*) s1pUser) -> decl -> form;
+  }
 
   st0 = s0pUser->head;
   st1 = s1pUser->head;

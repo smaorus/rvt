@@ -1,0 +1,416 @@
+f91.rv.c
+Adding CPROVER library
+First symex 1
+First symex 2
+Modified: unitrv::$return_value
+Harness:
+        // 0 no location
+        $return_value=chk0_f91(a$argument_input);
+        // 1 file harness-save-outputs
+        $return_value$f1_output = $return_value;
+        // 2 no location
+        $return_value=chk1_f91(a$argument_input);
+        // 3 file harness-assertions
+        ASSERT $return_value$f1_output == $return_value
+        // 4 no location
+        END_FUNCTION
+Symex on harness
+
+Thread 0
+LOCATION
+Guard: TRUE
+--------------
+Thread 0
+FUNCTION_CALL
+Guard: TRUE
+--------------
+Thread 0
+ASSIGNMENT (STATE)
+a!0@1#1 == a$argument_input!0#0
+Guard: TRUE
+--------------
+Thread 0 file f91.rv.c line 30 function chk0_f91
+LOCATION
+Guard: TRUE
+--------------
+Thread 0 file f91.rv.c line 32 function chk0_f91
+ASSIGNMENT (GUARD)
+\guard#1 == a!0@1#1 > 100
+Guard: TRUE
+--------------
+Thread 0 file f91.rv.c line 32 function chk0_f91
+ASSUME
+\guard#1 ==> !overflow("-", int, a!0@1#1, 10)
+Guard: \guard#1
+--------------
+Thread 0 file f91.rv.c line 32 function chk0_f91
+LOCATION
+Guard: \guard#1
+--------------
+Thread 0 file f91.rv.c line 32 function chk0_f91
+SHARED WRITE
+$return_value#1
+Guard: \guard#1
+--------------
+Thread 0 file f91.rv.c line 32 function chk0_f91
+ASSIGNMENT (STATE)
+$return_value#1 == -10 + a!0@1#1
+Guard: \guard#1
+--------------
+Thread 0 file f91.rv.c line 35 function chk0_f91
+ASSIGNMENT (PHI)
+$return_value#2 == $return_value#0
+Guard: TRUE
+--------------
+Thread 0 file f91.rv.c line 35 function chk0_f91
+DECL
+return_value_rvs0_f91$1!0@1#1
+Guard: !\guard#1
+--------------
+Thread 0 file f91.rv.c line 35 function chk0_f91
+ASSUME
+!\guard#1 ==> !overflow("+", int, a!0@1#1, 11)
+Guard: !\guard#1
+--------------
+Thread 0 file f91.rv.c line 35 function chk0_f91
+LOCATION
+Guard: !\guard#1
+--------------
+Thread 0 file f91.rv.c line 35 function chk0_f91
+FUNCTION_CALL
+Guard: !\guard#1
+--------------
+Thread 0 file f91.rv.c line 35 function chk0_f91
+ASSIGNMENT (STATE)
+a!0@1#1 == 11 + a!0@1#1
+Guard: !\guard#1
+--------------
+Thread 0 file f91.rv.c line 58 function rvs0_f91
+DECL
+retval!0@1#1
+Guard: !\guard#1
+--------------
+Thread 0 file f91.rv.c line 64 function rvs0_f91
+ASSIGNMENT (STATE)
+retval!0@1#2 == __CPROVER_uninterpreted_retval(a!0@1#1)
+Guard: !\guard#1
+--------------
+Thread 0 file f91.rv.c line 66 function rvs0_f91
+LOCATION
+Guard: !\guard#1
+--------------
+Thread 0 file f91.rv.c line 66 function rvs0_f91
+ASSIGNMENT (STATE)
+return_value_rvs0_f91$1!0@1#2 == retval!0@1#2
+Guard: !\guard#1
+--------------
+Thread 0 file f91.rv.c line 67 function rvs0_f91
+ASSIGNMENT (PHI)
+retval!0@1#4 == retval!0@1#2
+Guard: TRUE
+--------------
+Thread 0 file f91.rv.c line 67 function rvs0_f91
+FUNCTION_RETURN
+Guard: !\guard#1
+--------------
+Thread 0 file f91.rv.c line 35 function chk0_f91
+DECL
+return_value_rvs0_f91$2!0@1#1
+Guard: !\guard#1
+--------------
+Thread 0 file f91.rv.c line 35 function chk0_f91
+LOCATION
+Guard: !\guard#1
+--------------
+Thread 0 file f91.rv.c line 35 function chk0_f91
+FUNCTION_CALL
+Guard: !\guard#1
+--------------
+Thread 0 file f91.rv.c line 35 function chk0_f91
+ASSIGNMENT (STATE)
+a!0@2#1 == return_value_rvs0_f91$1!0@1#2
+Guard: !\guard#1
+--------------
+Thread 0 file f91.rv.c line 58 function rvs0_f91
+DECL
+retval!0@2#1
+Guard: !\guard#1
+--------------
+Thread 0 file f91.rv.c line 64 function rvs0_f91
+ASSIGNMENT (STATE)
+retval!0@2#2 == __CPROVER_uninterpreted_retval(a!0@2#1)
+Guard: !\guard#1
+--------------
+Thread 0 file f91.rv.c line 66 function rvs0_f91
+LOCATION
+Guard: !\guard#1
+--------------
+Thread 0 file f91.rv.c line 66 function rvs0_f91
+ASSIGNMENT (STATE)
+return_value_rvs0_f91$2!0@1#2 == retval!0@2#2
+Guard: !\guard#1
+--------------
+Thread 0 file f91.rv.c line 67 function rvs0_f91
+ASSIGNMENT (PHI)
+retval!0@2#4 == retval!0@2#2
+Guard: TRUE
+--------------
+Thread 0 file f91.rv.c line 67 function rvs0_f91
+FUNCTION_RETURN
+Guard: !\guard#1
+--------------
+Thread 0 file f91.rv.c line 35 function chk0_f91
+LOCATION
+Guard: !\guard#1
+--------------
+Thread 0 file f91.rv.c line 35 function chk0_f91
+SHARED WRITE
+$return_value#3
+Guard: !\guard#1
+--------------
+Thread 0 file f91.rv.c line 35 function chk0_f91
+ASSIGNMENT (STATE)
+$return_value#3 == return_value_rvs0_f91$2!0@1#2
+Guard: !\guard#1
+--------------
+Thread 0 file f91.rv.c line 36 function chk0_f91
+ASSIGNMENT (PHI)
+return_value_rvs0_f91$1!0@1#4 == return_value_rvs0_f91$1!0@1#2
+Guard: TRUE
+--------------
+Thread 0 file f91.rv.c line 36 function chk0_f91
+ASSIGNMENT (PHI)
+return_value_rvs0_f91$2!0@1#4 == return_value_rvs0_f91$2!0@1#2
+Guard: TRUE
+--------------
+Thread 0 file f91.rv.c line 36 function chk0_f91
+ASSIGNMENT (PHI)
+$return_value#4 == (\guard#1 ? $return_value#1 : $return_value#3)
+Guard: TRUE
+--------------
+Thread 0 file f91.rv.c line 36 function chk0_f91
+ASSIGNMENT (PHI)
+return_value_rvs0_f91$1!0@1#5 == (\guard#1 ? return_value_rvs0_f91$1!0@1#0 : return_value_rvs0_f91$1!0@1#4)
+Guard: TRUE
+--------------
+Thread 0 file f91.rv.c line 36 function chk0_f91
+ASSIGNMENT (PHI)
+return_value_rvs0_f91$2!0@1#5 == (\guard#1 ? return_value_rvs0_f91$2!0@1#0 : return_value_rvs0_f91$2!0@1#4)
+Guard: TRUE
+--------------
+Thread 0 file f91.rv.c line 36 function chk0_f91
+FUNCTION_RETURN
+Guard: TRUE
+--------------
+Thread 0 file harness-save-outputs
+SHARED WRITE
+$return_value$f1_output#1
+Guard: TRUE
+--------------
+Thread 0 file harness-save-outputs
+ASSIGNMENT (STATE)
+$return_value$f1_output#1 == $return_value#4
+Guard: TRUE
+--------------
+Thread 0
+LOCATION
+Guard: TRUE
+--------------
+Thread 0
+FUNCTION_CALL
+Guard: TRUE
+--------------
+Thread 0
+ASSIGNMENT (STATE)
+x!0@1#1 == a$argument_input!0#0
+Guard: TRUE
+--------------
+Thread 0 file f91.rv.c line 43 function chk1_f91
+LOCATION
+Guard: TRUE
+--------------
+Thread 0 file f91.rv.c line 45 function chk1_f91
+ASSIGNMENT (GUARD)
+\guard#2 == x!0@1#1 < 101
+Guard: TRUE
+--------------
+Thread 0 file f91.rv.c line 45 function chk1_f91
+DECL
+return_value_rvs1_f91$1!0@1#1
+Guard: \guard#2
+--------------
+Thread 0 file f91.rv.c line 45 function chk1_f91
+ASSUME
+\guard#2 ==> !overflow("+", int, 11, x!0@1#1)
+Guard: \guard#2
+--------------
+Thread 0 file f91.rv.c line 45 function chk1_f91
+LOCATION
+Guard: \guard#2
+--------------
+Thread 0 file f91.rv.c line 45 function chk1_f91
+FUNCTION_CALL
+Guard: \guard#2
+--------------
+Thread 0 file f91.rv.c line 45 function chk1_f91
+ASSIGNMENT (STATE)
+x!0@1#1 == 11 + x!0@1#1
+Guard: \guard#2
+--------------
+Thread 0 file f91.rv.c line 73 function rvs1_f91
+DECL
+retval!0@1#1
+Guard: \guard#2
+--------------
+Thread 0 file f91.rv.c line 79 function rvs1_f91
+ASSIGNMENT (STATE)
+retval!0@1#2 == __CPROVER_uninterpreted_retval(x!0@1#1)
+Guard: \guard#2
+--------------
+Thread 0 file f91.rv.c line 81 function rvs1_f91
+LOCATION
+Guard: \guard#2
+--------------
+Thread 0 file f91.rv.c line 81 function rvs1_f91
+ASSIGNMENT (STATE)
+return_value_rvs1_f91$1!0@1#2 == retval!0@1#2
+Guard: \guard#2
+--------------
+Thread 0 file f91.rv.c line 82 function rvs1_f91
+ASSIGNMENT (PHI)
+retval!0@1#4 == retval!0@1#2
+Guard: TRUE
+--------------
+Thread 0 file f91.rv.c line 82 function rvs1_f91
+FUNCTION_RETURN
+Guard: \guard#2
+--------------
+Thread 0 file f91.rv.c line 45 function chk1_f91
+DECL
+return_value_rvs1_f91$2!0@1#1
+Guard: \guard#2
+--------------
+Thread 0 file f91.rv.c line 45 function chk1_f91
+LOCATION
+Guard: \guard#2
+--------------
+Thread 0 file f91.rv.c line 45 function chk1_f91
+FUNCTION_CALL
+Guard: \guard#2
+--------------
+Thread 0 file f91.rv.c line 45 function chk1_f91
+ASSIGNMENT (STATE)
+x!0@2#1 == return_value_rvs1_f91$1!0@1#2
+Guard: \guard#2
+--------------
+Thread 0 file f91.rv.c line 73 function rvs1_f91
+DECL
+retval!0@2#1
+Guard: \guard#2
+--------------
+Thread 0 file f91.rv.c line 79 function rvs1_f91
+ASSIGNMENT (STATE)
+retval!0@2#2 == __CPROVER_uninterpreted_retval(x!0@2#1)
+Guard: \guard#2
+--------------
+Thread 0 file f91.rv.c line 81 function rvs1_f91
+LOCATION
+Guard: \guard#2
+--------------
+Thread 0 file f91.rv.c line 81 function rvs1_f91
+ASSIGNMENT (STATE)
+return_value_rvs1_f91$2!0@1#2 == retval!0@2#2
+Guard: \guard#2
+--------------
+Thread 0 file f91.rv.c line 82 function rvs1_f91
+ASSIGNMENT (PHI)
+retval!0@2#4 == retval!0@2#2
+Guard: TRUE
+--------------
+Thread 0 file f91.rv.c line 82 function rvs1_f91
+FUNCTION_RETURN
+Guard: \guard#2
+--------------
+Thread 0 file f91.rv.c line 45 function chk1_f91
+LOCATION
+Guard: \guard#2
+--------------
+Thread 0 file f91.rv.c line 45 function chk1_f91
+SHARED WRITE
+$return_value#5
+Guard: \guard#2
+--------------
+Thread 0 file f91.rv.c line 45 function chk1_f91
+ASSIGNMENT (STATE)
+$return_value#5 == return_value_rvs1_f91$2!0@1#2
+Guard: \guard#2
+--------------
+Thread 0 file f91.rv.c line 48 function chk1_f91
+ASSIGNMENT (PHI)
+$return_value#6 == $return_value#4
+Guard: TRUE
+--------------
+Thread 0 file f91.rv.c line 48 function chk1_f91
+ASSIGNMENT (PHI)
+return_value_rvs1_f91$1!0@1#4 == return_value_rvs1_f91$1!0@1#0
+Guard: TRUE
+--------------
+Thread 0 file f91.rv.c line 48 function chk1_f91
+ASSIGNMENT (PHI)
+return_value_rvs1_f91$2!0@1#4 == return_value_rvs1_f91$2!0@1#0
+Guard: TRUE
+--------------
+Thread 0 file f91.rv.c line 48 function chk1_f91
+ASSUME
+!\guard#2 ==> !overflow("-", int, x!0@1#1, 10)
+Guard: !\guard#2
+--------------
+Thread 0 file f91.rv.c line 48 function chk1_f91
+LOCATION
+Guard: !\guard#2
+--------------
+Thread 0 file f91.rv.c line 48 function chk1_f91
+SHARED WRITE
+$return_value#7
+Guard: !\guard#2
+--------------
+Thread 0 file f91.rv.c line 48 function chk1_f91
+ASSIGNMENT (STATE)
+$return_value#7 == -10 + x!0@1#1
+Guard: !\guard#2
+--------------
+Thread 0 file f91.rv.c line 49 function chk1_f91
+ASSIGNMENT (PHI)
+$return_value#8 == (\guard#2 ? $return_value#5 : $return_value#7)
+Guard: TRUE
+--------------
+Thread 0 file f91.rv.c line 49 function chk1_f91
+ASSIGNMENT (PHI)
+return_value_rvs1_f91$1!0@1#5 == (\guard#2 ? return_value_rvs1_f91$1!0@1#2 : return_value_rvs1_f91$1!0@1#4)
+Guard: TRUE
+--------------
+Thread 0 file f91.rv.c line 49 function chk1_f91
+ASSIGNMENT (PHI)
+return_value_rvs1_f91$2!0@1#5 == (\guard#2 ? return_value_rvs1_f91$2!0@1#2 : return_value_rvs1_f91$2!0@1#4)
+Guard: TRUE
+--------------
+Thread 0 file f91.rv.c line 49 function chk1_f91
+FUNCTION_RETURN
+Guard: TRUE
+--------------
+Thread 0 file harness-assertions
+ASSERT
+$return_value$f1_output#1 == $return_value#8
+assertion
+Guard: TRUE
+--------------
+Thread 0
+FUNCTION_RETURN
+Guard: TRUE
+--------------
+
+Post-processing
+Solving with MiniSAT 2.2.0 with simplifier
+1788 variables, 4854 clauses
+SAT checker: negated claim is UNSATISFIABLE, i.e., holds
+PROGRAMS ARE EQUIVALENT

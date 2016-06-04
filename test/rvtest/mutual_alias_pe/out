@@ -1,0 +1,32 @@
+/usr/bin/gcc -fsyntax-only .//mutual_alias.c
+/usr/bin/gcc -fsyntax-only .//mutual_alias1.c
+/usr/bin/cpp -D__FUNCTION__="<unknown>" -I /cygdrive/c/NewRVT/debug/../tools/scripts/../ansi-c-lib -x c .//mutual_alias.c .//S0.c
+/usr/bin/cpp -D__FUNCTION__="<unknown>" -I /cygdrive/c/NewRVT/debug/../tools/scripts/../ansi-c-lib -x c .//mutual_alias1.c .//S1.c
+typedef int  (*rvt_FuncPtrSubst_int__const_void_ptr_const_void_ptr)(const void  *rv_arg_0, const void  *rv_arg_1);typedef int  (*rvt_FuncPtrSubst_int__const_void_ptr_const_void_ptr)(const void  *rv_arg_2, const void  *rv_arg_3);Warning: unable to find function class to match declaration of function pointer:
+  int  (*rvt_FuncPtrSubst_int__const_void_ptr_const_void_ptr)(void  *rv_arg_0, void  *rv_arg_1)
+Warning: unable to find function class to match declaration of function pointer:
+  rvt_FuncPtrSubst_int__const_void_ptr_const_void_ptr  fncompare
+Warning: unable to find function class to match declaration of function pointer:
+  int  (*rvt_FuncPtrSubst_int__const_void_ptr_const_void_ptr)(void  *rv_arg_2, voidtypedef int  (*rvt_FuncPtrSubst_int__const_void_ptr_const_void_ptr)(void  *rv_arg_0, void  *rv_arg_1);typedef int  (*rvt_FuncPtrSubst_int__const_void_ptr_const_void_ptr)(void  *rv_arg_2, void  *rv_arg_3);  *rv_arg_3)
+Warning: unable to find function class to match declaration of function pointer:
+  rvt_FuncPtrSubst_int__const_void_ptr_const_void_ptr  fncompare
+rm: No match.
+dos2unix: converting file S0.opb to Unix format ...
+
+C:\NewRVT\test\rvtest\mutual_alias_pe>c:/deltacheck-trunk/branches/summary/src/summarizer/summarizer.exe .\mutual_alias.c.rec.c --xml-ui --context-sensitive  1>G.sum 
+
+C:\NewRVT\test\rvtest\mutual_alias_pe>c:/NewRVT/tools/scripts/SummarizerParser.exe G.sum G.sumres 0 
+
+Unhandled Exception: System.Xml.XmlException: Unexpected end of file has occurred. The following elements are not closed: cprover. Line 8211, position 1.
+   at System.Xml.XmlTextReaderImpl.Throw(Exception e)
+   at System.Xml.XmlTextReaderImpl.Throw(String res, String arg)
+   at System.Xml.XmlTextReaderImpl.ThrowUnclosedElements()
+   at System.Xml.XmlTextReaderImpl.ParseElementContent()
+   at System.Xml.XmlTextReaderImpl.Read()
+   at System.Xml.Linq.XContainer.ReadContentFrom(XmlReader r)
+   at System.Xml.Linq.XContainer.ReadContentFrom(XmlReader r, LoadOptions o)
+   at System.Xml.Linq.XElement.ReadElementFrom(XmlReader r, LoadOptions o)
+   at System.Xml.Linq.XElement.Load(XmlReader reader, LoadOptions options)
+   at System.Xml.Linq.XElement.Load(String uri, LoadOptions options)
+   at System.Xml.Linq.XElement.Load(String uri)
+   at SummarizerParser.Program.Main(String[] args)

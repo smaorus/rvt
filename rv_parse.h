@@ -150,6 +150,7 @@ class RVGlobLists : public RVParse {
 };
 
 extern RVGlobLists rv_parser;
+extern RVGlobLists rv_parser_base;
 
 
 

@@ -46,6 +46,7 @@ extern const std::string UFPREFIX;
 #define RV_OUTPUT_EXT ".rv.c"
 #define RV_AUF_EXT    ".auf"
 #define RV_LOOPS_TO_REC_EXT ".rec.c"
+#define RV_GOTO_ELIMINATION_EXT ".goto.c"
 // used in localize lane: 
 #define RV_LOCAL_PREFIX "local"
 //Qualifiers of matched function pairs (in map_func):
@@ -54,7 +55,7 @@ extern const std::string SYNTACTICALLY_EQUAL;
 extern const std::string MUTUALLY_TERMINATING;
 
 // loops are made into external functions but without the recursive call
-#define LOOPS_NOT_RECURSIVE
+//#define LOOPS_NOT_RECURSIVE
 
 /* params for defining RV channels: */
 extern const char *RVRECORD;

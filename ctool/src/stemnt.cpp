@@ -31,6 +31,7 @@
     o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o  */
 
 #include <cstring>
+#include <vector>
 #include <cassert>
 
 #include <ctool/stemnt.h>
@@ -285,7 +286,196 @@ Statement::addHeadLabel( Label *lbl )
         }
     }
 }
+// o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o
 
+void Statement::removeAllLabels(){
+	labels = LabelVector();
+}
+
+
+void Statement::insertBeforeTransUnit(Statement* statementToInsert, TransUnit* enclosingBlock)
+{
+	Statement* prev = NULL;
+	for (Statement *statement = enclosingBlock->head; statement; prev = statement, statement = statement->next)
+	{
+		if (statement == this){
+			statementToInsert -> next = this;
+			if (prev == NULL){
+				enclosingBlock -> head = statementToInsert;
+			}
+			else{
+				prev -> next = statementToInsert;
+			}
+			return;
+		}
+
+	}
+	return;
+}
+
+void Statement::insertBeforeInner(Statement* statementToInsert, Block* enclosingBlock)
+{
+	Statement* prev = NULL;
+	for (Statement *statement = enclosingBlock->head; statement; prev = statement, statement = statement->next)
+	{
+		if (statement == this){
+			statementToInsert -> next = this;
+			if (prev == NULL){
+				enclosingBlock -> head = statementToInsert;
+			}
+			else{
+				prev -> next = statementToInsert;
+			}
+			return;
+		}
+
+		if (statement->statementContainsBlock()){
+			std::vector<Block*>* b = statement->getBlockFromStatement();
+			for (unsigned int i = 0 ; i < b->size() ; i++){
+				Block* currentBlock = b->at(i);
+				if (currentBlock->statementIsInBlock(this)){
+					insertBeforeInner(statementToInsert, currentBlock);
+					return;
+				}
+			}
+		}
+	}
+	return;
+}
+
+void Statement::insertBefore(Statement* statementToInsert, Block* enclosingBlock){
+	insertBeforeInner(statementToInsert, enclosingBlock);
+}
+
+bool Statement::statementContainsBlock(){
+	StatementType t = this -> type;
+	return t == ST_Block || t == ST_IfStemnt || t == ST_SwitchStemnt || t == ST_ForStemnt || t == ST_WhileStemnt || t == ST_DoWhileStemnt;
+}
+
+
+std::vector<Block*>* Statement::getBlockFromStatement(){
+	std::vector<Block*>* resultBlocks = new std::vector<Block*>();
+	Block* block = NULL;
+	switch(this -> type)
+	{
+	case ST_Block:
+		resultBlocks -> push_back((Block*)this);
+		return resultBlocks;
+		break;
+	case ST_IfStemnt: {
+		IfStemnt* ifStemnt = (IfStemnt*) this;
+		Block* thenBlock = ifStemnt->thenBlk->encloseInBlockIfNeeded();
+		ifStemnt->thenBlk = thenBlock;
+		resultBlocks -> push_back(thenBlock);
+		if (ifStemnt -> elseBlk != NULL){
+			Block* elseBlock = ifStemnt->elseBlk->encloseInBlockIfNeeded();
+			ifStemnt->elseBlk = elseBlock;
+			resultBlocks -> push_back(elseBlock);
+		}
+		return resultBlocks;
+		break;
+					  }
+	case ST_SwitchStemnt:
+		block = ((SwitchStemnt*) this)->block->encloseInBlockIfNeeded();
+		((SwitchStemnt*) this)->block = block;
+		resultBlocks -> push_back(block);
+		return resultBlocks;
+		break;
+	case ST_ForStemnt:
+		block = ((ForStemnt*) this)->block->encloseInBlockIfNeeded();
+		((ForStemnt*) this)->block = block;
+		resultBlocks -> push_back(block);
+		return resultBlocks;
+		break;
+	case ST_WhileStemnt:
+		block = ((WhileStemnt*) this)->block->encloseInBlockIfNeeded();
+		((WhileStemnt*) this)->block = block;
+		resultBlocks -> push_back(block);
+		return resultBlocks;
+		break;
+	case ST_DoWhileStemnt:
+		block = ((DoWhileStemnt*) this)->block->encloseInBlockIfNeeded();
+		((DoWhileStemnt*) this)->block = block;
+		resultBlocks -> push_back(block);
+		return resultBlocks;
+		break;
+	default :
+		return NULL;
+	}
+}
+
+Block* Statement::encloseInBlockIfNeeded(){
+	if (type == ST_Block) return (Block*) this;
+
+	Block* enclosingBlock = new Block(location);
+	enclosingBlock->head = this;
+
+	return enclosingBlock;
+}
+
+Block* Statement::getEnclosingBlock(Block* enclosingBlock){
+	for (Statement *statement = enclosingBlock->head; statement; statement = statement->next)
+	{
+		if (statement == this){
+			return enclosingBlock;
+		}
+	}
+
+	for (Statement *statement = enclosingBlock->head; statement; statement = statement->next)
+	{
+		if (statement->statementContainsBlock()){
+			std::vector<Block*>* b = statement->getBlockFromStatement();
+			for (unsigned int i = 0 ; i < b->size() ; i++){
+				Block* enclosedBlock = getEnclosingBlock(b->at(i));
+				if (enclosedBlock != NULL){
+					return enclosedBlock;
+				}
+			}
+		}
+	}
+	return NULL;
+}
+
+Statement* Statement::getEnclosingStatement(Block* enclosingBlock){
+	for (Statement *statement = enclosingBlock->head; statement; statement = statement->next)
+	{
+		if (statement == this){
+			return enclosingBlock;
+		}
+	}
+
+	for (Statement *statement = enclosingBlock->head; statement; statement = statement->next)
+	{
+		if (statement->statementContainsBlock()){
+			std::vector<Block*>* b = statement->getBlockFromStatement();
+			for (unsigned int i = 0 ; i < b->size() ; i++){
+				Statement* enclosedBlock = getEnclosingStatement(b->at(i));
+
+				if (enclosedBlock != NULL){
+					if (enclosedBlock -> type == ST_Block){
+						return statement;
+					}
+					return enclosedBlock;
+				}
+			}
+		}
+	}
+	return NULL;
+}
+
+void Statement::replaceWith(Statement* newStatement, Block* enclosingBlock){
+	insertBefore(newStatement, enclosingBlock);
+	newStatement -> next = next;
+}
+
+void Statement::replaceWithTransUnit(Statement* newStatement, TransUnit* enclosingBlock){
+	insertBeforeTransUnit(newStatement, enclosingBlock);
+	newStatement -> next = next;
+}
+
+bool Statement::isStatementContainCaseLabel(){
+	return labels.size() == 1 && labels.at(0)->type == LT_Case;
+}
 // o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o
 Statement*
 Statement::dup0() const
@@ -345,6 +535,9 @@ Statement::findExpr( fnExprCallback cb )
     for (j=labels.begin(); j != labels.end(); j++)
         (*j)->findExpr(cb);
 }
+
+
+
 
 // o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o
 FileLineStemnt::FileLineStemnt(const std::string& incl, int lino, const Location& l):
@@ -490,6 +683,16 @@ ExpressionStemnt::ExpressionStemnt( Expression *expr, const Location& l)
                  : Statement( ST_ExpressionStemnt, l )
 {
     expression = expr;
+}
+
+ExpressionStemnt::ExpressionStemnt( std::string varNameToBeAssigned, SymEntry* matchingSymEntry, int assignmentConst, const Location& l)
+	: Statement( ST_ExpressionStemnt, l )
+{
+	Variable* leftExp = new Variable(varNameToBeAssigned, l, matchingSymEntry);
+	IntConstant* rightExp = new IntConstant(assignmentConst, false, l);
+	AssignExpr* exp = new AssignExpr(AO_Equal, leftExp, rightExp, l);
+	
+	expression = exp;
 }
 
 // o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o
@@ -693,6 +896,36 @@ SwitchStemnt::findStemnt( fnStemntCallback cb )
     (cb)(this);
 
     block->findStemnt(cb);
+}
+
+// o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o
+
+Statement* SwitchStemnt::getFatherCaseStatementOf(Statement* statementToFind){
+	Statement* currentCaseStatement = ((Block*) block)->head;
+	if (!currentCaseStatement->isStatementContainCaseLabel()){
+		throw new std::exception("First statement in a switch block should have a case label on it");
+	}
+
+	for (Statement* statement = currentCaseStatement ; statement ; statement = statement->next){
+		if (statement->isStatementContainCaseLabel()){
+			currentCaseStatement = statement;
+		}
+
+		if (statement == statementToFind){
+			return currentCaseStatement;
+		}
+
+		if (statement->statementContainsBlock()){
+			std::vector<Block*>* blocks = statement->getBlockFromStatement();
+			for (unsigned int i = 0 ; i < blocks->size() ; i++){
+				Block* block = blocks->at(i);
+				if (block->statementIsInBlock(statementToFind)){
+					return currentCaseStatement;
+				}
+			}
+		}
+	}
+	return NULL;
 }
 
 // o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o
@@ -1424,6 +1657,98 @@ Block::insert(Statement *stemnt, Statement *after /* =NULL */)
             head = tail = stemnt;
     }
 }
+// o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o
+bool Block::statementIsInBlock(Statement* statementToFind){
+	for (Statement *statement = this->head; statement; statement = statement->next)
+	{
+		if (statement == statementToFind)		{
+			return true;
+		}
+		if (statement->statementContainsBlock()){
+			std::vector<Block*>* b = statement -> getBlockFromStatement();
+			for (unsigned int i = 0 ; i < b->size() ; i++){
+				if (b->at(i)->statementIsInBlock(statementToFind)){
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
+int Block::statementCount(){
+	int count = 0;
+
+	for (Statement *statement = head; statement; statement = statement->next)
+	{
+		if (statement->statementContainsBlock()){
+			std::vector<Block*>* b = statement->getBlockFromStatement();
+			for (unsigned int i = 0 ; i < b->size() ; i++){
+				Block* block = b->at(i);
+				int innerBlockCount = block->statementCount();
+				
+				//add two lines for the head of the block (if().. while()..) and
+				//for the closing bracket
+				count+=innerBlockCount + 1 + 1; 
+			}
+		}
+		else{
+			count++;
+		}
+	}
+	return count;
+}
+
+bool Block::isStatementSingleInBlock(Statement* statementToFind){
+	if (statementToFind == NULL) return false;
+	if (head == NULL) return false;
+	if (head != statementToFind) return false;
+	return head -> next == NULL;
+}
+
+void Block::setBlockHead(Statement* newHead){
+	if (newHead){
+		newHead -> next = head;
+		head = newHead;
+	}
+}
+
+void Block::appendToTail(Statement* newTail){
+	Statement* temp = head;
+
+	while(temp -> next != NULL){
+		temp = temp -> next;
+	}
+
+	temp -> next = newTail;
+}
+
+bool Block::removeStatement(Statement* statementToRemove){
+	Statement* prev = NULL;
+	for (Statement* statement = head ; statement != NULL ; prev = statement, statement = statement -> next){
+		if (statement == statementToRemove){
+			if (prev == NULL){
+				head = statementToRemove->next;
+			}
+			else{
+				prev->next = statementToRemove->next;
+			}
+			return true;
+		}
+
+
+		if (statement->statementContainsBlock()){
+			std::vector<Block*>* b = statement->getBlockFromStatement();
+			for (unsigned int i = 0 ; i < b->size() ; i++){
+				Block* block = b->at(i);
+				if (block->removeStatement(statementToRemove)){
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
 
 // o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o
 void Block::inherit(Block *source) {
@@ -1505,6 +1830,12 @@ FunctionDef::FunctionName() const
 {
     return decl->name;
 }
+
+bool FunctionDef::isVoid()
+{
+	return this->decl->form->isVoid();
+}
+
 
 // o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o
 std::ostream&

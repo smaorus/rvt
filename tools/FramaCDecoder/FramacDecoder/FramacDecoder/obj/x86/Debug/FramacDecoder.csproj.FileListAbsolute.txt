@@ -1,0 +1,7 @@
+C:\NewRVT\tools\FramaCDecoder\FramacDecoder\FramacDecoder\bin\Debug\FramacDecoder.exe
+C:\NewRVT\tools\FramaCDecoder\FramacDecoder\FramacDecoder\bin\Debug\FramacDecoder.pdb
+C:\NewRVT\tools\FramaCDecoder\FramacDecoder\FramacDecoder\obj\x86\Debug\FramacDecoder.exe
+C:\NewRVT\tools\FramaCDecoder\FramacDecoder\FramacDecoder\obj\x86\Debug\FramacDecoder.pdb
+C:\NewRVT\tools\FramaCDecoder\FramacDecoder\FramacDecoder\obj\x86\Debug\FramacDecoder.csprojResolveAssemblyReference.cache
+C:\NewRVT\tools\scripts\FramacDecoder.exe
+C:\NewRVT\tools\scripts\FramacDecoder.pdb

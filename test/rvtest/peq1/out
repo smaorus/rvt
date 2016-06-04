@@ -1,0 +1,4 @@
+/usr/bin/gcc -fsyntax-only .//try_side0.c
+/usr/bin/gcc -fsyntax-only .//try1_side1.c
+/usr/bin/cpp -D__FUNCTION__="<unknown>" -I /cygdrive/c/NewRVT/debug/../tools/scripts/../ansi-c-lib -x c .//try_side0.c .//S0.c
+/usr/bin/cpp -D__FUNCTION__="<unknown>" -I /cygdrive/c/NewRVT/debug/../tools/scripts/../ansi-c-lib -x c .//try1_side1.c .//S1.c

@@ -189,6 +189,12 @@ public:
 
 private:
   void block(Statement *);
+  bool try_calc_constant_array_size_expression( Expression * size, int* result );
+
+  bool expression_is_legal_for_constant_value_calculation( Expression * exp );
+  int extract_integer_from_constant( Constant* constExpr );
+  int calc_expression( int leftNum, int rightNum, BinaryOp bOp );
+
 
   std::ostream &out;
   bool          debug;

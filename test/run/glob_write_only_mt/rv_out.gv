@@ -1,0 +1,22 @@
+digraph G{
+subgraph G0{ 
+side0[label = P0]
+node[color = black];
+main0[label = "main",fontcolor = "grey"];
+f0[label = "f",fontcolor = "black"];
+main0[shape = "octagon", color = "blue", style = "filled", fillcolor = "white"]
+f0[shape = "octagon",  style = "filled", fillcolor = "white"]
+main0->f0
+f0->f0
+}
+subgraph G1{ 
+side1[label = P1]
+node[color = black];
+main1[label = "main",fontcolor = "grey"];
+f1[label = "f",fontcolor = "black"];
+main1[shape = "octagon", color = "blue", style = "filled", fillcolor = "white"]
+f1[shape = "octagon",  style = "filled", fillcolor = "white"]
+main1->f1
+f1->f1
+}
+}

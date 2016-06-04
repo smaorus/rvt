@@ -1,0 +1,16 @@
+/usr/bin/gcc -fsyntax-only .//loopb.c
+/usr/bin/gcc -fsyntax-only .//loopb1.c
+/usr/bin/cpp -D__FUNCTION__="<unknown>" -I /cygdrive/c/NewRVT/debug/../tools/scripts/../ansi-c-lib -x c .//loopb.c .//S0.c
+/usr/bin/cpp -D__FUNCTION__="<unknown>" -I /cygdrive/c/NewRVT/debug/../tools/scripts/../ansi-c-lib -x c .//loopb1.c .//S1.c
+float  rv_mult(float  x, float  y);float  rv_mult(float  x, float  y);float  rv_mult(float  x, float  y);float  rv_mult(float  x, float  y);Unable to open fuf file: ".\rv_pe.fuf"
+rm: No match.
+Setting environment for using Microsoft Visual Studio 2010 x86 tools.
+-- Begin semantic check (semchk) ( .//semchks// Loop_g_while1 chk0_Loop_g_while1 chk1_Loop_g_while1 1 )
+running vcvars64
+Setting environment for using Microsoft Visual Studio 2010 x86 tools.
+running unitrv
+the value of mutual term check: 
+( Loop_g_while1, Loop_g_while1 ) : passed
+( g, g ) : passed
+( main, main ) : passed
+Output graph written to rv_out.gv

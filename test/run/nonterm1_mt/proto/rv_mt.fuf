@@ -1,0 +1,5 @@
+`P0                      P1                       Result
+`----------------------- ------------------------ ------
+Loop_infiniteLoop_while1 Loop_infiniteLoop_while1 mutually-terminating
+main                     main                     syntactically-equal mutually-terminating
+infiniteLoop             infiniteLoop             syntactically-equal mutually-terminating

@@ -1,7 +1,7 @@
 #ifndef CPROVER_TIMER_H
 #define CPROVER_TIMER_H
 
-#include <time_stopping.h>
+#include "util/time_stopping.h"
 
 class timert
 {

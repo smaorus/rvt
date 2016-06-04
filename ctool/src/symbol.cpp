@@ -331,6 +331,34 @@ bool SymEntry::IsEquivalent(const SymEntry *o) const
 	return type == o->type && name == o->name &&
 		   scope->IsEqualScopeId(o->scope);
 }
+/*  o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o  */
+bool SymEntry::isTypeDefStructDefinition()
+{
+	if (uComponent == NULL){
+		return false;
+	}
+
+	if (uComponent->form == NULL){
+		return false;
+	}
+
+	Type* curForm = uComponent->form;
+
+	if (type == EnumConstEntry){
+		return false;
+	}
+
+	if (curForm == NULL){
+		return false;
+	}
+
+	if (curForm->type != TT_Function && curForm->storage == ST_Typedef){
+		return true;
+	}
+
+	return false;
+}
+
 
 /*  o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o+o  */
 SymEntry*

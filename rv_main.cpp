@@ -33,6 +33,7 @@
 #include <rv_array_assume.h>
 #include "rv_glob.h"
 #include "rv_dataflow.h"
+#include "rv_gotoEliminator.h"
 
 #define RV_SECTION RV_SEC_MAIN
 
@@ -169,6 +170,7 @@ RVBoolStatus RVMain::parse_side(const RVSide& side, std::string& side_fpath)
   RVGlob::counters(RVGlob::GLBL_EXTERNAL_INPUTS, 0);
   bool ret = rv_parser.parse_path(side_fpath, side.toString("side"));
 
+   
   if (side == SIDE1 && external_inputs != RVGlob::counters(RVGlob::GLBL_EXTERNAL_INPUTS))
 	  endl(rv_errstrm << "Warning: different number of external inputs");
   external_inputs = std::max(external_inputs, RVGlob::counters(RVGlob::GLBL_EXTERNAL_INPUTS));
@@ -324,7 +326,7 @@ RVBoolStatus RVMain::create_call_graph(int side, bool collect_arrays /*=false*/)
 	RVCollectArrayRefs array_ref_collector;
 	if( collect_arrays )
 		wcol.set_array_ref_collector(&array_ref_collector);
-
+	rv_parser.get_parsetree(side)->units.at(0)->head->print(cout, 0);
 	/* should be in order of func declaration: */
 	Statement* st = RVCtool::get_glob_stemnt(rv_parser.get_parsetree(side));
 	for(; st; st = st->next, func = NULL ) {
@@ -411,14 +413,15 @@ void RVMain::filter_common_read_only_globals()
 }
 
 
-RVBoolStatus RVMain::convert_loops_to_rec(void) {
+RVBoolStatus RVMain::convert_loops_to_rec(bool is_basecase) {
   bool ret = true;
   ScopeTbl* file_scope = NULL;  /* the scope to which to add the new function.*/
   FunctionDef* func = NULL;
   Symbol* sym;
+  std::string base_ext = is_basecase? ".base" : "";
 
-  std::string side0_rec_fname = side0_fpath + RV_LOOPS_TO_REC_EXT; 
-  std::string side1_rec_fname = side1_fpath + RV_LOOPS_TO_REC_EXT; 
+  std::string side0_rec_fname = side0_fpath + RV_LOOPS_TO_REC_EXT + base_ext; 
+  std::string side1_rec_fname = side1_fpath + RV_LOOPS_TO_REC_EXT + base_ext; 
   
   for(int side = 0; side < 2; side++)
   {
@@ -475,7 +478,7 @@ RVBoolStatus RVMain::convert_loops_to_rec(void) {
 	st = RVCtool::get_glob_stemnt(pt);
 	for(; st; st = st->next )
 	  if( st->isFuncDef() ) {
-		  func = static_cast<FunctionDef*>(st);
+ 		  func = static_cast<FunctionDef*>(st);
 		  rv_loops.print_protos(temps, func, file_scope);
 		  rv_replace_loop_calls.replace(func, pt);  // Ofer: stores func's loops in RVLoop, creates the call to them in func. Uses go().. etc hence hard to follow. 
 		  func->print(temps.get_strm(),0);
@@ -630,6 +633,12 @@ RVIntStatus RVMain::main(void) {
   if( !parse_side(SIDE0, S0) || !parse_side(SIDE1, S1) )
 	return RVIntStatus(1, DBG_INFO, DBG);
 
+  
+  if (!eliminateGotoStatements()){
+	  return RVIntStatus(1, DBG_INFO, DBG);
+  }
+
+
   if(DBG) rv_errstrm << DBG_INFO << "P2.5 - after parsing the sides\n";
 
   RVTypeProp rv_type_prop;
@@ -676,6 +685,7 @@ RVIntStatus RVMain::main(void) {
 	if( !convert_loops_to_rec() )
 	  return RVIntStatus(1, DBG_INFO, DBG);
 
+	
 	pt1.clear_arrays(0);
 	pt1.clear_arrays(1);
 
@@ -805,12 +815,23 @@ RVIntStatus RVMain::main(void) {
 							  mapf, 
 							  syntacticEquiv0,
 							  names0, names1, 
-							  *this);		
+							  *this, side0_fpath, side1_fpath);		
   }
 
   return RVIntStatus(0);
 }
 
+RVBoolStatus RVMain::eliminateGotoStatements()
+{
+	if (GotoEliminator::gotoStatementExists(rv_parser.side_parsetree[0]->units[0])){
+		GotoEliminator::removeGoto(rv_parser.side_parsetree[0]->units[0], true);
+	}
+	if (GotoEliminator::gotoStatementExists(rv_parser.side_parsetree[1]->units[0])){
+		GotoEliminator::removeGoto(rv_parser.side_parsetree[1]->units[0], true);
+	}
+
+	return RVBoolStatus(1, DBG_INFO, DBG);//reprocessAfterGotoElimination();
+}
 
 
 ///<summary>
@@ -818,6 +839,8 @@ RVIntStatus RVMain::main(void) {
 ///</summary>
 int main(int argc, char *argv[])
 {
+	
   RVOptions options(argc, argv);
+  
   return options.readyToRun() ? options.main() : options.getErrorStatus();
 }

@@ -543,7 +543,7 @@ if(DBG){rv_errstrm<<"RVWalk::go_block() starts block at ";
 	if( try_replace(pst) && !process(*pst) )
 	return false;
 	
-	/* connect chain (may be desrupted by try_replace()): */
+	/* connect chain (may be desrupted by try_repslace()): */
 	(*pst)->next = next;
 
 	if( next )
