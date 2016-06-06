@@ -6,8 +6,16 @@ var fs = require('fs');
 var uuid = require('node-uuid');
 var mkdirp = require('mkdirp');
 var rimraf = require('rimraf');
+var path = require('path');
 // app.use(express.static(__dirname + '/frontend'));
 // app.get('/', (req, res) => res.sendFile(__dirname + '/frontend/index.html'));
+
+var SAMPLE_FOLDER = "samples"
+var SAMPLE_PROGRAM1_FILE_NAME = "p1.txt";
+var SAMPLE_PROGRAM2_FILE_NAME = "p1.txt";
+var SAMPLE_PARAMETERS_FILE_NAME = "prms.txt";
+var RV_PATH = path.resolve('..\\Debug\\rv.exe');
+	
 
 io.on('connection', function(socket){
   console.log('a user connected');
@@ -24,37 +32,20 @@ io.on('connection', function(socket){
 		checkEquivalence(msg, socket);
 	}); 
 
+   socket.on('init_samples', function(sample_name){
+   		var sample_dirs = getDirectories('samples');
+   		var sample = readSample('Basecase not in sync')
+   		sample.additional_samples = sample_dirs;
+   		socket.emit('init_samples_response', sample);
+   });
+
    socket.on('sample_request', function(sample_name){
    		console.log(sample_name);
-   		var file1 = '.\\samples\\' + sample_name + '_1.txt';
-   		var file2 = '.\\samples\\' + sample_name + '_2.txt';
-   		var fileprms = '.\\samples\\' + sample_name + '_prms.txt';
-   		fs.readFile(file1, 'utf8', 
-		  	function(err, data1) {
-			  	if (err) throw err;
-			  	var side1 = data1;
 
-			  	fs.readFile(file2, 'utf8', 
-		  			function(err, data2) {
-		  				if (err) throw err;
-			  			var side2 = data2;
-
-			  			fs.readFile(fileprms, 'utf8', 
-				  			function(err, data3) {
-				  				if (err) throw err;
-					  			var prms = data3;
-					  			console.log('sending response');
-					  			socket.emit('sample_response',  {p1: side1,
-					  											p2: side2,
-					  											parameters: prms});
-				  			});
-		  			});
-
-
-			});
-		});
-  });
-
+   		var sample = readSample(sample_name)
+   		socket.emit('sample_response', sample);
+  	});
+});
 
 http.listen(3000, () => console.log('listening on *:3000'));
 
@@ -68,7 +59,7 @@ function deleteFolder(folderName){
 function runRVT(socket, p1, p2, folderName, params){
 	var errText = '';
 	
-	var rvtCommand = 'C:\\NewRVT\\Debug\\rv.exe ' + params + ' ' + p1 + ' ' + p2;
+	var rvtCommand = RV_PATH + ' ' + params + ' ' + p1 + ' ' + p2;
 	const exec = require('child_process').exec;
 	
 	console.log('Running RVT');
@@ -89,7 +80,7 @@ function runRVT(socket, p1, p2, folderName, params){
 							deleteFolder(folderName);
 						});
 					  });
-    cmd.stderr.on('data', function(data) {
+      cmd.stderr.on('data', function(data) {
       errText += data.toString();
     });
 }
@@ -97,7 +88,7 @@ function runRVT(socket, p1, p2, folderName, params){
 
 function checkEquivalence(msg, socket) {
     var uid = uuid.v1();
-    var folderName = 'C:\\NewRVT\\rvtweb\\' + uid
+    var folderName = path.resolve('.\\' + uid);
 	mkdirp(folderName, function(err) { 
 		if (err) {
 			socket.emit('wait', 'Error creating dedicated folder');
@@ -111,6 +102,25 @@ function checkEquivalence(msg, socket) {
 	    runRVT(socket, p1Path, p2Path, folderName, msg.prms);
 
     });
+
+}
+
+function getDirectories(srcpath) {
+  return fs.readdirSync(srcpath).filter(function(file) {
+    return fs.statSync(path.join(srcpath, file)).isDirectory();
+  });
+}
+
+function readSample(sample_name){
+	var file1 = '.\\' + SAMPLE_FOLDER + '\\' + sample_name + '\\' + SAMPLE_PROGRAM1_FILE_NAME;
+   	var file2 = '.\\' + SAMPLE_FOLDER + '\\' + sample_name + '\\' + SAMPLE_PROGRAM2_FILE_NAME;
+   	var fileprm = '.\\' + SAMPLE_FOLDER + '\\' + sample_name + '\\' + SAMPLE_PARAMETERS_FILE_NAME;	
+
+   	var program1 = fs.readFileSync(file1).toString();
+   	var program2 = fs.readFileSync(file2).toString();
+	var prms = fs.readFileSync(fileprm).toString();
+   		
+	return {p1: program1, p2: program2, parameters: prms};
 
 }
 

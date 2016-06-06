@@ -75,13 +75,7 @@
           <div class="dropdown">
             <button disabled="true" id="dropsample" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Select Example
             <span class="caret"></span></button>
-            <ul class="dropdown-menu" style="position: relative;">
-              <li><a href="#">Basecase not in sync</a></li>
-              <li><a href="#">Not in lockstep</a></li>
-              <li><a href="#">Value analysis</a></li>
-              <li><a href="#">Collatz</a></li>
-              <li><a href="#">Ackermann</a></li>
-            </ul>
+            <ul id ="sample-list" class="dropdown-menu" style="position: relative;"></ul>
           </div>
         </div>
       </div>
@@ -195,6 +189,12 @@
         $('#params').val(curText + ' ' + text)
       }
 
+      function populateSampleList(samples){
+        samples.forEach(function(sample) {
+            $('#sample-list').append('<li><a href="#">' + sample + '</a></li>');
+        });
+      }
+
       $( "#-main" ).click(function() {
         appendParams('-main <main-name>')
       });
@@ -228,9 +228,22 @@
           unFreezeScreen();
         }
         else{
-          socket.emit('sample_request', 'Basecase not in sync');
+          //socket.emit('sample_request', 'Basecase not in sync');
+          socket.emit('init_samples');
         }
       });
+
+      socket.on('init_samples_response', function (msg) {
+          console.log('init_samples_response');
+          
+          populateSampleList(msg.additional_samples)
+
+          pcm1.setValue(msg.p1);
+          pcm2.setValue(msg.p2);
+          $('#params').val(msg.parameters);        
+          unFreezeScreen(); 
+      });
+
 
       socket.on('disconnect', function () {
         console.log('disconnect');
@@ -248,14 +261,6 @@
           $('#error').show();
           connectionProblems=true;
           freezeScreen();
-      });
-
-      $("#send-btn" ).click(function(){
-        socket.emit('message', {p1: pcm1.getValue(), 
-                                p2: pcm2.getValue(), 
-                                prms: $('#params').val()});
-        startLoadDisplay();
-        return false;
       });
 
       socket.on('message', function(msg){
@@ -281,6 +286,16 @@
                 unFreezeScreen(); 
       });
 
+
+      $("#send-btn" ).click(function(){
+        socket.emit('message', {p1: pcm1.getValue(), 
+                                p2: pcm2.getValue(), 
+                                prms: $('#params').val()});
+        startLoadDisplay();
+        return false;
+      });
+
+      
      
       $(".dropdown").on('click', 'li a', function(event){
           freezeScreen();
