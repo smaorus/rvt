@@ -12,9 +12,10 @@ var path = require('path');
 
 var SAMPLE_FOLDER = "samples"
 var SAMPLE_PROGRAM1_FILE_NAME = "p1.txt";
-var SAMPLE_PROGRAM2_FILE_NAME = "p1.txt";
+var SAMPLE_PROGRAM2_FILE_NAME = "p2.txt";
 var SAMPLE_PARAMETERS_FILE_NAME = "prms.txt";
-var RV_PATH = path.resolve('..\\Debug\\rv.exe');
+var RV_PATH = path.resolve(path.join('..', 'Debug', 'rv.exe'));
+var RESULT_FILE = 'rv_out.gv';
 	
 
 io.on('connection', function(socket){
@@ -73,7 +74,7 @@ function runRVT(socket, p1, p2, folderName, params){
 					  }
 					  console.log('RVT is done, sending result');
 					
-					  fs.readFile(folderName + '\\rv_out.gv', 'utf8', 
+					  fs.readFile(path.join(folderName, RESULT_FILE), 'utf8', 
 					  	function(err, data) {
 						  	if (err) throw err;
 						  	socket.emit('message', data);
@@ -88,14 +89,14 @@ function runRVT(socket, p1, p2, folderName, params){
 
 function checkEquivalence(msg, socket) {
     var uid = uuid.v1();
-    var folderName = path.resolve('.\\' + uid);
+    var folderName = path.resolve(path.join('.', uid));
 	mkdirp(folderName, function(err) { 
 		if (err) {
 			socket.emit('wait', 'Error creating dedicated folder');
 			throw err;
 		}
-		var p1Path = folderName + '\\p1.c';
-		var p2Path = folderName + '\\p2.c';
+		var p1Path = path.join(folderName, 'p1.c');
+		var p2Path = path.join(folderName, 'p2.c');
 		fs.writeFile(p1Path, msg.p1, errFunc);
 	    fs.writeFile(p2Path, msg.p2, errFunc);
 
@@ -112,9 +113,9 @@ function getDirectories(srcpath) {
 }
 
 function readSample(sample_name){
-	var file1 = '.\\' + SAMPLE_FOLDER + '\\' + sample_name + '\\' + SAMPLE_PROGRAM1_FILE_NAME;
-   	var file2 = '.\\' + SAMPLE_FOLDER + '\\' + sample_name + '\\' + SAMPLE_PROGRAM2_FILE_NAME;
-   	var fileprm = '.\\' + SAMPLE_FOLDER + '\\' + sample_name + '\\' + SAMPLE_PARAMETERS_FILE_NAME;	
+	var file1 = path.join('.', SAMPLE_FOLDER, sample_name, SAMPLE_PROGRAM1_FILE_NAME);
+   	var file2 = path.join('.', SAMPLE_FOLDER, sample_name, SAMPLE_PROGRAM2_FILE_NAME);
+   	var fileprm = path.join('.', SAMPLE_FOLDER, sample_name, SAMPLE_PARAMETERS_FILE_NAME);
 
    	var program1 = fs.readFileSync(file1).toString();
    	var program2 = fs.readFileSync(file2).toString();
