@@ -16,7 +16,7 @@ var SAMPLE_PROGRAM2_FILE_NAME = "p2.txt";
 var SAMPLE_PARAMETERS_FILE_NAME = "prms.txt";
 var RV_PATH = path.resolve(path.join('..', 'Debug', 'rv.exe'));
 var RESULT_FILE = 'rv_out.gv';
-	
+var LISTENING_PORT = 3017;
 
 io.on('connection', function(socket){
   console.log('a user connected');
@@ -48,7 +48,7 @@ io.on('connection', function(socket){
   	});
 });
 
-http.listen(3000, () => console.log('listening on *:3000'));
+http.listen(LISTENING_PORT, () => console.log('listening on *:' + LISTENING_PORT));
 
 function deleteFolder(folderName){
 	rimraf(folderName, function(err){
