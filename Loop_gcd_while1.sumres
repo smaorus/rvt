@@ -1,6 +1,0 @@
-swap: (1)
-Loop_gcd_while1: (retval <= 255 && -(retval) <= 0)
-gcd: (!(a <= 32767 && -(a) <= 32768 && b <= 32767 && -(b) <= 32768 ) || ( retval <= 32767 && -(retval) <= 32768))
-simplify: (1)
-main: (1)
-_start: (1)
