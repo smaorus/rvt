@@ -246,9 +246,10 @@ void RVCommands::check_syntax(const std::string in_file0,
 		                      bool c99) {
 	string script("rv_gcc");
 	int ret = runScript(script, unixStylePath(in_file0), c99GccOption(c99));
-	if (ret) rv_errstrm << "*** Syntax problems on side 0 (exit code " << ret << "). May lead to problems later on. ***\n";
+	if (ret) fatal_error("*** Syntax problems on side 0 ***", false);//rv_errstrm << " (exit code " << ret << "). May lead to problems later on. ***\n";
 	ret = runScript(script, unixStylePath(in_file1), c99GccOption(c99));
-	if (ret) rv_errstrm << "*** Syntax problems on side 1 (exit code " << ret << "). May lead to problems later on. ***\n";
+	if (ret) fatal_error("*** Syntax problems on side 1 ***", false);//rv_errstrm << " (exit code " << ret << "). May lead to problems later on. ***\n";
+
 }
 
 
