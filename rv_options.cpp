@@ -52,7 +52,7 @@ RV_LOC_MSGS_ENG_BEGIN
 	    "  -continue_on_fail    keep running even if CBMC returns an uninterpretable result.\n"
 		"  -debug <section(s)>  Emit debug prints to stderr. <section(s)> code in octal\n"
 		"  -directives <directives file name>  Directives file with channel and check point definitions\n"
-		"  -frama Use frama-c value analysis to strengthen proofs"
+		"  -val Use frama-c value analysis to strengthen proofs"
 		"  <side0 file name> <side1 file name>  Names of the source file for each side\n"
 		"\n"
 		"Currently only one file per side is supported.\n"
@@ -384,7 +384,7 @@ bool RVOptions::parse_options(int argc, char* const argv[])
 		}
 		breakOnSeq(argv[i]);
 	}
-	else if (!strcmp(argv[i], "-frama")) {
+	else if (!strcmp(argv[i], "-val")) {
 		frama = true;
 	}
 	else if (!strcmp(argv[i], "-unroll")){ 

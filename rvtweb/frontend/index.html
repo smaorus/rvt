@@ -58,7 +58,7 @@
 
             <button disabled="true" id="-sprtbase" class="btn btn-info btn-block" data-toggle="tooltip" Title="Use this to prove the base case and the recursive step separatly">Separate base case</button>
             <button disabled="true" id="-unroll" class="btn btn-info btn-block" data-toggle="tooltip" Title="Use this to unroll syntactically both sides of the program">Syntactic unroll</button>
-            <button disabled="true" id="-frama" class="btn btn-info btn-block" data-toggle="tooltip" Title="Use this to strengthen the proof by using abstract interpretation">Value analysis</button>
+            <button disabled="true" id="-val" class="btn btn-info btn-block" data-toggle="tooltip" Title="Use this to strengthen the proof by using abstract interpretation">Value analysis</button>
             <button disabled="true" id="-main" class="btn btn-info btn-block" data-toggle="tooltip" Title="Use this in case you don't have a main function">Change main</button>
             <button disabled="true" id="-nooutline_funcs" class="btn btn-info btn-block" data-toggle="tooltip" Title="Use this to prevent rvt from converting arithmetic functions to ufs. This slows the proof.">Keep arithmetics</button>
             <!-- <button id="-timeout" class="btn btn-info btn-block" data-toggle="tooltip" Title="Use this if you wish to limit the runnning time of rvt">Set timeout</button> -->
@@ -204,8 +204,8 @@
       $( "#-unroll" ).click(function() {
         appendParams('-unroll <#1> <#2>')
       });
-      $( "#-frama" ).click(function() {
-        appendParams('-frama')
+      $( "#-val" ).click(function() {
+        appendParams('-val')
       });
       $( "#-mt" ).click(function() {
         appendParams('-mt')
@@ -218,7 +218,7 @@
       });
 
 
-      var socket = io.connect('http://maorv-vm.iem.technion.ac.il:3000');
+      var socket = io.connect('http://localhost:3017');
 
 
       socket.on('connect', function(){
