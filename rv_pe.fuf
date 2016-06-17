@@ -1,7 +1,6 @@
-`P0                  P1                   Result
-`------------------- -------------------- ------
-rv_mod_short__short_ rv_mod_short__short_ syntactically-equal partially-equivalent
-main                 main                 syntactically-equal
-gcd                  gcd                  
-swap                 swap                 syntactically-equal partially-equivalent
-Loop_gcd_while1      Loop_gcd_while1      partially-equivalent
+`P0         P1          Result
+`---------- ----------- ------
+Loop_f_for1 Loop_f_for1 syntactically-equal partially-equivalent
+checkInput  checkInput  syntactically-equal partially-equivalent
+main        main        syntactically-equal partially-equivalent
+f           f           partially-equivalent

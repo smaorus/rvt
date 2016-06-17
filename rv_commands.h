@@ -6,7 +6,7 @@
 #include <vector>
 #include <string>
 
-#define FRAMA_PARSER_PATH "C:/NewRVT/tools/scripts/FramacDecoder.exe"
+#define FRAMA_PARSER_PATH "FramacDecoder.exe"
 #define FRAMA_SCRIPT_NAME "frama"
 #define FRAMA_PARSED_FILE "frama_out_parsed.txt"
 

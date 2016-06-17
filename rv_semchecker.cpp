@@ -355,7 +355,7 @@ bool RVSemChecker::generate_output( const std::string& fname, const std::string&
 	  m_temps.close(discharger);
 	  cout << "the value of mutual term check: " + mutual_term_check << "\n";
 	  if (mutual_term_check)
-		//ufgen->determineLoopBackDepths(ofname, *this, fname);
+		ufgen->determineLoopBackDepths(ofname, *this, fname);
 	  
 	  return true;
   } catch(RVSemCheckException e) {

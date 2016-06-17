@@ -2,32 +2,24 @@
 float rv_mult(float x, float y);
 float rv_div(float x, float y);
 int rv_mod (int x, int y);
-# 1 "/cygdrive/c/NewRVT/test/rvtest/gcd/gcd.c"
+# 1 "/cygdrive/c/abs1.c"
 # 1 "<command-line>"
-# 1 "/cygdrive/c/NewRVT/test/rvtest/gcd/gcd.c"
+# 1 "/cygdrive/c/abs1.c"
 
-void swap(short *a, short *b)
-{
- short tmp = *a;
- *a = *b;
- *b = tmp;
+int r(int n){
+ if (n < 0) return 8;
+ return 5;
 }
 
-short gcd(short a, short b)
-{
- while (a != 0)
- {
-  b = b%a;
-  swap(&a,&b);
- }
-
- return b;
+int f(int n){
+ if (n <= 0) return 1;
+ if (f(n-1) < 0) return 2;
+ else return r(n);
 }
 
-short main()
-{
- short a;
- short b;
- gcd(a,b);
- return 0;
+
+int main(int x){
+
+ return f(x);
+
 }

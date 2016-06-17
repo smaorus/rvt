@@ -84,7 +84,7 @@ RVCommands::RVCommands(void)
 vector<string>* RVCommands::runFrama(){
 
 	runScript(FRAMA_SCRIPT_NAME);
-	exec(FRAMA_PARSER_PATH);
+	runScript(FRAMA_PARSER_PATH);
 	std::ifstream infile(FRAMA_PARSED_FILE);
 	std::string line;
 	vector<string>* result = new vector<string>();
