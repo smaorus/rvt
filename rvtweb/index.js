@@ -78,7 +78,7 @@ function runRVT(socket, p1, p2, folderName, params){
 					  	function(err, data) {
 						  	if (err) throw err;
 						  	socket.emit('message', data);
-							//deleteFolder(folderName);
+							deleteFolder(folderName);
 						});
 					  });
       cmd.stderr.on('data', function(data) {
