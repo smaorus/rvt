@@ -2,24 +2,17 @@
 float rv_mult(float x, float y);
 float rv_div(float x, float y);
 int rv_mod (int x, int y);
-# 1 "/cygdrive/c/abs2.c"
+# 1 "/cygdrive/c/gitrvt/test/rvtest/ackermann_mt/ackermann1.c"
 # 1 "<command-line>"
-# 1 "/cygdrive/c/abs2.c"
-
-int r(int n){
- if (n < 0) return 8;
- return 5;
-}
-
-int f(int n){
- if (n <= 0) return 1;
- if (f(n-1) < 0) return 4;
- else return r(n);
+# 1 "/cygdrive/c/gitrvt/test/rvtest/ackermann_mt/ackermann1.c"
+int A(int m, int n) {
+ if (m > 0 && n == 0) return A(m - 1, 1);
+ if (m == 0) return n + 1;
+ return A(m - 1, A(m, n - 1));
 }
 
 
-int main(int x){
-
- return f(x);
-
+main() {
+        int x, y;
+ return A(y, x);
 }

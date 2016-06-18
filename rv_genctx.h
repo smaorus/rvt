@@ -82,7 +82,7 @@ class RVGenCtx : public RVCtool
     std::string get_print_type_with_side(Type *, const RVSide&, Symbol *sname) const;
 
   public:
-	RVGenCtx(const char *_where, bool in, const RVGen* pRenamer = NULL, const RVSide& = NO_SIDE);
+	RVGenCtx(const char *_where, bool in, bool unitrv, const RVGen* pRenamer = NULL, const RVSide& = NO_SIDE);
 
 	/* to add a UF action pair: */
 	RVGenCtx(Symbol * sym,
@@ -95,7 +95,8 @@ class RVGenCtx : public RVCtool
 			 bool in,
 			 bool global,
 			 const char *_where,
-			 const RVGen* pRenamer);
+			 const RVGen* pRenamer,
+			 bool unitrv);
 	
 	/* for side0 UFs: */
 	RVGenCtx(Symbol * sym,
@@ -105,7 +106,8 @@ class RVGenCtx : public RVCtool
 			 bool in,
 			 bool global,
 			 const char *_where,
-			 const RVGen* pRenamer);
+			 const RVGen* pRenamer,
+			 bool unitrv);
 
 	/* to add a UF action pair: */
 	void init_uf_ctx(Symbol *sym,Type* item_tp, const std::string& item, const std::string& item_pref, Type* var_tp, const std::string& var, const RVSide& var_side, bool in, bool global, const char *_where);

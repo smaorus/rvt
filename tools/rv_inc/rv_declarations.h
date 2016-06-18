@@ -1,5 +1,6 @@
 _Bool __CPROVER_array_equal(void *, void *);
 void __CPROVER_array_copy(void *, void *);
+void __CPROVER_assert(_Bool, char*);
 void assert(_Bool assertion) {__CPROVER_assert(assertion, "RVT assertion");}
 void __CPROVER_assume(_Bool);
 void assume(_Bool assumption) { __CPROVER_assume(assumption); }

@@ -47,8 +47,8 @@ void RVGenCtx::check_inited(const char* caller) const {
 	}
 }
 
-RVGenCtx::RVGenCtx(const char *_where, bool in, const RVGen* pRenamer, const RVSide& side)
-  : m_side(side), m_pRenamer(pRenamer)
+RVGenCtx::RVGenCtx(const char *_where, bool in, bool unitrv, const RVGen* pRenamer, const RVSide& side)
+  : m_side(side), m_pRenamer(pRenamer), m_unitrv(unitrv)
 {
 	where = _where;
 	input   = in;
@@ -56,7 +56,6 @@ RVGenCtx::RVGenCtx(const char *_where, bool in, const RVGen* pRenamer, const RVS
 	my_parent = NULL;
 	my_comp_num = my_item_num = 0;
 
-	m_unitrv = false;
 }
 
 RVGenCtx::RVGenCtx(Symbol *sym,
@@ -68,15 +67,15 @@ RVGenCtx::RVGenCtx(Symbol *sym,
 		           const RVSide& var_side,
 		           bool in, bool global,
 		           const char *_where,
-		           const RVGen* pRenamer)
-  : m_side(var_side), m_pRenamer(pRenamer)
+		           const RVGen* pRenamer,
+				   bool unitrv)
+  : m_side(var_side), m_pRenamer(pRenamer), m_unitrv(unitrv)
 {
 	if (DBG)
 		if (sym) rv_errstrm << "RVGenCtx_1(" << item << "," << var << "," << sym->name << ")\n";
 
 	init_uf_ctx(sym,item_tp, item, item_pref, var_tp, var, var_side, in, global, _where);
 
-	m_unitrv = false;
 }
 
 RVGenCtx::RVGenCtx(Symbol *sym,
@@ -86,8 +85,8 @@ RVGenCtx::RVGenCtx(Symbol *sym,
                    bool in,
                    bool global,
                    const char *_where,
-                   const RVGen* pRenamer)
-  : m_side(SIDE0), m_pRenamer(pRenamer)
+                   const RVGen* pRenamer, bool unitrv)
+  : m_side(SIDE0), m_pRenamer(pRenamer), m_unitrv(unitrv)
 {
 	if (DBG)
 		if (sym) rv_errstrm << "RVGenCtx_0(" << side0_name <<  "," << sym->name << ")\n";
@@ -95,7 +94,6 @@ RVGenCtx::RVGenCtx(Symbol *sym,
 	/* in case of side0 UF the item name and type is similar to var's ones */
 	init_uf_ctx(sym,side0_tp, side0_name, item_pref, side0_tp, side0_name, SIDE0, in, global, _where);
 
-	m_unitrv = false;
 }
 
 void RVGenCtx::init_uf_ctx(Symbol *sym,Type* item_tp, const string& item, const string& item_pref, Type* var_tp, const string& var,	const RVSide& var_side, bool in, bool global, const char *_where)
@@ -172,7 +170,7 @@ std::string RVGenCtx::expand_name(const std::string& parent_name, Decl* comp, bo
 }
 
 RVGenCtx* RVGenCtx::cloneCtx(void) const {
-    return new RVGenCtx(where, is_input(), m_pRenamer, m_side);
+    return new RVGenCtx(where, is_input(), m_unitrv, m_pRenamer, m_side);
 }
 
 auto_ptr<RVGenCtx> RVGenCtx::dup_for_struct_item(unsigned comp_num, unsigned item_num) {

@@ -316,14 +316,14 @@ bool RVSemChecker::generate_output( const std::string& fname, const std::string&
 	  
 	  if( gen_recursive ) {
 		  ufgen->gen_one_uf(semchk_pair, decision_params.allow_cps_in_ufs, true); // makes a recursive call uninterpreted.
-		  mutual_term_check = mutual_term_check && ufgen->get_is_created_mutual_termination_tokens();
+		  //mutual_term_check = mutual_term_check && ufgen->get_is_created_mutual_termination_tokens();
 		  if (mutual_term_check){
-			ufgen->gen_initializing_of_unitrv_mutual_termination_variables_function(semchk_pair);
+			//ufgen->gen_initializing_of_unitrv_mutual_termination_variables_function(semchk_pair);
 		  }
 	  }	
 	  //ufgen->gen_initializing_of_unitrv_mutual_termination_variables_function();
 
-	  mutual_term_check = mutual_term_check && ufgen->get_is_created_mutual_termination_tokens();
+	  //mutual_term_check = mutual_term_check && ufgen->get_is_created_mutual_termination_tokens();
 
 	  /*if (mutual_term_check){
 		  ufgen->gen_initializing_of_unitrv_mutual_termination_variables_function(semchk_pair);

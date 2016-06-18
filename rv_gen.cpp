@@ -1437,7 +1437,7 @@ void RVUFGen::gen_side1_cbmc_uf(int counter, bool rec_func_uf)
 		side0_decl = related_side0_arg(i);
 		//DIMAXXX RVGenCtx ctx(decl->name,side0_decl->form, side0_decl->name->name, "", decl->form, decl->name->name, SIDE1, true, false, m_where, this);
 
-		RVGenCtx ctx(m_where, true, this, SIDE1);
+		RVGenCtx ctx(m_where, true, false, this, SIDE1);
 		ctx.add_lane(decl->name, decl->form, decl->name->name, SIDE1, "");
 
 		gen_item_or_struct_op(ADD, ctx, location);		
@@ -1454,7 +1454,7 @@ void RVUFGen::gen_side1_cbmc_uf(int counter, bool rec_func_uf)
 		side0_decl = related_side0_global(decl->name, true);
 		//DIMAXXX RVGenCtx ctx(decl->name,side0_decl->form, side0_decl->name->name, "", decl->form, decl->name->name, SIDE1, true, true, m_where, this);
 
-		RVGenCtx ctx(m_where, true, this, SIDE1);
+		RVGenCtx ctx(m_where, true, false, this, SIDE1);
 		string global_var_prefix = "";
 		if (!m_unitrv){
 			global_var_prefix = SIDE1.get_side_prefix();
@@ -1512,7 +1512,7 @@ void RVUFGen::gen_side1_cbmc_uf(int counter, bool rec_func_uf)
 		side0_decl = related_side0_arg(i);
 		//DIMAXXX RVGenCtx ctx(decl->name,side0_decl->form, side0_decl->name->name, "", decl->form, decl->name->name,	SIDE1, false, false, m_where, this);
 
-		RVGenCtx ctx(m_where, false, this, SIDE1);
+		RVGenCtx ctx(m_where, false, false, this, SIDE1);
 		ctx.add_lane(decl->name, decl->form, decl->name->name, SIDE1, "");
 
 		if( !ctx.check_out_arg(item_lane()) ) continue; // outputs should be pointers. This checks that.
@@ -1529,7 +1529,7 @@ void RVUFGen::gen_side1_cbmc_uf(int counter, bool rec_func_uf)
 		side0_decl = related_side0_global(decl->name, false);
 		//DIMAXXX RVGenCtx ctx(decl->name, side0_decl->form, side0_decl->name->name, "", decl->form, decl->name->name, SIDE1, false, true, m_where, this);
 
-		RVGenCtx ctx(m_where, false, this, SIDE1);
+		RVGenCtx ctx(m_where, false, false, this, SIDE1);
 		string global_var_prefix = "";
 		if (!m_unitrv){
 			global_var_prefix = SIDE1.get_side_prefix();
@@ -1545,7 +1545,7 @@ void RVUFGen::gen_side1_cbmc_uf(int counter, bool rec_func_uf)
 		//DIMAXXX Type* side0_type = ((FunctionType*)pfp->side_func[1]->decl->form)->subType;
 		//DIMAXXX RVGenCtx ctx((Symbol *) NULL ,side0_type, *pretvar, "",	proto->subType, *pretvar, SIDE1, false, false, m_where, this);
 
-		RVGenCtx ctx(m_where, false, this, SIDE1);
+		RVGenCtx ctx(m_where, false, false, this, SIDE1);
 		ctx.add_lane((Symbol *) NULL ,proto->subType, *pretvar, SIDE1, "");
 
 		if (ctx.is_aggregate()) is_aggregate = true;
@@ -1722,7 +1722,7 @@ bool RVReUfGen::gen_unitrv_side0_uf()
 		/* gen code to save its value in UFarr: */
 		decl = (*it)->entry->uVarDecl;
 		item_pref = unitrv_item_prefix(decl->name->name);
-		RVGenCtx ctx(decl->name, decl->form, decl->name->name, item_pref, true, true, m_where, this);
+		RVGenCtx ctx(decl->name, decl->form, decl->name->name, item_pref, true, true, m_where, this, false);
 		ret = gen_item_or_struct_op(COPY_S1_to_S0, ctx, location) && ret;
 	}   
 
@@ -1736,7 +1736,7 @@ bool RVReUfGen::gen_unitrv_side0_uf()
 		item_pref = unitrv_output_item_prefix(decl->name->name);
 
 
-		RVGenCtx ctx(decl->name,decl->form, decl->name->name, item_pref, false, false, m_where, this);
+		RVGenCtx ctx(decl->name,decl->form, decl->name->name, item_pref, false, false, m_where, this, false);
 		if( !ctx.check_out_arg(1) ) continue;
 
 		// pointer arg value must be changed in place - 
@@ -1761,7 +1761,7 @@ bool RVReUfGen::gen_unitrv_side0_uf()
 		item_pref = unitrv_output_item_prefix(decl->name->name);
 		
 
-		RVGenCtx ctx((Symbol *) NULL,proto0->subType, *pretvar, item_pref,	false, false, m_where, this);
+		RVGenCtx ctx((Symbol *) NULL,proto0->subType, *pretvar, item_pref,	false, false, m_where, this, false);
 		ret = gen_item_or_struct_op(NONDET_SAVE, ctx, location) && ret;
 	}
 
@@ -1783,7 +1783,7 @@ bool RVReUfGen::gen_unitrv_side0_uf()
 	FORVEC(it,(*vec)) {
 		decl = (*it)->entry->uVarDecl;
 		item_pref = unitrv_output_item_prefix(decl->name->name);
-		RVGenCtx ctx(decl->name,decl->form, decl->name->name, item_pref, false, true, m_where, this);
+		RVGenCtx ctx(decl->name,decl->form, decl->name->name, item_pref, false, true, m_where, this, false);
 		ret = gen_item_or_struct_op(NONDET_SAVE, ctx, location) && ret;
 	}
 
@@ -1870,7 +1870,7 @@ bool RVUFGen::gen_side0_uf()
 		/* gen code to save its value in UFarr: */
 		decl = proto0->args[i];
 		if( !is_in_arg(i) || !decl || !decl->name ) continue;
-		RVGenCtx ctx(decl->name, decl->form, decl->name->name, item_pref, true, false, m_where, this);		
+		RVGenCtx ctx(decl->name, decl->form, decl->name->name, item_pref, true, false, m_where, this, m_unitrv);
 		ret = gen_item_or_struct_op(COPY_S1_to_S0, ctx, location) && ret;
 	}
 
@@ -1881,7 +1881,7 @@ bool RVUFGen::gen_side0_uf()
 		if( ignore_in_global(*it, 0) ) continue;
 		/* gen code to save its value in UFarr: */
 		decl = (*it)->entry->uVarDecl;
-		RVGenCtx ctx(decl->name, decl->form, decl->name->name, item_pref, true, true, m_where, this);
+		RVGenCtx ctx(decl->name, decl->form, decl->name->name, item_pref, true, true, m_where, this, m_unitrv);
 		ret = gen_item_or_struct_op(COPY_S1_to_S0, ctx, location) && ret;
 	}   
 
@@ -1890,7 +1890,7 @@ bool RVUFGen::gen_side0_uf()
 	for(i = 0; i < proto0->nArgs; i++) {
 		decl = proto0->args[i];
 		if( !is_out_arg(i) || !decl || !decl->name ) continue;
-		RVGenCtx ctx(decl->name,decl->form, decl->name->name, item_pref, false, false, m_where, this);
+		RVGenCtx ctx(decl->name,decl->form, decl->name->name, item_pref, false, false, m_where, this, false);
 		if( !ctx.check_out_arg(1) ) continue;
 
 		// pointer arg value must be changed in place - 
@@ -1903,13 +1903,13 @@ bool RVUFGen::gen_side0_uf()
 	vec = &pfp->side_func[0]->fnode.written;
 	FORVEC(it,(*vec)) {
 		decl = (*it)->entry->uVarDecl;
-		RVGenCtx ctx(decl->name,decl->form, decl->name->name, item_pref, false, true, m_where, this);
+		RVGenCtx ctx(decl->name,decl->form, decl->name->name, item_pref, false, true, m_where, this, m_unitrv);
 		ret = gen_item_or_struct_op(NONDET_SAVE, ctx, location) && ret;
 	}
 
 	/* for the return value: */
 	if(pretvar) {
-		RVGenCtx ctx((Symbol *) NULL,proto0->subType, *pretvar, item_pref,	false, false, m_where, this);
+		RVGenCtx ctx((Symbol *) NULL,proto0->subType, *pretvar, item_pref,	false, false, m_where, this, m_unitrv);
 		ret = gen_item_or_struct_op(NONDET_SAVE, ctx, location) && ret;
 	}
 
@@ -1999,7 +1999,7 @@ bool RVReUfGen::gen_unitrv_side1_uf( bool seq_equiv_to_cps )
 		side0_decl = related_side0_global(decl->name, true);
 		RVGenCtx ctx(decl->name,side0_decl->form, side0_decl->name->name, item_pref,
 			decl->form, decl->name->name, 
-			SIDE1, true, true, m_where, this);
+			SIDE1, true, true, m_where, this, false);
 		ret = gen_item_or_struct_op( COMPARE, ctx, location ) && ret;
 	}
 	if(first_compare)
@@ -2084,7 +2084,7 @@ bool RVUFGen::gen_side1_uf(bool seq_equiv_to_cps)
             continue;
 
         side0_decl = related_side0_arg(i);
-        RVGenCtx ctx(decl->name, side0_decl->form, side0_decl->name->name, item_pref, decl->form, decl->name->name, SIDE1, true, false, m_where, this);
+        RVGenCtx ctx(decl->name, side0_decl->form, side0_decl->name->name, item_pref, decl->form, decl->name->name, SIDE1, true, false, m_where, this, false);
         ret = gen_item_or_struct_op(COMPARE, ctx, location) && ret;
     }
     /* for each input global: */
@@ -2095,7 +2095,7 @@ bool RVUFGen::gen_side1_uf(bool seq_equiv_to_cps)
 		side0_decl = related_side0_global(decl->name, true);
 		RVGenCtx ctx(decl->name,side0_decl->form, side0_decl->name->name, item_pref,
 			decl->form, decl->name->name, 
-			SIDE1, true, true, m_where, this);
+			SIDE1, true, true, m_where, this, false);
 		ret = gen_item_or_struct_op( COMPARE, ctx, location ) && ret;
 	}
     if(first_compare)
@@ -2146,7 +2146,7 @@ bool RVUFGen::gen_input_found_case(const FunctionType *proto1, const string& ite
             continue;
 
         side0_decl = related_side0_arg(i);
-        RVGenCtx ctx(decl->name, side0_decl->form, side0_decl->name->name, item_pref, decl->form, decl->name->name, SIDE1, false, false, m_where, this);
+        RVGenCtx ctx(decl->name, side0_decl->form, side0_decl->name->name, item_pref, decl->form, decl->name->name, SIDE1, false, false, m_where, this, false);
         if(!ctx.check_out_arg(1))
             continue;
 
@@ -2161,7 +2161,7 @@ bool RVUFGen::gen_input_found_case(const FunctionType *proto1, const string& ite
 		side0_decl = related_side0_global(decl->name, false);
 		RVGenCtx ctx(decl->name, side0_decl->form, side0_decl->name->name, item_pref,
 			decl->form, decl->name->name,
-			1, false, true, m_where, this);
+			1, false, true, m_where, this, false);
 		ret = gen_item_or_struct_op( COPY_S0_to_S1, ctx, location ) && ret;
 	}
     /* retrive return code if exists: */
@@ -2169,7 +2169,7 @@ bool RVUFGen::gen_input_found_case(const FunctionType *proto1, const string& ite
 		Type* side0_type = ((FunctionType*)pfp->side_func[1]->decl->form)->subType;
 		RVGenCtx ctx((Symbol *) NULL ,side0_type, *pretvar, item_pref,
 			proto1->subType, *pretvar,
-			1, false, false, m_where, this);
+			1, false, false, m_where, this, false);
 		ret = gen_item_or_struct_op( COPY_S0_to_S1, ctx, location ) && ret;
 	}
 
@@ -2259,9 +2259,8 @@ void RVUFGen::gen_one_uf(RVFuncPair *_pfp, bool seq_equiv_to_cps, bool rec_func_
 	assert(_pfp);
 	pfp = _pfp;
 	pfp->unite_argtypes();
-	
-	gen_one_uf_in_both_sides(seq_equiv_to_cps ,rec_func_uf);
-
+	//if (!get_is_mutual_termination_set())
+		gen_one_uf_in_both_sides(seq_equiv_to_cps ,rec_func_uf);
 	is_created_mutual_termination_tokens = true;
 	
 	pfp = NULL;	// needed!
@@ -2279,7 +2278,8 @@ void RVUFGen::gen_one_uf(RVFuncPair *_pfp, bool seq_equiv_to_cps, bool rec_func_
 void RVUFGen::gen_one_uf_in_both_sides(bool seq_equiv_to_cps, bool rec_func_uf)
 {
 
-
+	std::string& name = pfp->name;
+	uf_name_list.push_back(name);
 
 #ifdef CBMC_UF
 	static int counter = 0;
@@ -2288,9 +2288,6 @@ void RVUFGen::gen_one_uf_in_both_sides(bool seq_equiv_to_cps, bool rec_func_uf)
 	gen_side1_cbmc_uf(counter, rec_func_uf); 
 	++counter;
 #else
-	std::string& name = pfp->name;
-
-	uf_name_list.push_back(name);
 	uf_strname[0] = temps.uf_array_name(name) + "[" + temps.uf_count_name(name,0) + "].";
 	uf_strname[1] = temps.uf_array_name(name) + "[" + rv_uf_ind + "].";
 	gen_uf_array();
@@ -2614,7 +2611,7 @@ void RVReUfGen::generate_channel_compares()
 ///                               side 1 will be sought among all the
 ///                               parameters passed to side 0
 ///</param>
-void RVReUfGen::gen_one_uf_in_both_sides(bool seq_equiv_to_cps)
+void RVReUfGen::gen_one_uf_in_both_sides(bool seq_equiv_to_cps, bool rec_func_uf)
 {
 	const std::string& name = pfp->name;
 
@@ -2739,7 +2736,7 @@ bool RVReUfGen::gen_unitrv_input_found_case( FunctionType * proto1, SymbolVector
 			//proto1->
 			RVGenCtx ctx(decl->name, side0_decl->form, side0_decl->name->name, item_pref,
 				decl->form, decl->name->name,
-				1, false, true, m_where, this);
+				1, false, true, m_where, this, false);
 			ret = gen_item_or_struct_op( COPY_S0_to_S1, ctx, location ) && ret;
 		}
 		/* retrive return code if exists: */
@@ -2755,7 +2752,7 @@ bool RVReUfGen::gen_unitrv_input_found_case( FunctionType * proto1, SymbolVector
 			item_pref = get_unitrv_found_access_output(decl->name->name);
 			RVGenCtx ctx((Symbol *) NULL ,proto0->subType, *pretvar, item_pref,
 				proto1->subType, *pretvar,
-				1, false, false, m_where, this);
+				1, false, false, m_where, this, false);
 			ret = gen_item_or_struct_op( COPY_S0_to_S1, ctx, location ) && ret;
 		}
 
@@ -3204,8 +3201,7 @@ void RVMainGen::gen_arg_alloc_side(FunctionType *proto, const RVSide& side)
 			add_prefix_if_required(decl, prefix, side.index());
 		}
 		//is_out = is_out_arg(i);
-		RVGenCtx ctx(m_where, 0);
-		ctx.set_unitrv(m_unitrv);
+		RVGenCtx ctx(m_where, 0, m_unitrv);
 		//if( is_out  || is_aggregate_arg(i)) {
 		assert(decl && decl->name);
 		ctx.add_lane(decl->name,decl->form, decl->name->name, side, arg_prefix[side.index()]);
@@ -3258,20 +3254,17 @@ bool RVMainGen::gen_equal_nondet_globals()
 		assert(sym1->entry && sym1->entry->IsVarDecl() && sym1->entry->uVarDecl && (tp1 = sym1->entry->uVarDecl->form));
 			
 		temps.print("//nondet values for side 0:\n");
-		RVGenCtx ctx0(m_where, true);
-		ctx0.set_unitrv(m_unitrv);
+		RVGenCtx ctx0(m_where, true, m_unitrv);
 		ctx0.add_lane(sym0,tp0, sym0->name, SIDE0, arg_prefix[0]);
 		ret = gen_item_or_struct_op(NONDET, ctx0, location) && ret;
 		temps.print("//alloc for side 1:\n");
-		RVGenCtx ctx1(m_where, true);
-		ctx1.set_unitrv(m_unitrv);
+		RVGenCtx ctx1(m_where, true, m_unitrv);
 		ctx1.add_lane(sym1,tp1, sym1->name, SIDE1, arg_prefix[1]);
 		ret = gen_item_or_struct_op(ALLOC, ctx1, location) && ret;
 
 		temps.print("//copy leaves from side 0 to 1:\n");
 		/* copy sym0 value to sym1 */
-		RVGenCtx ctx2(m_where, true);
-		ctx2.set_unitrv(m_unitrv);
+		RVGenCtx ctx2(m_where, true, m_unitrv);
 		ctx2.add_lane(sym0,tp0, sym0->name, 0, arg_prefix[0]);
 		ctx2.add_lane(sym1,tp1, sym1->name, 1, arg_prefix[1]);
 		ret = gen_item_or_struct_op(COPY_S0_to_S1, ctx2, location) && ret;
@@ -3289,7 +3282,7 @@ bool RVMainGen::gen_equal_nondet_globals()
 		if( vec0.find_related(sym1)) continue; /* if has counterpart - we have already done */		
 		if( ignore_in_global(sym1, 1))	continue;	
 
-		RVGenCtx ctx1(m_where, true);
+		RVGenCtx ctx1(m_where, true, false);
 		ctx1.add_lane(sym1,tp1, sym1->name, 1, arg_prefix[1]);
 		ret = gen_item_or_struct_op(NONDET, ctx1, location) && ret;
 	} 
@@ -3374,8 +3367,7 @@ bool RVMainGen::gen_args_equality(int nItems, Decl **items0, Decl **items1, bool
 		tp1 = decl1->form;
 
 		bool is_out = before ? 1 : is_out_arg(i);
-		RVGenCtx ctx(m_where, !is_out);
-		ctx.set_unitrv(m_unitrv);
+		RVGenCtx ctx(m_where, !is_out, m_unitrv);
 		ctx.add_lane(decl0->name,tp0, decl0->name->name, 0, arg_prefix[0]);
 		ctx.add_lane(decl1->name,tp1, decl1->name->name, 1, arg_prefix[1]);
 
@@ -3429,8 +3421,7 @@ bool RVMainGen::gen_globals_check_output()
 		}
 
 		first_compare = true; 
-		RVGenCtx ctx(m_where, false);
-		ctx.set_unitrv(m_unitrv);
+		RVGenCtx ctx(m_where, false, m_unitrv);
 		temps.print("// for asserting global equality:\n");
 		ctx.add_lane(sym0,tp0, sym0->name, 0, arg_prefix[0]);
 		ctx.add_lane(sym1,tp1, sym1->name, 1, arg_prefix[1]);		
@@ -3504,8 +3495,7 @@ void RVMainGen::gen_main(bool reach_equiv_check, int first_side_to_call)
 			temps.print("\n  /* Compare return values: */ \n", temps.get_assert_strm());
 	
 			/* should work OK from simple values, tokens and structs: */
-			RVGenCtx ctx(m_where, false);
-			ctx.set_unitrv(m_unitrv);
+			RVGenCtx ctx(m_where, false, m_unitrv);
 			ctx.add_lane((Symbol *) NULL, proto0->subType, uf_retvar+"0", 0, "");
 			ctx.add_lane((Symbol *) NULL, proto1->subType, uf_retvar+"1", 1, "");
 			gen_item_or_struct_op(ASSERT_EQ, ctx, location);

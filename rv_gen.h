@@ -209,8 +209,8 @@ class RVUFGen : public RVGenRename
 
     bool gen_side0_uf();
     bool gen_side1_uf(bool seq_equiv_to_cps);
-    virtual void gen_one_uf_in_both_sides(bool seq_equiv_to_cps, bool rec_func_uf = false);
-    virtual bool gen_input_found_case(const FunctionType *proto1, const std::string& item_pref, const SymbolVector *vec, const std::string *pretvar);
+    virtual void gen_one_uf_in_both_sides(bool seq_equiv_to_cps, bool rec_func_uf);
+	virtual bool gen_input_found_case(const FunctionType *proto1, const std::string& item_pref, const SymbolVector *vec, const std::string *pretvar);
     virtual bool gen_input_not_found_case(const FunctionType *proto1, const SymbolVector *vec, const std::string *pretvar, bool gen_seq_equiv_code);
     virtual std::string get_on_found_action(unsigned look_back_, const std::string& item_pref) const;
 
@@ -257,7 +257,7 @@ protected:
     virtual std::string get_on_found_action(unsigned look_back_, const std::string& item_pref) const;
 	virtual void generate_channel_inits(void);
 	virtual void generate_channel_compares(void);
-    virtual void gen_one_uf_in_both_sides(bool seq_equiv_to_cps);
+    virtual void gen_one_uf_in_both_sides(bool seq_equiv_to_cps, bool rec_func_uf);
 	bool gen_unitrv_uf_array();
 	void gen_all_recording_arrays( FunctionType * proto0, const std::string& ufname );
 
