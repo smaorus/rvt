@@ -1,5 +1,8 @@
 
 
+float  rv_mult(float  x, float  y);
+float  rv_div(float  x, float  y);
+int  rv_mod(int  x, int  y);
 int  checkInput(int  n);
 
 int  f(int  n);
@@ -44,6 +47,9 @@ unsigned char  Loop_f_for1(int  n, int  *rvp_i, int  *rvp_sum, int  *rvp_rvretva
   }
 
   ++*rvp_i;
+  {
+    return Loop_f_for1(n,rvp_i,rvp_sum,rvp_rvretval);
+  }
   return 0;
 }
 

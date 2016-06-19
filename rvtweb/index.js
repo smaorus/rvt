@@ -16,7 +16,11 @@ var SAMPLE_PROGRAM2_FILE_NAME = "p2.txt";
 var SAMPLE_PARAMETERS_FILE_NAME = "prms.txt";
 var RV_PATH = path.resolve(path.join('..', 'Debug', 'rv.exe'));
 var RESULT_FILE = 'rv_out.gv';
+var FUF_FILE = 'rv_pe.fuf';
+var FUF_COMMAND = '-fuf ' + FUF_FILE;
 var LISTENING_PORT = 3017;
+var MUTUAL_TERMINATION_PARAM = '-mt';
+
 
 io.on('connection', function(socket){
   console.log('a user connected');
@@ -60,30 +64,77 @@ function deleteFolder(folderName){
 function runRVT(socket, p1, p2, folderName, params){
 	var errText = '';
 	
-	var rvtCommand = RV_PATH + ' ' + params + ' ' + p1 + ' ' + p2;
 	const exec = require('child_process').exec;
-	
-	console.log('Running RVT');
-	var cmd = exec(rvtCommand , {cwd: folderName},
-				(err, stdout, stderr) => {
-					  if (err) {
-					  	console.log(errText);
-					    socket.emit('wait', errText);
-					    deleteFolder(folderName);
-					    return;
-					  }
-					  console.log('RVT is done, sending result');
-					
-					  fs.readFile(path.join(folderName, RESULT_FILE), 'utf8', 
-					  	function(err, data) {
-						  	if (err) throw err;
-						  	socket.emit('message', data);
-							deleteFolder(folderName);
+	if (params.indexOf(MUTUAL_TERMINATION_PARAM) > -1){
+		
+		var moddedParams = params.replace('-mt', '');
+		// running rvt without mt to create rv_pe.fuf file
+		var rvtMtCommand = RV_PATH + ' ' + moddedParams + ' ' + p1 + ' ' + p2;
+
+		console.log('Running mt RVT: ' + rvtMtCommand);
+		
+		var cmd = exec(rvtMtCommand , {cwd: folderName},
+					(err, stdout, stderr) => {
+						  if (err) {
+						  	console.log(errText);
+						    socket.emit('wait', errText);
+						    deleteFolder(folderName);
+						    return;
+						  }
+							
+						var rvtCommand = RV_PATH + ' ' + FUF_COMMAND + ' ' + params + ' ' + p1 + ' ' + p2;
+
+						console.log('RVT pe is done, continue with mt proof: ' + rvtCommand);
+						var cmd = exec(rvtCommand , {cwd: folderName},
+								(err, stdout, stderr) => {
+									  if (err) {
+									  	console.log(errText);
+									    socket.emit('wait', errText);
+									    deleteFolder(folderName);
+									    return;
+									  }
+								
+								console.log('RVT mt is done, sending results');
+								fs.readFile(path.join(folderName, RESULT_FILE), 'utf8', 
+						  		function(err, data) {
+								  	if (err) throw err;
+								  	socket.emit('message', data);
+									deleteFolder(folderName);
+								});
+						  });	  
+
 						});
-					  });
-      cmd.stderr.on('data', function(data) {
-      errText += data.toString();
-    });
+						  
+						  
+	      cmd.stderr.on('data', function(data) {
+	      errText += data.toString();
+	    });
+
+	}
+	else{
+		console.log('Running RVT');
+		var rvtCommand = RV_PATH + ' ' + params + ' ' + p1 + ' ' + p2;
+		var cmd = exec(rvtCommand , {cwd: folderName},
+					(err, stdout, stderr) => {
+						  if (err) {
+						  	console.log(errText);
+						    socket.emit('wait', errText);
+						    deleteFolder(folderName);
+						    return;
+						  }
+						  console.log('RVT is done, sending result');
+						
+						  fs.readFile(path.join(folderName, RESULT_FILE), 'utf8', 
+						  	function(err, data) {
+							  	if (err) throw err;
+							  	socket.emit('message', data);
+								deleteFolder(folderName);
+							});
+						  });
+	      cmd.stderr.on('data', function(data) {
+	      errText += data.toString();
+	    });
+	  }
 }
 
 

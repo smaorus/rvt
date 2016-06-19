@@ -2321,7 +2321,7 @@ void RVUFGen::gen_ufs(bool seq_equiv_to_cps)
 			}
 			gen_one_uf(pfp, seq_equiv_to_cps);
 			
-			if (get_is_mutual_termination_set()){
+			if (get_is_mutual_termination_set() && m_unitrv){
 				gen_initializing_of_unitrv_mutual_termination_variables_function(pfp);
 			}
 		}
