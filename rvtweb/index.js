@@ -132,7 +132,8 @@ function runRVT(socket, p1, p2, folderName, params){
 							});
 						  });
 	      cmd.stderr.on('data', function(data) {
-	      errText += data.toString();
+	      		errText += data.toString();
+	      		console.log(errText);
 	    });
 	  }
 }

@@ -3023,8 +3023,6 @@ std::string RVReUfGen::get_variable_prefix( Type * form )
 RVMainGen::RVMainGen(RVTemp& _temps, Project* _sides[2], const std::string& _main_name)
 	: RVGenRename(_temps, _sides), main_name(_main_name)
 {
-	//adjust_all_functions_to_unitrv(_sides[0]);
-	//adjust_all_functions_to_unitrv(_sides[1]);
 	
 	sides[0] = _sides[0];
 	sides[1] = _sides[1];

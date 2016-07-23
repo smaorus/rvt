@@ -49,6 +49,7 @@
           <a class="navbar-brand" href="#">RVT</a>
           <ul class="nav navbar-nav">
               <li><a href="#" data-toggle="modal" data-target="#contactModal">Contact</a></li>
+              <li><a href="https://github.com/smaorus/rvt" target="_blank" >Source</a></li>
           </ul>
         </div>
       </div>
@@ -240,7 +241,7 @@
       });
 
 
-      var socket = io.connect('http://maorv-vm.iem.technion.ac.il:3017');
+      var socket = io.connect('http://localhost:3017');
 
 
       socket.on('connect', function(){

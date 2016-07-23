@@ -461,7 +461,7 @@ string RVCommands::combineFilePath(const string &dir, const string &filename, co
 
 RVCommands::ResCode RVCommands::get_result_code( bool is_unitrv, bool is_mutual_check, char * res )
 {
-	ResCode r;
+	ResCode r = UNKNOWN;
 	const char** matching_code_name_list;
 	if (is_unitrv){
 		if (is_mutual_check){
