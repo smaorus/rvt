@@ -1,0 +1,7 @@
+data/parser.h.i
+data/common.h.i
+data/common.c.i
+data/parser.c.i
+data/main.c.i
+data/token.c.i
+data/token.h.i
