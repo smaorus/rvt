@@ -1,0 +1,2 @@
+/* type-specific outlined function created by prependOutlineFunction() */
+unsigned int rv_mult_unsigned_long__int_(unsigned long x, int y);

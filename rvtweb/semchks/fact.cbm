@@ -13,7 +13,7 @@ converting SSA
 Running propositional reduction
 Post-processing
 Solving with MiniSAT 2.2.0 with simplifier
-1731 variables, 2271 clauses
-SAT checker inconsistent: negated claim is UNSATISFIABLE, i.e., holds
+1729 variables, 2967 clauses
+SAT checker: negated claim is UNSATISFIABLE, i.e., holds
 Runtime decision procedure: 0.011s
 VERIFICATION SUCCESSFUL

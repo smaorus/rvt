@@ -18,5 +18,5 @@ Post-processing
 Solving with MiniSAT 2.2.0 with simplifier
 5153 variables, 21408 clauses
 SAT checker: negated claim is UNSATISFIABLE, i.e., holds
-Runtime decision procedure: 0.136s
+Runtime decision procedure: 0.055s
 VERIFICATION SUCCESSFUL

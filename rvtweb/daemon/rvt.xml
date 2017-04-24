@@ -1,0 +1,1 @@
+<service><id>rvt.exe</id><name>RVT</name><description>Regression verification tool</description><executable>C:\Program Files\nodejs\node.exe</executable><arguments>--harmony "C:\Users\Maor\AppData\Roaming\npm\node_modules\node-windows\lib\wrapper.js" -f "C:\gitrvt\rvtweb\index.js" -l "RVT" -g 0.25 -w 1 -r 3 -a n</arguments><logmode>rotate</logmode></service>

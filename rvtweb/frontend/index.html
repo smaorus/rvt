@@ -55,6 +55,8 @@
       </div>
     </div>
 
+
+
     <div class="modal fade" id="contactModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
       <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -71,7 +73,17 @@
         </div>
       </div>
     </div>
-
+      <div class="row">
+        <div class="col-md-1">
+        </div>
+        <div class="col-md-8">
+              <div class="page-header">
+                <h2>Regression Verification Tool (RVT) <small>Web-Interface</small></h2>
+              </div>
+        </div>
+        
+      </div>
+      
       <div class="row">
         <div class="col-md-2">
           <div id="options" class="row">
@@ -240,8 +252,9 @@
         appendParams('-nooutline_funcs')
       });
 
-
-      var socket = io.connect('http://localhost:3017');
+      var prod_server = 'http://maorv-vm.iem.technion.ac.il:3017';
+      var local_server = 'https://localhost:3017';
+      var socket = io.connect(local_server, {secure: true});
 
 
       socket.on('connect', function(){

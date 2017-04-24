@@ -582,6 +582,7 @@ bool RVSemChecker::createBaseCaseTestFile( const std::string& pair_name, std::st
 {
 	RVDischarger discharger;
 	if (!m_temps.open(discharger, rv_commands.combineFilePath(semchk_dir, getUnrollFileName(pair_name, side) + ".rv.c"), false, ios_base::out )) {
+		rv_errstrm << "Unable to open m_temps for file " << pair_name << "\n";
 		return false;
 	}
 
@@ -613,6 +614,7 @@ bool RVSemChecker::createBaseCaseTestFile( const std::string& pair_name, std::st
 	ren[0] = prepare_side(0, side_paths[0], semchk_pair, false, false, NULL);
 	ren[1] = prepare_side(1, side_paths[1], semchk_pair, false, false, NULL);
 	if( NULL == ren[0] || NULL == ren[1]) {
+		rv_errstrm << "Failed when preparing sides\n";
 		return false;
 	}
 
@@ -625,11 +627,13 @@ bool RVSemChecker::createBaseCaseTestFile( const std::string& pair_name, std::st
 
 
 	if( !print_global_decls(ren[0], ren[1]) ) {
+		rv_errstrm << "Failed printing globals\n";
 		return false;
 	}
 	m_temps.flush();
 
 	if (!print_function_bodies(ren)){
+		rv_errstrm << "Failed printing function bodies\n";
 		return false;
 	}
 	m_temps.flush();
@@ -659,6 +663,8 @@ bool RVSemChecker::print_function_bodies(RVRenameTree * ren[2])
 	m_temps.print("\n/*** Functions side 1: ***/\n");
 	res = res && ren[1]->print_all(m_temps, false, true);
 	if (!res) { return false;}
+
+	return true;
 }
 
 void RVSemChecker::unrollSide( int side, const std::string& pair_name, RVRenameTree* ren[2], int threshold, bool call_uf)

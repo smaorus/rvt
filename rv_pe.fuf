@@ -1,4 +1,80 @@
-`P0  P1   Result
-`--- ---- ------
-A    A    partially-equivalent
-main main syntactically-equal partially-equivalent
+`P0                                           P1                                            Result
+`-------------------------------------------- --------------------------------------------- ------
+Loop_tokenize_string_while1                   Loop_tokenize_string_while1                   syntactically-equal partially-equivalent
+Loop_eatwhitespace_do_while1_do_while1_while1 Loop_eatwhitespace_do_while1_do_while1_while1 syntactically-equal partially-equivalent
+Loop_seatest_header_printer_for2              Loop_seatest_header_printer_for2              syntactically-equal partially-equivalent
+all_unit_tests_hub                            all_unit_tests_hub                            syntactically-equal
+get_token                                     get_token                                     syntactically-equal partially-equivalent
+tokenize_number                               tokenize_number                               syntactically-equal partially-equivalent
+is_digit                                      is_digit                                      syntactically-equal partially-equivalent
+is_alpha                                      is_alpha                                      syntactically-equal partially-equivalent
+test_file_name                                test_file_name                                syntactically-equal partially-equivalent
+strlen                                        strlen                                        syntactically-equal partially-equivalent
+memcpy                                        memcpy                                        syntactically-equal partially-equivalent
+seatest_should_run                            seatest_should_run                            syntactically-equal partially-equivalent
+seatest_assert_string_ends_with               seatest_assert_string_ends_with               syntactically-equal partially-equivalent
+seatest_assert_string_equal                   seatest_assert_string_equal                   syntactically-equal partially-equivalent
+seatest_assert_int_equal                      seatest_assert_int_equal                      syntactically-equal partially-equivalent
+putchar                                       putchar                                       syntactically-equal partially-equivalent
+__CPROVER_printf_0                            __CPROVER_printf_0                            syntactically-equal partially-equivalent
+Loop_tokenize_identifier_for2                 Loop_tokenize_identifier_for2                 syntactically-equal partially-equivalent
+Loop_tokenize_number_while1                   Loop_tokenize_number_while1                   syntactically-equal partially-equivalent
+Loop_eatwhitespace_do_while1_do_while1        Loop_eatwhitespace_do_while1_do_while1        syntactically-equal partially-equivalent
+init_tokenizer                                init_tokenizer                                syntactically-equal partially-equivalent
+is_alphanum                                   is_alphanum                                   syntactically-equal partially-equivalent
+strstr                                        strstr                                        syntactically-equal partially-equivalent
+strcmp                                        strcmp                                        syntactically-equal partially-equivalent
+strcpy                                        strcpy                                        syntactically-equal partially-equivalent
+run_tests                                     run_tests                                     syntactically-equal
+seatest_teardown                              seatest_teardown                              syntactically-equal
+seatest_assert_string_starts_with             seatest_assert_string_starts_with             syntactically-equal partially-equivalent
+seatest_assert_false                          seatest_assert_false                          syntactically-equal partially-equivalent
+seatest_test_fixture_end                      seatest_test_fixture_end                      syntactically-equal partially-equivalent
+seatest_test_fixture_start                    seatest_test_fixture_start                    syntactically-equal partially-equivalent
+getchar                                       getchar                                       syntactically-equal partially-equivalent
+fprintf_0                                     fprintf_0                                     syntactically-equal partially-equivalent
+__CPROVER_printf_1                            __CPROVER_printf_1                            syntactically-equal partially-equivalent
+stack_push                                    stack_push                                    syntactically-equal partially-equivalent
+rv_mult_int__int_                             rv_mult_int__int_                             syntactically-equal partially-equivalent
+rv_div_unsigned_long__unsigned_long_          rv_div_unsigned_long__unsigned_long_          syntactically-equal partially-equivalent
+Loop_tokenizer_test_fixture_do_while3         Loop_tokenizer_test_fixture_do_while3         syntactically-equal partially-equivalent
+Loop_eatwhitespace_do_while1                  Loop_eatwhitespace_do_while1                  syntactically-equal partially-equivalent
+Loop_seatest_header_printer_for1              Loop_seatest_header_printer_for1              syntactically-equal partially-equivalent
+Loop_test_file_name_while1                    Loop_test_file_name_while1                    syntactically-equal partially-equivalent
+is_whitespace                                 is_whitespace                                 syntactically-equal partially-equivalent
+main                                          main                                          syntactically-equal
+strncmp                                       strncmp                                       syntactically-equal partially-equivalent
+exit                                          exit                                          syntactically-equal partially-equivalent
+seatest_run_test                              seatest_run_test                              syntactically-equal partially-equivalent
+seatest_assert_string_doesnt_contain          seatest_assert_string_doesnt_contain          syntactically-equal partially-equivalent
+seatest_assert_double_equal                   seatest_assert_double_equal                   syntactically-equal partially-equivalent
+seatest_assert_float_equal                    seatest_assert_float_equal                    syntactically-equal partially-equivalent
+fprintf_1                                     fprintf_1                                     syntactically-equal partially-equivalent
+destroy_stack                                 destroy_stack                                 syntactically-equal partially-equivalent
+rv_mult_unsigned_int__int_                    rv_mult_unsigned_int__int_                    syntactically-equal partially-equivalent
+Loop_tokenizer_test_fixture_do_while2         Loop_tokenizer_test_fixture_do_while2         
+Loop_tokenize_identifier_while1               Loop_tokenize_identifier_while1               syntactically-equal partially-equivalent
+Loop_eatwhitespace_do_while1_while2           Loop_eatwhitespace_do_while1_while2           syntactically-equal partially-equivalent
+eatwhitespace                                 eatwhitespace                                 syntactically-equal partially-equivalent
+release_tokenizer                             release_tokenizer                             syntactically-equal partially-equivalent
+GetTickCount                                  GetTickCount                                  syntactically-equal partially-equivalent
+all_unit_tests                                all_unit_tests                                syntactically-equal
+memset                                        memset                                        syntactically-equal partially-equivalent
+sprintf_2                                     sprintf_2                                     syntactically-equal partially-equivalent
+create_stack                                  create_stack                                  syntactically-equal partially-equivalent
+rv_mult_int__unsigned_int_                    rv_mult_int__unsigned_int_                    syntactically-equal partially-equivalent
+Loop_tokenizer_test_fixture_do_while1         Loop_tokenizer_test_fixture_do_while1         partially-equivalent
+Loop_eatwhitespace_do_while1_do_while1_while2 Loop_eatwhitespace_do_while1_do_while1_while2 syntactically-equal partially-equivalent
+tokenize_string                               tokenize_string                               syntactically-equal partially-equivalent
+tokenize_identifier                           tokenize_identifier                           syntactically-equal partially-equivalent
+seatest_header_printer                        seatest_header_printer                        partially-equivalent
+tokenizer_test_fixture                        tokenizer_test_fixture                        syntactically-equal
+isdigit                                       isdigit                                       syntactically-equal partially-equivalent
+seatest_setup                                 seatest_setup                                 syntactically-equal
+seatest_assert_string_contains                seatest_assert_string_contains                syntactically-equal partially-equivalent
+seatest_assert_true                           seatest_assert_true                           syntactically-equal partially-equivalent
+seatest_simple_test_result                    seatest_simple_test_result                    syntactically-equal partially-equivalent
+puts                                          puts                                          syntactically-equal partially-equivalent
+__CPROVER_printf_3                            __CPROVER_printf_3                            syntactically-equal partially-equivalent
+stack_pop                                     stack_pop                                     syntactically-equal partially-equivalent
+rv_div_int__int_                              rv_div_int__int_                              syntactically-equal partially-equivalent

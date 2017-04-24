@@ -1904,6 +1904,7 @@ bool RVUFGen::gen_side0_uf()
 	FORVEC(it,(*vec)) {
 		decl = (*it)->entry->uVarDecl;
 		RVGenCtx ctx(decl->name,decl->form, decl->name->name, item_pref, false, true, m_where, this, m_unitrv);
+		dont_alloc_root = true;
 		ret = gen_item_or_struct_op(NONDET_SAVE, ctx, location) && ret;
 	}
 

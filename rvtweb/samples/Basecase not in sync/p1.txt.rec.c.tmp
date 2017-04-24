@@ -1,0 +1,2 @@
+/* type-specific outlined function created by prependOutlineFunction() */
+int rv_mult_int__int_(int x, int y);

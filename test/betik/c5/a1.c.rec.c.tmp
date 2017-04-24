@@ -1,0 +1,10 @@
+/* type-specific outlined function created by prependOutlineFunction() */
+int rv_div_int__int_(int x, int y);
+/* type-specific outlined function created by prependOutlineFunction() */
+unsigned int rv_div_unsigned_long__unsigned_long_(unsigned long x, unsigned long y);
+/* type-specific outlined function created by prependOutlineFunction() */
+int rv_mult_int__int_(int x, int y);
+/* type-specific outlined function created by prependOutlineFunction() */
+unsigned int rv_mult_int__unsigned_int_(int x, unsigned int y);
+/* type-specific outlined function created by prependOutlineFunction() */
+unsigned int rv_mult_unsigned_int__int_(unsigned int x, int y);

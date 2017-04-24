@@ -1,0 +1,5 @@
+`P0               P1                Result
+`---------------- ----------------- ------
+rv_mult_int__int_ rv_mult_int__int_ syntactically-equal partially-equivalent
+main              main              syntactically-equal partially-equivalent
+fact              fact              partially-equivalent
